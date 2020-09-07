@@ -1,0 +1,2 @@
+# Notes
+Daily notes
