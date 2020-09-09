@@ -1,8 +1,8 @@
 # 关于在PC端编译构建并使用QEMU虚拟机运行ARM Linux的记录(ARMv7 Cortex A9/A7)
 
-~~其实基本就是Linux From Scratch(LFS)~~
+~~这个其实基本就是Linux From Scratch(LFS)~~
 
-如果懒得scratch可以[看这里](https://github.com/apachiww/Notes/blob/master/200908b_qemu-arm.md#8-使用raspbian)，直接用raspbian镜像，同时也省去了后续在虚拟机安装工具链的繁琐过程
+如果懒得scratch可以[看这里](https://github.com/apachiww/Notes/blob/master/200908b_qemu-arm.md#8-使用raspbian)，直接用树莓派raspbian镜像，同时也省去了后续在虚拟机安装工具链的繁琐过程
 
 生命在于折腾x
 
@@ -201,6 +201,58 @@ ArchLinux官方仓库的arm工具链是arm-none-eabi-，这个工具链是用于
             -append "init=/linuxrc root=/dev/mmcblk0 rw rootwait earlyprintk console=ttyAMA0"
     ```
 
-+ 启动成功，完成
++ 启动成功
+
+    经过测试运行流畅，功能虽然少但是运行正常，其他的东西可以以后扩充
 
 ## 8. 使用Raspbian
+
+参考自<a href="https://azeria-labs.com/emulate-raspberry-pi-with-qemu/" target="_blank">azeria-labs教程</a>，直接使用树莓派的Raspbian Jessie，便于搭建开发环境
+
++ 下载
+
+    Raspbian清华大学镜像站<a href="https://mirrors.tuna.tsinghua.edu.cn/raspberry-pi-os-images/raspbian/images/" target="_blank">下载</a>，建议Jessie
+
+    内核<a href="https://raw.githubusercontent.com/dhruvvyas90/qemu-rpi-kernel/master/kernel-qemu-4.4.34-jessie" target="_blank">下载</a> 
+
+    *注：githubusercontent.com域名被污染，可以改hosts下载*
+
++ 解压raspbian镜像，使用fdisk查看分区，并挂载
+
+    应该可以看到两个分区，将img2的起始sector乘512得到offset
+
+    这里使用137216示例
+
+    ```shell
+    sudo mount -v -o offset=70254592 -t ext4 /path/to/img /mountpath
+    ```
+
++ 修改镜像文件
+
+    编辑ld.so.preload，注释掉所有行
+
+    ```shell
+    sudo vim /mountpath/etc/ld.so.preload
+    ```
+
+    编辑fstab，将所有mmcblk分区更改为sda1，sda2
+
+    ```shell
+    sudo vim /mountpath/etc/fstab
+    ```
+
+    卸载镜像
+
+    ```shell
+    sudo umount /mountpath
+    ```
+
++ 启动qemu
+
+    ```shell
+    qemu-system-arm -kernel /path/to/kernel-qemu -cpu arm1176 -m 256 -M versatilepb -serial stdio -append "root=/dev/sda2 rootfstype=ext4 rw" -hda /path/to/jessie-image.img -redir tcp:5022::22 -no-reboot
+    ```
+
++ 后记
+
+    经过尝试以上方法最后成功启动，但是有图形界面的raspbian极其占用资源，还只能用arm11单核，实际运行非常卡顿，最后关机还出现了kernel panic，只能kill掉，不知道是哪里的问题，只好暂时放弃，在小米4用Linux Deploy代替，以后补充更好的方案
