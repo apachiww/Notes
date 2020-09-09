@@ -129,7 +129,7 @@ ArchLinux官方仓库的arm工具链是arm-none-eabi-，这个工具链是用于
     ```shell
     cd /path/to/kernel/source
     export ARCH=arm
-    export CROSS_COMPILE=/path/to/toolchain/bin/
+    export CROSS_COMPILE=/path/to/toolchain/bin/arm-none-linux-gnueabihf-
     make vexpress_defconfig
     make menuconfig
     make -j12
