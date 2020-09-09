@@ -2,7 +2,7 @@
 
 ~~其实基本就是Linux From Scratch(LFS)~~
 
-如果懒得scratch可以[看这里]()，直接用raspbian镜像，同时也省去了后续在虚拟机安装工具链的繁琐过程
+如果懒得scratch可以[看这里](https://github.com/apachiww/Notes/blob/master/200908b_qemu-arm.md#8-使用raspbian)，直接用raspbian镜像，同时也省去了后续在虚拟机安装工具链的繁琐过程
 
 生命在于折腾x
 
@@ -202,3 +202,5 @@ ArchLinux官方仓库的arm工具链是arm-none-eabi-，这个工具链是用于
     ```
 
 + 启动成功，完成
+
+## 8. 使用Raspbian
