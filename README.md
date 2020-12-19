@@ -24,3 +24,8 @@
 
     STM32学习笔记 [201020a_stm32.md](201020a_stm32.md)
 
++ 2020.12.19更新
+
+    shell脚本 [201219a_shell.md](201219a_shell.md)
+
+    makefile以及编译 [201219b_makefile.md](201219b_makefile.md)
