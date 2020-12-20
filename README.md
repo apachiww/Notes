@@ -33,3 +33,7 @@
 + 2020.12.20更新
 
     使用Eclipse搭建ARM mcu开发环境 [201220a_mcu-ide.md](201220a_mcu-ide.md)
+
+    使用Hashcat或JohntheRipper破解密码 [201220b_crack.md](201220b_crack.md)
+
+    Metasploit使用入门 [201220c_metasploit.md](201220c_metasploit.md)
