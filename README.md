@@ -28,4 +28,8 @@
 
     shell脚本 [201219a_shell.md](201219a_shell.md)
 
-    makefile以及编译 [201219b_makefile.md](201219b_makefile.md)
+    arm单片机makefile以及命令行编译方法 [201219b_makefile.md](201219b_makefile.md)
+
++ 2020.12.20更新
+
+    使用Eclipse搭建ARM mcu开发环境 [201220a_mcu-ide.md](201220a_mcu-ide.md)
