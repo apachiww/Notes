@@ -54,6 +54,10 @@
 
     AutoCAD笔记 [210108a_autocad.md](210108a_autocad.md)
 
++ 2020.01.10添加
+
+    《计算机体系结构量化研究方法》以及《大话处理器》阅读笔记 [210110a_computer-arch.md](210110a_computer-arch.md)
+
 ### 优质参考书列表
 
 1. 《数字逻辑基础与Verilog设计（第2版）》，Stephen Brown，Zvonko Vrannesic著，机械工业出版社
