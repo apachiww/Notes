@@ -50,6 +50,10 @@
 
     加密算法以及密码学 [201230a_cryptography.md](201230a_cryptography.md)
 
++ 2020.01.08添加
+
+    AutoCAD笔记 [210108a_autocad.md](210108a_autocad.md)
+
 ### 优质参考书列表
 
 1. 《数字逻辑基础与Verilog设计（第2版）》，Stephen Brown，Zvonko Vrannesic著，机械工业出版社
