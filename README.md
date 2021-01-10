@@ -14,7 +14,7 @@
 
     信号与系统以及DSP，学习记录 [200920b_dsp.md](200920b_dsp.md)
 
-    数字电路以及verilog，学习记录 [200920c_verilog](200920c_verilog.md)
+    数字电路以及verilog，学习记录 [200920c_verilog.md](200920c_verilog.md)
 
 + 2020.10.02添加
 
@@ -50,11 +50,11 @@
 
     加密算法以及密码学 [201230a_cryptography.md](201230a_cryptography.md)
 
-+ 2020.01.08添加
++ 2021.01.08添加
 
     AutoCAD笔记 [210108a_autocad.md](210108a_autocad.md)
 
-+ 2020.01.10添加
++ 2021.01.10添加
 
     《计算机体系结构量化研究方法》以及《大话处理器》阅读笔记 [210110a_computer-arch.md](210110a_computer-arch.md)
 
