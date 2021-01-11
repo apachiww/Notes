@@ -58,7 +58,11 @@
 
     《计算机体系结构量化研究方法》以及《大话处理器》阅读笔记 [210110a_computer-arch.md](210110a_computer-arch.md)
 
-### 优质参考书列表
++ 2021.01.11添加
+
+    Qt开发，[210111a_qt.md](210111a_qt.md)
+
+### 参考书收藏列表
 
 1. 《数字逻辑基础与Verilog设计（第2版）》，Stephen Brown，Zvonko Vrannesic著，机械工业出版社
 2. 《Linux命令行与Shell脚本编程大全（第3版）》，Richard Blum，Christine Bresnahan著，人民邮电出版社
