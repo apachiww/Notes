@@ -62,6 +62,30 @@
 
     Qt开发，见[210111a_qt.md](210111a_qt.md)
 
+
+## 进度状态
+
+| No. | Content | Status |
+| :-: | :-: | :-: |
+| 200908a | sdram           | <div style="color:#F00">Finished</div> |
+| 200908b | qemu-arm        | <div style="color:#F00">Finished</div> |
+| 200920a | arm-assembly    | <div style="color:#09F">In process</div> |
+| 200920b | dsp             | <div style="color:#FB0">Hang up</div> |
+| 200920c | verilog         | <div style="color:#09F">In process</div> |
+| 201002a | maths           | <div style="color:#0F0">New</div> |
+| 201020a | stm32           | <div style="color:#0F0">New</div> |
+| 201219a | shell           | <div style="color:#09F">In process</div> |
+| 201219b | makefile        | <div style="color:#0F0">New</div> |
+| 201220a | mcu-ide         | <div style="color:#0F0">New</div> |
+| 201220b | crack           | <div style="color:#0F0">New</div> |
+| 201220c | metasploit      | <div style="color:#0F0">New</div> |
+| 201225a | ssd             | <div style="color:#F00">Finished</div> |
+| 201229a | ror             | <div style="color:#0F0">New</div> |
+| 201230a | cryptography    | <div style="color:#0F0">New</div> |
+| 210108a | autocad         | <div style="color:#F00">Finished</div> |
+| 210110a | computer-arch   | <div style="color:#0F0">New</div> |
+| 210111a | qt              | <div style="color:#0F0">New</div> |
+
 ### 参考书收藏列表
 
 1. 《数字逻辑基础与Verilog设计（第2版）》，Stephen Brown，Zvonko Vrannesic著，机械工业出版社
