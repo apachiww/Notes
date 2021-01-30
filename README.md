@@ -87,7 +87,7 @@
 | 201229a | ror             | New           |
 | 201230a | cryptography    | New           |
 | 210108a | autocad         | Finished      |
-| 210110a | computer-arch   | New           |
+| 210110a | computer-arch   | In process    |
 | 210111a | qt              | New           |
 | 210115a | freebsd         | Hang up       |
 
