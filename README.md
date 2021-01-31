@@ -66,6 +66,10 @@
 
     FreeBSD安装以及注意事项，见[210115a_freebsd.md](210115a_freebsd.md)
 
++ 2021.01.30添加
+
+    有关Linux以及FreeBSD使用以及系统优化杂项，见[210130a_install-notice.md](210130a_install-notice.md)
+
 
 ## 进度状态
 
@@ -90,6 +94,7 @@
 | 210110a | computer-arch   | In process    |
 | 210111a | qt              | New           |
 | 210115a | freebsd         | Hang up       |
+| 210130a | install-notice  | Update ondemand |
 
 ### 参考书收藏列表
 
