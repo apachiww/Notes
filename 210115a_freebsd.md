@@ -11,7 +11,7 @@
 > CPU：Intel Celeron J3160(4) @ 1.6GHz \
   GPU：Intel HD Graphics 400 \
   内存：2 x 2GB DDR3 \
-  硬盘：Seagate ST380817AS(80G) \
+  硬盘：KIOXIA 240G SATA SSD & Seagate 500G 5400rpm HDD \
   启动模式：UEFI x64 \
   磁盘分区格式：GPT
 
@@ -206,7 +206,10 @@ SERVERNAME=portsnap.freebsd.cn
 
 ### 3.2.1 安装显卡驱动
 
-安装intel显卡kms，安装`pkg install drm-kmod`。
+安装intel显卡kms`pkg install drm-kmod`。
 
-> 记于2021.01.17：显卡驱动是作为普通用户想将FreeBSD作为桌面系统使用需要克服的最大困难之一，FreeBSD的显卡驱动相比linux要稍显落后。intel的主流产品线，比如*Celeron Gxxxx, Pentium Gxxxx, i3-xxxx, i5-xxxx, i7-xxxx, i9-xxxx*的集成显卡支持尚可，但是intel的其他产品线，比如使用Atom核心的低功耗SoC产品线*Celeron N/Jxxxx, Pentium N/Jxxxx*支持就不是很好了。这次使用到的Celeron J3160就是属于intel的SoC产品线（代号Braswell），使用的HD400在FreeBSD-12.2-RELEASE中不被pkg以及ports中的drm-kmod正常支持（kldload时绑定GPU失败，kldunload卸载模块时kernel panic），而之后尝试在13.0-CURRENT中通过ports安装drm-current-kmod发现已经支持，kldload无异常，且可以启动X。期待2021年3月FreeBSD-13.0的Release，同时建议安装FreeBSD之前先考察显卡驱动的支持状况。\
-关于FreeBSD的安装暂时先搁置，等到3月FreeBSD-13.0-RELEASE出来以后再考虑安装
+> 显卡驱动是作为普通用户想将FreeBSD作为桌面系统使用需要克服的最大困难之一，FreeBSD的显卡驱动相比linux要稍显落后（好像就是直接从Linux移植而来），包括intel的核显驱动。这次使用的Celeron J3160属于intel的低功耗SoC产品线，在RELEASE-13.0之前不被正常支持（13.0更新了来自Linux的显卡驱动，很奇怪的是同属Braswell的N3160据说早在11.2核显就可以正常工作，按理应该没区别，FreeBSD论坛[链接](https://forums.freebsd.org/threads/xcfe-login-gui-doesnt-show-up.66419/)）。建议安装FreeBSD之前先考察显卡驱动的支持状况。
+
+> 附：有人之前在FreeBSD论坛写了一篇文章讨论intel不同产品线的核显的区别，大概也顺带批评了intel的SoC产品线的混乱，[链接](https://forums.freebsd.org/threads/how-to-use-the-old-or-the-new-i915kms-driver-for-intel-integrated-graphics-with-xorg.66732/)
+
+想要查看自己的显卡或平台是否确实被FreeBSD支持，这里推荐一个[网站](https://bsd-hardware.info)
