@@ -60,41 +60,45 @@
 
 + 2021.01.11添加
 
-    Qt开发，见[210111a_qt.md](210111a_qt.md)
+    Qt开发，见 [210111a_qt.md](210111a_qt.md)
 
 + 2021.01.15添加
 
-    FreeBSD安装以及注意事项，见[210115a_freebsd.md](210115a_freebsd.md)
+    FreeBSD安装以及注意事项，见 [210115a_freebsd.md](210115a_freebsd.md)
 
 + 2021.01.30添加
 
-    有关Linux以及FreeBSD使用以及系统优化杂项，见[210130a_install-notice.md](210130a_install-notice.md)
+    有关Linux以及FreeBSD使用以及系统优化杂项，见 [210130a_install-notice.md](210130a_install-notice.md)
 
++ 2021.02.16添加
+
+    Rust语言入门 [210216a_rust.md](210216a_rust.md)
 
 ## 进度状态
 
 | No. | Content | Status |
 | :-: | :-: | :-: |
-| 200908a | sdram           | Finished      |
-| 200908b | qemu-arm        | Finished      |
-| 200920a | arm-assembly    | In process    |
-| 200920b | dsp             | Hang up       |
-| 200920c | verilog         | In process    |
-| 201002a | maths           | New           |
-| 201020a | stm32           | New           |
-| 201219a | shell           | In process    |
-| 201219b | makefile        | New           |
-| 201220a | mcu-ide         | New           |
-| 201220b | crack           | New           |
-| 201220c | metasploit      | New           |
-| 201225a | ssd             | Finished      |
-| 201229a | ror             | New           |
-| 201230a | cryptography    | New           |
-| 210108a | autocad         | Finished      |
-| 210110a | computer-arch   | In process    |
-| 210111a | qt              | New           |
-| 210115a | freebsd         | Hang up       |
-| 210130a | install-notice  | Update ondemand |
+| 200908a | 计算机存储：SDRAM                   | Finished      |
+| 200908b | LFS并使用QEMU运行Linux（ARMv7）     | Finished      |
+| 200920a | ARM汇编以及内存架构（Cortex-A）     | In process    |
+| 200920b | DSP数字信号处理                     | Hang up       |
+| 200920c | 数字逻辑以及Verilog                 | In process    |
+| 201002a | 高数                                | New           |
+| 201020a | STM32开发                           | New           |
+| 201219a | Linux命令行以及Shell脚本            | In process    |
+| 201219b | C语言Makefile以及交叉编译           | New           |
+| 201220a | 基于Eclipse的通用MCU开发环境        | New           |
+| 201220b | 加密爆破                            | New           |
+| 201220c | 使用Metasploit的渗透测试，社工      | New           |
+| 201225a | 固态硬盘工作原理与优化方法          | Finished      |
+| 201229a | Ruby语言以及Ruby On Rails           | New           |
+| 201230a | 加密算法，密码学                    | New           |
+| 210108a | AutoCAD基本操作                     | Finished      |
+| 210110a | 计算机体系结构以及处理器的设计      | In process    |
+| 210111a | Qt应用开发                          | New           |
+| 210115a | FreeBSD安装并作为桌面系统使用       | Hang up       |
+| 210130a | 各种类Unix的安装部署以及安全优化    | Update ondemand |
+| 210216a | Rust语言入门                        | New           |
 
 ### 参考书收藏列表
 
