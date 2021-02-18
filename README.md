@@ -85,7 +85,7 @@
 | 200920c | 数字逻辑以及Verilog                 | In process    |
 | 201002a | 高数                                | New           |
 | 201020a | STM32开发以及ARM汇编（ARMv7M）      | In process    |
-| 201219a | Linux命令行以及Shell脚本            | In process    |
+| 201219a | Linux命令行以及Shell脚本            | Update ondemand |
 | 201219b | C语言Makefile以及交叉编译           | In process    |
 | 201220a | 基于Eclipse的通用MCU开发环境        | In process    |
 | 201220b | 加密爆破                            | New           |
@@ -94,7 +94,7 @@
 | 201229a | Ruby语言以及Ruby On Rails           | New           |
 | 201230a | 加密算法，密码学                    | New           |
 | 210108a | AutoCAD基本操作                     | Finished      |
-| 210110a | 计算机体系结构以及处理器的设计      | In process    |
+| 210110a | 计算机体系结构以及处理器的设计      | Hang up       |
 | 210111a | Qt应用开发                          | New           |
 | 210115a | FreeBSD安装并作为桌面系统使用       | Hang up       |
 | 210130a | 各种类Unix的管理维护以及安全优化    | Update ondemand |

@@ -1,8 +1,6 @@
-# 关于在PC端编译构建并使用QEMU虚拟机运行ARM Linux的记录(ARMv7 Cortex A9/A7)
+# 关于在PC端编译构建并使用QEMU虚拟机运行Linux（ARM）的记录(ARMv7 Cortex A9/A7)
 
 ~~这个其实基本就是Linux From Scratch(LFS)~~
-
-如果懒得scratch可以[看这里](#8-使用raspbian)，直接用树莓派raspbian镜像，同时也省去了后续在虚拟机安装工具链的繁琐过程
 
 生命在于折腾x
 
