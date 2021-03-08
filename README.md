@@ -22,7 +22,7 @@
 
 + 2020.10.20添加
 
-    STM32学习笔记，附带ARMv7m-ISA [201020a_stm32.md](201020a_stm32.md)
+    STM32学习笔记，附带ARMv7-ISA（Cortex-M） [201020a_stm32.md](201020a_stm32.md)
 
 + 2020.12.19添加
 
@@ -40,7 +40,7 @@
 
 + 2020.12.25添加
 
-    有关固态硬盘SSD的内部工作机理 [201225a_ssd.md](201225a_ssd.md)
+    有关固态硬盘SSD的内部工作原理 [201225a_ssd.md](201225a_ssd.md)
 
 + 2020.12.29添加
 
@@ -80,15 +80,15 @@
 | :-: | :-: | :-: |
 | 200908a | 计算机存储：SDRAM                   | Finished      |
 | 200908b | LFS并使用QEMU运行Linux（ARMv7）     | Finished      |
-| 200920a | ARM汇编以及内存架构（ARMv7A）       | In process    |
+| 200920a | ARM汇编以及内存架构（ARMv7 Cortex-A）       | In process    |
 | 200920b | 信号与系统，DSP数字信号处理         | Hang up       |
 | 200920c | 数字逻辑以及Verilog                 | In process    |
-| 201002a | 高数                                | New           |
-| 201020a | STM32开发以及ARM汇编（ARMv7M）      | In process    |
+| 201002a | 高数                                | In process    |
+| 201020a | STM32开发以及ARM汇编（ARMv7 Cortex-M）      | In process    |
 | 201219a | Linux命令行以及Shell脚本            | Update ondemand |
 | 201219b | C语言Makefile以及交叉编译           | In process    |
 | 201220a | 基于Eclipse的通用MCU开发环境        | In process    |
-| 201220b | 加密爆破                            | New           |
+| 201220b | 密码爆破                            | New           |
 | 201220c | 使用Metasploit的渗透测试，社工      | New           |
 | 201225a | 固态硬盘工作原理与优化方法          | Finished      |
 | 201229a | Ruby语言以及Ruby On Rails           | New           |
