@@ -1486,12 +1486,12 @@ Mealy型电路不一定更简，但是由于消除了延迟的一个周期，所
 Windows下基于Quartus Prime的FPGA开发，以及类Unix下的Verilog设计仿真环境
 
 
-### 2.1 类Unix下的Verilog编译和仿真环境：使用Verilator、Icarus Verilog配合gtkwave
+### 2.1 类Unix下的Verilog编译和仿真环境：使用Verilator或Icarus Verilog，配合gtkwave
 
 ArchLinux下安装:
 
 ```shell
-pacman -S iverilog verilator gtkwave
+pacman -S iverilog verilator gtkwave yosys
 ```
 
 FreeBSD下通过`pkg`安装：
@@ -1500,7 +1500,9 @@ FreeBSD下通过`pkg`安装：
 pkg install iverilog verilator gtkwave
 ```
 
+
 ### 2.1.1 源文件编写与组织
+
 
 
 ### 2.1.2 编译以及仿真，使用Icarus Verilog
@@ -1515,6 +1517,7 @@ pkg install iverilog verilator gtkwave
 ## 3 Verilog HDL语言基础
 
 记录Verilog的语法和设计模式
+
 
 ### 3.1 常量和变量
 
@@ -1543,7 +1546,6 @@ pkg install iverilog verilator gtkwave
 ### 3. AES
 
 ### 3. CRC
-
 
 ### 3. 设计简单的处理器
 
