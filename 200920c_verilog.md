@@ -1480,10 +1480,18 @@ Mealy型电路不一定更简，但是由于消除了延迟的一个周期，所
 
 ### 1.7.1 触发器亚稳态问题
 
+触发器的亚稳态，就是指一个触发器无法在一定时间以内到达一个确定的状态。触发器会输出一些中间电平，这些中间电平无法预测，可能会出现振荡的情况，并且这种中间电平会传递给下一级触发器导致后级触发器也出现亚稳态，如下图中B由于AB时钟的不同步，取到了A触发器的中间输出，导致了B的亚稳态
+
+![触发器亚稳态](images/200920c118.png)
+
+> 这里引入一个术语：MTBF，即平均故障间隔时间，是故障率的倒数，指的是下一级D触发器发生故障的时间间隔。
+>
+> 一般通过使用多级D触发器的形式改善亚稳态的问题
+
 
 ## 2 Verilog HDL开发环境
 
-Windows下基于Quartus Prime的FPGA开发，以及类Unix下的Verilog设计仿真环境
+Windows下基于Quartus Prime的FPGA开发，以及类Unix下的Verilog设计仿真环境，和基本的设计流程
 
 
 ### 2.1 类Unix下的Verilog编译和仿真环境：使用Verilator或Icarus Verilog，配合gtkwave
@@ -1500,15 +1508,46 @@ FreeBSD下通过`pkg`安装：
 pkg install iverilog verilator gtkwave
 ```
 
+`yosys`可以用于RTL的生成
+
 
 ### 2.1.1 源文件编写与组织
 
+一般一个Verilog工程至少应当包含**源代码**（包含了设计好的电路，使用.v后缀），**Testbench**（用于对电路进行仿真测试，调用设计好的电路，使用.v后缀）。仿真以后还会生成**波形文件**（电路仿真的结果，使用gtkwave查看，有多种格式，见下）
 
 
 ### 2.1.2 编译以及仿真，使用Icarus Verilog
 
+直接使用示例说明
+
+假设创建了一个源文件`innovate.v`，一个Testbench`innovate_tb.v`，编译
+
+```shell
+iverilog -s innovate_tb -o innovate_tb.out innovate.v innovate_tb.v
+```
+
+其中`-s`指定topmodule，**即Testbench中定义的模块名**；`-o`指定输出文件名
+
+仿真使用`vvp`命令。**输出文件名在Testbench中定义**
+
+```shell
+vvp -n innovate_tb.out
+```
+
+可以指定输出文件的格式，可以使用`.lxt2` `.lxt` `.fst`，这些文件和`.vcd`类似，区别是`.lxt2`体积小，`.lxt`速度快，`.fst`比较新
+
+```shell
+vvp -n innovate_tb.out -lxt2
+```
+
 
 ### 2.1.3 查看波形，基于gtkwave
+
+直接使用`gtkwave`打开`.vcd`文件（或其他比如`.lxt2` `.lxt`和`.fst`文件）
+
+```shell
+gtkwave innovate.vcd
+```
 
 
 ### 2.2 Intel Quartus Prime 使用简介，仿真基于ModelSim
@@ -1519,13 +1558,14 @@ pkg install iverilog verilator gtkwave
 记录Verilog的语法和设计模式
 
 
-### 3.1 常量和变量
+### 3.1 模块
 
-### 3.2 基本运算
 
-### 3.3 模块定义和调用
 
-### 3.4 预处理
+```verilog
+
+```
+
 
 ### 3. 常用的算术硬件以及计算方法
 
