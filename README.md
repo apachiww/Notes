@@ -18,7 +18,7 @@
 
 + 2020.10.02添加
 
-    高数复习x [201002a_maths.md](201002a_maths.md)
+    高数 [201002a_maths.md](201002a_maths.md)
 
 + 2020.10.20添加
 
@@ -74,6 +74,10 @@
 
     Rust语言入门 [210216a_rust.md](210216a_rust.md)
 
++ 2021.03.13添加
+
+    Octave使用，和[线性代数](201002a_maths.md#1-线性代数)同步更新 [210313a_octave.md](210313a_octave.md)
+
 ## 进度状态
 
 | No. | Content | Status |
@@ -99,6 +103,7 @@
 | 210115a | FreeBSD安装并作为桌面系统使用       | Hang up       |
 | 210130a | 各种类Unix的管理维护以及安全优化    | Update ondemand |
 | 210216a | Rust语言入门                        | New           |
+| 210313a | Octave入门                                | In process    |
 
 ### 参考书收藏列表
 
