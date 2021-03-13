@@ -1198,7 +1198,7 @@ Mealy型电路不一定更简，但是由于消除了延迟的一个周期，所
 
 > 这里首先引入一个定义：如果一个流程表每一行都有一个稳态，那么这个流程表就被称为基本流程表。
 >
-> 合并的两个阶段：第一阶段和同步电路的状态简化相似，而第二阶段是同步电路简化特有的步骤
+> 合并的两个阶段：第一阶段和同步电路的状态简化相似，而第二阶段是异步电路简化特有的步骤
 
 例1：设计这样一个售货机电路：每颗糖果为1角，售货机接受5分和1角硬币，多给不找零
 
@@ -1560,14 +1560,531 @@ gtkwave innovate.vcd
 
 ### 3.1 模块
 
-
+模块是Verilog中最基本的组成单位。模块声明如下示例，设计一个16位加法器。**圆括号内声明输入输出，之后描述电路**
 
 ```verilog
+module adder (
+    input   wire [15:0] in_a,
+    input   wire [15:0] in_b,
+    output  wire [15:0] out
+);
 
+    assign out = in_a + in_b;
+
+endmodule
+```
+
+> 输入为**input**，输出为**output**，双向输入输出为**inout**
+>
+> 变量比特位使用[MSB:LSB]格式描述
+>
+> 有效变量名格式为`[a-zA-Z_][0-9a-zA-Z_-]*`
+
+**模块实例化**
+
+模块实例化调用已定义的模块，以下实例化了一个adder。使用`.`运算符调用信号，并命名在实例中的名称
+
+```verilog
+adder adder01 (
+    .in_a   (adder01_in_a),
+    .in_b   (adder01_in_b),
+    .out    (adder01_out)
+);
 ```
 
 
-### 3. 常用的算术硬件以及计算方法
+### 3.2 常量
+
+常量的使用和其他一般编程语言有较大不同
+
+| 逻辑值 | 描述 |
+| :-: | :-: |
+| 0 | 低电平 |
+| 1 | 高电平 |
+| x | 不定值 |
+| z | 高阻态，High impedance |
+
+**常量需要指出进制以及位宽，b为二进制，o为八进制，d为十进制，h为十六进制，示例如下**
+
+```verilog
+4'b1100
+6'o75
+4'd8
+8'h4e
+```
+
+
+### 3.3 变量及其类型
+
+Verilog中的变量分为寄存器型和网络型两种。寄存器型可以根据情况生成锁存器或触发器，或其他组合电路。
+
+### 3.3.1 寄存器型变量声明与赋值
+
+寄存器型变量常用的有3种类型
+
+| 名称 | 位宽 | 符号 | 描述 |
+| :-: | :-: | :-: | :-: |
+| reg | 1 | 无 | 一般寄存器变量 | 
+| integer | 32 | 有 | 整数 |
+| real | 64 | 有 | 实数 |
+
+寄存器型变量可以在`initial`或`always`语句中赋值，称为**过程赋值**。过程赋值又分为**阻塞赋值（顺序赋值）和非阻塞赋值（并行赋值）**，**且两者不能在同一个过程块中出现**
+
+以下为示例
+
+```verilog
+reg             [15:0]  reg_1;  //16位无符号
+reg             [15:0]  reg_2;
+reg signed      [15:0]  reg_3;  //16位有符号
+reg signed      [15:0]  reg_arr [15:0]; //16*16寄存器阵列
+```
+
+```verilog
+reg_1 <= reg_1 + 1; //并行赋值，若reg_1初始值为0，那么最后reg_1和reg_2都是1
+reg_2 <= reg_1 + 1;
+``` 
+
+```verilog
+reg_1 = reg_1 + 1;  //顺序赋值，reg_1为1，reg_2为2
+reg_2 = reg_1 + 1;
+```
+
+
+### 3.3.2 网络型变量声明与赋值
+
+网络型变量不持有数据，仅仅描述数据的传输。
+
+网络型变量常用的有5种类型
+
+| 名称 | 位宽 | 符号 | 描述 |
+| :-: | :-: | :-: | :-: |
+| wire/tri | 1 | 无 | 线连接 |
+| wor/trior | 1 | 无 | 线或 |
+| wand/triand | 1 | 无 | 线与 |
+| tri1 | 1 | 无 | 带上拉的线 |
+| tri0 | 1 | 无 | 带下拉的线 |
+| supply1 | 1 | 无 | 直连高电平 |
+| supply0 | 1 | 无 | 直连低电平 |
+
+**使用默认网络型变量可以不加声明直接使用**。网络型变量可以在`assign`语句中赋值，wire同样可以声明符号
+
+以下为示例
+
+```verilog
+wire            [15:0]  wire_1;         //16位无符号
+wire            [7:0]   wordl, wordh;
+
+/*  也可以在声明变量时赋值
+wire            [7:0] wordl = wire_1 [7:0];
+wire            [7:0] wordh = wire_1 [15:8];
+*/
+
+assign  wordl = wire_1[7:0];
+assign  wordh = wire_2[15:8];
+```
+
+wire型变量有无符号的转换可以使用`$signed()`和`$unsigned()`更改，这两个属于**系统任务**
+
+```verilog
+wire    signed  [7:0] wire_s;
+wire            [7:0] wire_u;
+
+assign wire_u = $unsigned(wire_s);
+```
+
+> 由于网络变量可以不加声明直接使用，**所以在实际使用中容易出现引用了不存在的变量名却无法检查出错误的问题**。所以在RTL设计时最好指定`default_nettype`为`none`，而不是`wire`
+
+```verilog
+`default_nettype none //verilog中使用`作为预处理命令
+```
+
+
+### 3.4 运算符
+
+**算术运算符**
+
+| 符号 | 描述 | 优先级 |
+| :-: | :-: | :-: |
+| + | 加法 | 3 |
+| - | 减法 | 3 |
+| * | 乘法 | 2 |
+| / | 除法 | 2 |
+| % | 求余 | 2 |
+
+**位运算符**
+
+| 符号 | 描述 | 优先级 |
+| :-: | :-: | :-: |
+| ~ | 非 | 1 |
+| & | 与 | 7 |
+| \| | 或 | 8 |
+| ^ | 异或 | 7 |
+| ~^ | 异或非 | 7 |
+| << | 逻辑左移 | 4 |
+| >> | 逻辑右移 | 4 |
+
+**缩减运算符**
+
+| 符号 | 描述 | 优先级 |
+| :-: | :-: | :-: |
+| & | 与 | 1 |
+| ~& | 与非 | 1 |
+| \| | 或 | 1 |
+| ~\| | 或非 | 1 |
+| ^ | 异或 | 1 |
+| ~^ | 异或非 | 1 |
+
+> 缩减运算符一般用于对多位量的每一个bit进行计算，并输出到一个单bit量中
+>
+> 示例如下
+
+```verilog
+wire    [7:0]   byte_1;
+wire    bit_1;
+
+assign bit_1 = |byte_1; //相当于byte_1[7] | byte_1[6] | ... | byte_1[0]
+```
+
+**比较运算符**
+
+| 符号 | 描述 | 优先级 |
+| :-: | :-: | :-: |
+| == | 相等 | 6 |
+| != | 不等 | 6 |
+| === | 相等，包括xz | 6 |
+| !== | 不等，包括xz | 6 |
+| > | 大于 | 5 |
+| < | 小于 | 5 |
+| >= | 大于等于 | 5 |
+| <= | 小于等于 | 5 |
+
+**逻辑运算符**
+
+| 符号 | 描述 | 优先级 |
+| :-: | :-: | :-: |
+| ! | 逻辑非 | 1 |
+| \|\| | 逻辑或 | 9 |
+| && | 逻辑与 | 10 |
+
+**其他运算符**
+
+| 符号 | 描述 | 优先级 |
+| :-: | :-: | :-: |
+| ? : | 条件运算 | 11 |
+| {} | 拼接 | N/A |
+
+> 拼接运算符用于将多个变量合成一个变量
+>
+> 示例如下
+
+```verilog
+wire    [7:0]   byte_0, byte_1, byte_2, byte_3;
+wire    [31:0]  word_1 = {byte_0, byte_1, byte_2, byte_3};  //可以合并不同变量
+wire    [15:0]  word_2 = {2{byte_0}};   //也可以将变量重复n遍
+```
+
+
+### 3.5 条件
+
+条件可以在`initial`或`always`中使用
+
+### 3.5.1 if
+
+示例
+
+```verilog
+if ( a > b ) begin
+    a = a + 1;
+end else if ( a == b ) begin
+    b = b + 1;
+end else begin
+    a = a + b;
+end
+```
+
+
+### 3.5.2 case
+
+示例
+
+```verilog
+case (byte_1[7:0])
+    8'h00   : begin
+        a = a + 1;
+    end
+    8'he4, 8'hf6    : begin
+        a = a + 2;
+    end
+    default : begin
+        a = a + 3;
+    end
+endcase
+```
+
+
+### 3.6 循环
+
+循环同样可以在`initial`或`always`中使用
+
+### 3.6.1 for
+
+示例
+
+```verilog
+for (i = 0; i < 10; i = i + 1) begin
+    a = a - 1;
+end
+```
+
+
+### 3.6.2 while
+
+示例
+
+```verilog
+while (i < 10) begin
+    i = i + 1;
+end
+```
+
+
+### 3.7 always过程块
+
+always过程块是Verilog中用于描述流程最基本的组件
+
+示例1
+
+```verilog
+always @(*) begin
+    a = ~a;
+end
+
+always @(posedge clk_1 or negedge clk_2) begin
+    b = b + 1;
+end
+```
+
+> `always`语句中，`@()`之内**填写触发事件**。触发事件有常用的有两种类型，一种是**posedge**，一种是**negedge**，也可以使用*表示在信号发生任何变化时都执行语句，可以使用`or`分隔多个触发事件
+
+示例2
+
+```verilog
+always #10 begin
+    a = a + 1;
+end
+
+always #(STEP / 4) begin
+    b = b ^ a;
+end
+```
+
+> `always`语句也可以用于在Testbench中定时运行指令，使用`#`指定运行的时间间隔，单位为电路基本始终
+
+**默认行为与无关项**
+
+在Verilog中，使用`always`的语句如果缺少某些输入状态的行为描述，可能会导致锁存器的引入，如下
+
+```verilog
+module mod_1 (
+    input   wire    [3:0]   in;
+    output  reg     [1:0]   out; 
+);
+
+    always  @(*)    begin
+        case    (in)
+            4'h0 : out = 2'b10;
+            4'h1 : out = 2'b11;
+        endcase
+    end
+
+endmodule
+```
+
+> 由于缺少一些输入状态的行为描述，所以在输入为其他状态时输出应该不变，此时就会引入异步时序电路，这不是想要的结果
+> 
+> 解决的方法就是补全说明或使用`default`设置默认值，如果是无关项可以设为x
+
+```verilog
+module mod_1 (
+    input   wire    [3:0]   in;
+    output  reg     [1:0]   out; 
+);
+
+    always  @(*)    begin
+        case    (in)
+            4'h0 : out = 2'b10;
+            4'h1 : out = 2'b11;
+            default : out = 2'b00;
+            // 如果是无关项，可以设为 default : out = 2'bxx;
+        endcase
+    end
+
+endmodule
+```
+
+示例3
+
+使用Verilog描述一个D触发器如下
+
+```verilog
+module dff (
+    input   wire    d_in;
+    input   wire    reset_;
+    input   wire    clk;
+    output  reg     d_out;
+);
+
+    always @(posedge clk or negedge reset_) begin
+        if (reset_ == 1'b0) begin   //异步复位
+            d_out <= 1'b0;
+        end else begin
+            d_out <= d_in;
+        end
+    end
+
+endmodule
+```
+
+
+### 3.8 Testbench构造
+
+> 一般Testbench有8个部分构成
+> 1. 定义Timescale
+> 2. 引用头文件
+> 3. 声明测试模块
+> 4. 定义内部信号
+> 5. 生成时钟
+> 6. 实例化要测试的模块
+> 7. 编写测试用例
+> 8. 输出波形
+
+### 3.8.1 Timescale定义
+
+使用`timescale`宏设定仿真的时间单位和精度
+
+```verilog
+`timescale 1us/1ns
+```
+
+> 以上设定仿真时间单位为1us，时间精度为1ns。**单位时间必须大于等于时间精度**
+
+
+### 3.8.2 initial语句和延迟语句
+
+`initial`只在仿真开始时会执行一次
+
+示例
+
+```verilog
+initial begin
+    #0 begin        //时刻0执行
+        a = a + 1;
+    end
+
+    #10 begin       //时刻10执行
+        b = b + 1;
+    end
+
+    #10 begin       //时刻20执行
+        c = c + 1;
+    end
+end
+```
+
+> 使用`#`指定延迟时间，这种语句称为**延迟语句**，一般只用在Testbench中
+
+示例
+
+```verilog
+always  @(*)    begin
+    a = #10 b;  //10个时钟周期后赋值
+end
+
+initial begin
+    #0  a = 1'b1;   //0刻a为1
+    #10 a = 1'b0;   //10刻a为0
+end
+```
+
+> 在实际仿真中，仿真器默认的延迟为0。**这是理想状态下的输出延迟，但是实际中输出总是有延迟的，所以要使用延迟语句加入延迟，以得到真实的仿真结果**
+
+示例
+
+```verilog
+module dff (
+    input   wire    d_in;
+    input   wire    reset_;
+    input   wire    clk;
+    output  reg     d_out;
+);
+
+    always @(posedge clk or negedge reset_) begin
+        if (reset_ == 1'b0) begin   //异步复位
+            d_out <= #1 1'b0;       //延迟一个时间单位
+        end else begin
+            d_out <= #1 d_in;       //延迟一个时间单位
+        end
+    end
+
+endmodule
+```
+
+### 3.8.3 时钟生成
+
+示例
+
+```verilog
+always #10 begin
+    clk <= ~clk;
+end
+
+initial begin
+    #0 begin        //时钟初始化
+        clk <= 1'b0;
+    end
+    //后接以后的仿真语句
+end
+```
+
+
+### 3.8.4 仿真常用系统任务
+
+**输出字符串**
+
+```verilog
+$display("string %d", i);     //带回车符，可以使用类似c语言的格式化输出
+$write("string %d", i);       //不带回车符
+```
+
+**返回目前仿真时间**
+
+```verilog
+$time;
+```
+
+**结束仿真**
+
+```verilog
+$finish;
+```
+
+**载入存储映像**
+
+```verilog
+$readmemh("filename.dat", mem); //将filename读入到mem中，mem可以是一个reg阵列。数据文件使用十六进制文本记录
+```
+
+**指定输出**
+
+```verilog
+initial begin
+    $dumpfile("test1.vcd"); //指定输出文件名
+    $dumpvars(0, test);     //从时刻0开始，模块名test的输出波形
+end
+```
+
+
+### 3.9 常用的算术硬件以及计算方法
 
 算术电路是CPU的核心部分，常见的一般有加法器，乘法器，除法器，以及针对定点浮点运算的算术逻辑电路
 
