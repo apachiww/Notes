@@ -78,20 +78,24 @@
 
     Octave使用，和[线性代数](201002a_maths.md#1-线性代数)同步更新 [210313a_octave.md](210313a_octave.md)
 
++ 2021.03.16添加
+
+    计算机图形学和vulkan，[210316a_computer-graphics.md](210313a_computer-graphics.md)
+
 ## 进度状态
 
 | No. | Content | Status |
 | :-: | :-: | :-: |
 | 200908a | 计算机存储：SDRAM                   | Finished      |
 | 200908b | LFS并使用QEMU运行Linux（ARMv7）     | Finished      |
-| 200920a | ARM汇编以及内存架构（ARMv7 Cortex-A）       | In process    |
+| 200920a | ARM汇编以及内存架构（ARMv7 Cortex-A）       | Hang up       |
 | 200920b | 信号与系统，DSP数字信号处理         | Hang up       |
 | 200920c | 数字逻辑以及Verilog                 | In process    |
 | 201002a | 高数                                | In process    |
-| 201020a | STM32开发以及ARM汇编（ARMv7 Cortex-M）      | In process    |
+| 201020a | STM32开发以及ARM汇编（ARMv7 Cortex-M）      | Hang up       |
 | 201219a | Linux命令行以及Shell脚本            | Update ondemand |
 | 201219b | C语言Makefile以及交叉编译           | In process    |
-| 201220a | 基于Eclipse的通用MCU开发环境        | In process    |
+| 201220a | 基于Eclipse的通用MCU开发环境        | New           |
 | 201220b | 密码爆破                            | New           |
 | 201220c | 使用Metasploit的渗透测试，社工      | New           |
 | 201225a | 固态硬盘工作原理与优化方法          | Finished      |
@@ -99,11 +103,12 @@
 | 201230a | 加密算法，密码学                    | New           |
 | 210108a | AutoCAD基本操作                     | Finished      |
 | 210110a | 计算机体系结构以及处理器的设计      | Hang up       |
-| 210111a | Qt应用开发                          | New           |
+| 210111a | Qt应用开发                          | In process    |
 | 210115a | FreeBSD安装并作为桌面系统使用       | Hang up       |
 | 210130a | 各种类Unix的管理维护以及安全优化    | Update ondemand |
 | 210216a | Rust语言入门                        | New           |
 | 210313a | Octave入门                                | In process    |
+| 210316a | 计算机图形学和Vulkan                 | In process    |
 
 ### 参考书收藏列表
 
