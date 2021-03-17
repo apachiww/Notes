@@ -82,6 +82,10 @@
 
     计算机图形学和vulkan，[210316a_computer-graphics.md](210313a_computer-graphics.md)
 
++ 2021.03.17添加
+
+    并行计算，[210317a_parallel.md](210317a_parallel.md)
+
 ## 进度状态
 
 | No. | Content | Status |
@@ -109,6 +113,7 @@
 | 210216a | Rust语言入门                        | New           |
 | 210313a | Octave入门                                | In process    |
 | 210316a | 计算机图形学和Vulkan                 | In process    |
+| 210317a | 并行计算                            | New           |
 
 ### 参考书收藏列表
 
