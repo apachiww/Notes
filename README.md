@@ -86,6 +86,10 @@
 
     并行计算，[210317a_parallel.md](210317a_parallel.md)
 
++ 2021.03.20添加
+
+    计算机视觉，三维重构 [210320a_3drebuild.md](210320a_3drebuild.md)
+
 ## 进度状态
 
 | No. | Content | Status |
@@ -114,6 +118,7 @@
 | 210313a | Octave入门                                | In process    |
 | 210316a | 计算机图形学和Vulkan                 | In process    |
 | 210317a | 并行计算                            | New           |
+| 210320a | 平面图形的3D重构                              | In process    |
 
 ### 参考书收藏列表
 
