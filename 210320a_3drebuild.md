@@ -18,6 +18,8 @@
 
 **畸变：分为枕形畸变和桶形畸变**
 
+这些形变其实都是线性的，就是将原有坐标乘以一个常数
+
 **枕型畸变：成像点远离中心**
 
 **桶形畸变：成像点靠近中心**
@@ -203,6 +205,8 @@ $$
 
 世界坐标系到摄像机坐标系的转变，$R$为旋转部分，$T$为平移部分
 
+设摄像机沿世界坐标系$z$轴负方向平移$z_0$距离，那么应该在$T$加上相应的距离（平移的逆过程，**摄像机所有移动步骤的逆**）
+
 $$
 P=\begin{bmatrix}
 R & T \\
@@ -212,3 +216,104 @@ $$
 
 其中$P_w=\begin{bmatrix}x_w \\ y_w \\ z_w \\ 1 \end{bmatrix}$为世界坐标
 
+可以和映射矩阵结合，得到世界坐标系到胶片平面的映射 **（重点公式）**
+
+$$
+P'=
+K\begin{bmatrix}
+I & 0
+\end{bmatrix}
+\begin{bmatrix}
+R & T \\
+0 & 1 \\
+\end{bmatrix}P_w=
+K\begin{bmatrix}
+R & T
+\end{bmatrix}P_w
+$$
+
+其中，$K$为摄像机的**内参数**矩阵，$R$和$T$为**外参数**（即摄像机相对世界坐标系的位移的逆）。这两个矩阵可以合并，设为$M$，那么$P'=MP_w$
+
+**自由度**：自由度就是看一个矩阵中可以影响一个矩阵的因素数量。$K$有5个自由度，$R$有3个自由度（分别绕$xyz$轴旋转），$T$有3个自由度（分别沿$xyz$轴移动），所以$M$一共有11个自由度
+
+设$M=\begin{bmatrix} m_1 \\ m_2 \\ m_3 \end{bmatrix}$那么最终$P'$的欧氏坐标形式为$(\dfrac{m_1P_w}{m_3P_w},\dfrac{m_2P_w}{m_3P_w})$
+
+
+### 1.2.5 Faugeras定理
+
+**Faugeras定理**：
+
+1. 设$M=K\begin{bmatrix} R & T \end{bmatrix}=\begin{bmatrix} KR & KT \end{bmatrix}=\begin{bmatrix} A & b \end{bmatrix}$，$M$是一个透视投影矩阵的充要条件是$\det (A) \neq 0$
+
+2. 设$A=\begin{bmatrix} a_1 \\ a_2 \\ a_3 \end{bmatrix}$，那么$M$是零倾斜($\theta=0$)透视投影矩阵的充要条件是$(a_1 \times a_3)\cdot(a_2 \times a_3)=0$
+
+3. $M$宽高比为1（使用方形像素）的充要条件为
+
+$$
+\begin{cases}
+(a_1 \times a_3)\cdot(a_2 \times a_3) = 0 \\
+(a_1 \times a_3)\cdot(a_1 \times a_3) = (a_2 \times a_3)\cdot(a_2 \times a_3)
+\end{cases}
+$$
+
+
+### 1.3 弱透视和正交投影
+
+弱透视，$m_3P_w=1$，$P'=(m_1P_w,m_2P_w)$，常用于图像识别
+
+正交投影（无透视），$x'=x,y'=y$，常用于工业设计CAD
+
+
+### 1.4 摄像机标定
+
+**摄像机标定就是对于摄像机内外参数的求解（投影矩阵M的求解）**
+
+本章开始使用$p$替代$P'$，使用$P$替代$P_w$
+
+$$
+p=K\begin{bmatrix} R & T \end{bmatrix}P
+$$
+
+$p_i$的欧氏坐标为
+
+$$
+p_i=\begin{bmatrix} u_i \\ v_i \end{bmatrix}=\begin{bmatrix} \dfrac{m_1P_i}{m_3P_i} \\ \dfrac{m_2P_i}{m_3P_i} \end{bmatrix}
+$$
+
+关键就在于$m_1,m_2,m_3$（都是1行4列的矩阵）的求解，**一共11个未知量，分别是世界坐标相对摄像机坐标的3个平移量、3个旋转量，以及5个摄像机参数，分别为$\alpha,\beta,\theta,c_x,c_y$**
+
+而一对$p_i$和$P_i$可以得到两个方程，所以至少需要$6 \times 2 = 12 \gt 11$共6对点数据（先求出$m_1,m_2,m_3$的12个数据），而实际**一般取多于6对点**
+
+可以列出方程组如下
+
+$$
+\begin{cases}
+-u_1(m_3P_1)+m_1P_1=0 \\
+-v_1(m_3P_1)+m_2P_1=0 \\
+\quad \vdots \\
+-u_n(m_3P_n)+m_1P_n=0 \\
+-v_n(m_3P_n)+m_2P_n=0 \\
+\end{cases}
+$$
+
+可以$m_1,m_2,m_3$转置合并为一个12行1列的矩阵$m=\begin{bmatrix} m_1^T \\ m_2^T \\ m_3^T \end{bmatrix}$
+
+而$P$如下，最后可以求解$Pm=0$
+
+$$
+\begin{bmatrix}
+P_1^T & 0 & -u_1P_1^T \\
+0 & P_1^T & -v_1P_1^T \\
+\quad \vdots \\
+P_n^T & 0 & -u_nP_n^T \\
+0 & P_n^T & -v_nP_n^T \\
+\end{bmatrix}
+$$
+
+但是由于方程行数一定大于列数，所以方程只有零解。解决这个问题，需要使用到**奇异值分解**
+
+> 讲到奇异值分解（SVD）之前，先讲一下正交矩阵和特征值分解（EVD）。正交矩阵其实就是旋转矩阵，区别是$\theta$指代坐标系的旋转角度而不是点的旋转角度
+>
+> $$ U = \begin{bmatrix} \cos(\theta) & \sin(\theta) \\ -\sin(\theta) & \cos(\theta) \end{bmatrix}$$
+>
+> 
