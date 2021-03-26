@@ -224,4 +224,192 @@ rref(C);
 
 ## 2 绘图
 
-### 2.1 
+### 2.1 二维坐标图
+
+### 2.1.1 基本绘图
+
+设X，Y为两个长度相同的向量。可以使用`plot`直接绘制二维坐标图
+
+```matlab
+plot(X,Y);
+```
+
+添加标题/变量单位/栅格
+
+```matlab
+plot(X,Y);
+title('Test 1');
+xlabel('Time, s'), ylabel('Distance, m');
+grid;
+```
+
+
+### 2.1.2 创建多个图形窗口
+
+创建Figure 2图形窗口
+
+```matlab
+figure(2)
+```
+
+
+### 2.1.3 绘制多条曲线
+
+可以使用`hold on`保持之前的图形，防止其被覆盖
+
+```matlab
+plot(X, Y1);
+hold on;
+plot(X, Y2);
+```
+
+而`hold off`可以使得之前绘制的图形被覆盖
+
+也可以一次绘制两条曲线
+
+```matlab
+plot(X, Y1, X, Y2);
+```
+
+也可以将两个向量合并为一个矩阵
+
+```matlab
+Y = [Y1; Y2];
+plot[X, Y];
+```
+
+
+### 2.1.4 绘图风格
+
+可以在plot中指定绘图曲线样式，点形状，以及颜色
+
+示例
+
+```matlab
+plot(X, Y, 'bx-'); % 绘制蓝色实线，点为x形
+```
+
+可用样式
+
+```
+
+           b     blue          .     point              -     solid
+           g     green         o     circle             :     dotted
+           r     red           x     x-mark             -.    dashdot 
+           c     cyan          +     plus               --    dashed   
+           m     magenta       *     star             (none)  no line
+           y     yellow        s     square
+           k     black         d     diamond
+           w     white         v     triangle (down)
+                               ^     triangle (up)
+                               <     triangle (left)
+                               >     triangle (right)
+                               p     pentagram
+                               h     hexagram
+```
+
+
+### 2.1.5 固定坐标显示
+
+可以使用`axis`固定或取消固定坐标的缩放
+
+```matlab
+axis
+```
+
+
+### 2.1.6 子图
+
+使用`subplot`命令将一个窗口分为多个子图区域
+
+```matlab
+subplot(2, 2, 1); % 在2*2窗口的第1个小窗口绘制图形
+```
+
+
+### 2.1.7 极坐标图
+
+使用`polar`绘制极坐标图
+
+```matlab
+Y = sin(X);
+polar(X, Y);
+```
+
+
+### 2.1.8 对数图
+
+使用`semilogx` `semilogy` `loglog`创建对数坐标
+
+```matlab
+semilogx(X, Y);
+semilogy(X, Y);
+loglog(X, Y);
+```
+
+
+### 2.1.9 双y轴
+
+使用`plotyy`
+
+```matlab
+plotyy(X, Y1, X, Y2);
+```
+
+
+### 2.2 三维坐标图
+
+### 2.2.1 三维线图
+
+使用`plot3`绘制三维线图
+
+```matlab
+plot3(X, Y, Z);
+```
+
+
+### 2.2.2 曲面图
+
+使用`mesh`或`surf`绘制三维曲面
+
+可以只使用一个二维矩阵z，矩阵中的元素的位置代表图形在mesh图中的x，y坐标，元素的值代表z坐标
+
+```matlab
+mesh(z);
+xlabel('x-axis');
+ylabel('y-axis');
+zlabel('z-axis');
+```
+
+也可以指定x，y的值，但是x，y的长度一定要和z对应
+
+```matlab
+x = linspace(1, 50, 10);
+y = linspace(500, 1000, 3);
+mesh(x, y, z);
+```
+
+而`surf`创建的是着色的三维曲面图，颜色由z决定
+
+`surf`的样式可以改变，如下
+
+```matlab
+shading interp; % 去除网格，模糊显示
+shading flat; % 单去除网格
+```
+
+使用`colormap`控制曲面图颜色
+
+```matlab
+colormap(gray); % 灰色
+```
+
+
+### 2.2.3 等高图
+
+等高图使用`contour`绘制
+
+```matlab
+contour(X, Y, Z);
+```
+
