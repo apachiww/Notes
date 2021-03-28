@@ -118,7 +118,7 @@
 | 210313a | Octave入门                                | In process    |
 | 210316a | 计算机图形学和Vulkan                 | In process    |
 | 210317a | 并行计算                            | New           |
-| 210320a | 平面图形的3D重构                              | In process    |
+| 210320a | 计算机视觉，平面图形的3D重构         | In process    |
 
 ### 参考书收藏列表
 
@@ -133,3 +133,7 @@
 9. 《Lua程序设计（第4版）》，Roberto lerusalimschy著，电子工业出版社
 10. 《Ruby基础教程（第2版）》，高桥征义，后藤裕藏著，人民邮电出版社
 11. 《ARM Cortex-M4嵌入式开发精解：基于STM32F4》，廖义奎著，北京航空航天大学出版社
+12. 《计算机图形学（第2版）》，Peter Shirley著，人民邮电出版社
+13. 《Vulkan应用开发指南》，Graham Sellers，John Kessenich著，人民邮电出版社
+14. 《Vulkan学习指南》，Parminder Singh著，机械工业出版社
+15. 《三维计算机视觉技术和算法导论》，Boguslaw Cyganek，J. Paul Siebert著，国防工业出版社

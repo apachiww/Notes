@@ -76,9 +76,9 @@ $$
 
 **畸变：分为枕形畸变和桶形畸变**
 
-这些形变其实都是线性的，就是将原有坐标乘以一个常数
+这些形变其实都是相对中心坐标将原有坐标乘以一个常数
 
-**枕型畸变：成像点远离中心**
+**枕形畸变：成像点远离中心**
 
 **桶形畸变：成像点靠近中心**
 
@@ -299,15 +299,14 @@ $$
 
 ### 1.2.5 Faugeras定理
 
-**Faugeras定理**：
+原理会在之后提到，这里先引入结论
 
-1. 设$M=K\begin{bmatrix} R & T \end{bmatrix}=\begin{bmatrix} KR & KT \end{bmatrix}=\begin{bmatrix} A & b \end{bmatrix}$，$M$是一个透视投影矩阵的充要条件是$\det (A) \neq 0$
-
-2. 设$A=\begin{bmatrix} a_1 \\ a_2 \\ a_3 \end{bmatrix}$，那么$M$是零倾斜($\theta=0$)透视投影矩阵的充要条件是$(a_1 \times a_3)\cdot(a_2 \times a_3)=0$
-
-3. $M$宽高比为1（使用方形像素）的充要条件为
-
-$$
+> 1. 设$M=K\begin{bmatrix} R & T \end{bmatrix}=\begin{bmatrix} KR & KT \end{bmatrix}=\begin{bmatrix} A & b \end{bmatrix}$，$M$是一个透视投影矩阵的充要条件是$\det (A) \neq 0$
+> 
+> 2. 设$A=\begin{bmatrix} a_1 \\ a_2 \\ a_3 \end{bmatrix}$，那么$M$是零倾斜($\theta=90\degree$)透视投影矩阵的充要条件是$(a_1 \times a_3)\cdot(a_2 \times a_3)=0$
+>
+> 3. $M$宽高比为1（使用方形像素）的充要条件为
+> $$
 \begin{cases}
 (a_1 \times a_3)\cdot(a_2 \times a_3) = 0 \\
 (a_1 \times a_3)\cdot(a_1 \times a_3) = (a_2 \times a_3)\cdot(a_2 \times a_3)
@@ -317,7 +316,7 @@ $$
 
 ### 1.3 弱透视和正交投影
 
-弱透视，$m_3P_w=1$，$P'=(m_1P_w,m_2P_w)$，常用于图像识别
+弱透视（将距离相差不大的点看成在同一个平面），$m_3P_w=1$，$P'=(m_1P_w,m_2P_w)$，常用于图像识别
 
 正交投影（无透视），$x'=x,y'=y$，常用于工业设计CAD
 
@@ -328,39 +327,53 @@ $$
 
 特征值的意义就是，计算$A\vec{x}$时可以将$\vec{x}$分解为向量组$P$的线性组合，之后可以将矩阵$A$替换为特征值计算
 
-而在这里，如果将向量组$P$的所有特征向量全部正交标准化（$|| p_i ||=1$且都正交）转换为长度为1的单位向量，那么此时$P$成为**标准正交矩阵**（幺正矩阵/酉矩阵，Unitary Matrix），$P^T=P^{-1}$，可以得到
+而在这里，如果A为**对称矩阵**，那么此时$P$成为**正交矩阵**，可以进行标准化转化为**标准正交矩阵**（中文音译幺正矩阵/酉矩阵，Unitary Matrix，所有向量模为1且正交），此时$P^T=P^{-1}$，可以得到
 
 $$
 A=P\Lambda P^T
 $$
 
-正交化可以使用**施密特正交化法**，而标准化原理比较简单，不再赘述
-
-**施密特正交化公式**
-
-$$
+> ~~无关补充~~：向量组正交化可以使用**施密特正交化法**
+> **施密特正交化公式**
+> $$
 \beta_1 = \alpha_1 \\
 \beta_2 = \alpha_2 - \dfrac{[\beta_1,\alpha_2]}{[\beta_1,\beta_1]} \beta_1 \\
 \quad \vdots \\
 \beta_n = \alpha_n - \dfrac{[\beta_1,\alpha_n]}{[\beta_1,\beta_1]} \beta_1 - \dfrac{[\beta_2,\alpha_n]}{[\beta_2,\beta_2]} \beta_2 - \cdots - \dfrac{[\beta_{n-1},\alpha_n]}{[\beta_{n-1},\beta_{n-1}]} \beta_{n-1} \\
 $$
 
-而**奇异值分解（SVD）** ，可以理解为和特征值分解类似，区别是$A$和$\Lambda$不再是方阵，形式如下
+而**奇异值分解（SVD）** ，可以理解为和**对称矩阵的特征值分解**类似，**区别是$A$和$\Lambda$不再是对称阵（主要用于非方阵的场合）。SVD可以用于最小二乘问题，求解一个齐次超定方程组的最优解**，形式如下
 
 $$
 A=U\Sigma V^T
 $$
 
-其中，方阵$U$的阶数和$A$的行数相同，$V$的阶数和$A$的列数相同，并且$U$和$V$**都是标准正交矩阵**
+可以这样想：**无论$A^TA$还是$AA^T$都是对称矩阵（$(AA^T)^T=AA^T$，反之同理），所以可以使用上面特征值分解中的技巧**。这里，方阵$U$的阶数和$A$的行数相同，$V$的阶数和$A$的列数相同，并且直接得到的$U$和$V$**都是正交矩阵**。$U$可以通过求$AA^T$的特征值和特征向量得到，由特征向量组合而成；而$V$可以通过求$A^TA$的特征值和特征向量得到
 
-其中，$U$可以通过求$AA^T$的特征值和特征向量得到，由特征向量组合而成；而$V$可以通过求$A^TA$的特征值和特征向量得到。
+接下来可以这样看：
 
-SVD基本步骤：
+$$
+AA^T = U \Sigma V^T (U \Sigma V^T)^T
+= U \Sigma V^T V \Sigma^T U^T
+= U \Sigma \Sigma^T U^T
+= U \Sigma_U U^T \\
+A^TA = (U \Sigma V^T)^T U \Sigma V^T
+= V \Sigma^T U^T U \Sigma V^T
+= V \Sigma^T \Sigma V^T
+= V \Sigma_V V^T
+$$
 
-> 1. 分别求出$AA^T$和$A^TA$的特征值和特征向量，并将特征向量标准正交化，分别作为$U$和$V$
-> 2. 由于$A = U \Sigma V^T \Rightarrow AV = U\Sigma \Rightarrow Av_i = \sigma_i u_i \Rightarrow \sigma_i = \dfrac{Av_i}{u_i}$，依此求出$\sigma_i$
-> 3. 
-> 4. 
+> 这里再次引用一条结论（证明过程省略）：**$A^TA$和$AA^T$拥有相同的非零特征值，且这些特征值都不为负数，$\Sigma_U$和$\Sigma_V$的秩相同**。
+
+由以上可以明显看出，其实等式就是$A=P\Lambda P^T$的形式
+
+综上，SVD基本步骤：
+
+> 1. 分别求出$AA^T$和$A^TA$的特征值和特征向量，并将特征向量标准化（模为1），分别作为$U$和$V$
+> 2. 方法1（较为繁琐）：由于$A = U \Sigma V^T \Rightarrow AV = U\Sigma \Rightarrow Av_i = \sigma_i u_i \Rightarrow \sigma_i = \dfrac{Av_i}{u_i}$
+> 方法2（简明高效）：因为$\Sigma_U$和$\Sigma_V$拥有相同的$\lambda_1,\lambda_2,\cdots,\lambda_k$，所以$\sigma_1=\sqrt{\lambda_1},\sigma_2=\sqrt{\lambda_2},\cdots,\sigma_k=\sqrt{\lambda_k}$
+
+**SVD可以用于图像压缩（舍去较小的奇异值和奇异向量），但是效果较差，容易损失细节。常用的图片压缩算法一般基于DCT或DWT**
 
 
 ### 1.5 摄像机标定
@@ -376,7 +389,7 @@ $$
 $p_i$的欧氏坐标为
 
 $$
-p_i=\begin{bmatrix} u_i \\ v_i \end{bmatrix}=\begin{bmatrix} \dfrac{m_1P_i}{m_3P_i} \\ \dfrac{m_2P_i}{m_3P_i} \end{bmatrix}
+p_i = \begin{bmatrix} u_i \\ v_i \end{bmatrix} = \begin{bmatrix} \dfrac{m_1P_i}{m_3P_i} \\ \dfrac{m_2P_i}{m_3P_i} \end{bmatrix}
 $$
 
 关键就在于$m_1,m_2,m_3$（都是1行4列的矩阵）的求解，**一共11个未知量，分别是世界坐标相对摄像机坐标的3个平移量、3个旋转量，以及5个摄像机参数，分别为$\alpha,\beta,\theta,c_x,c_y$**
@@ -400,6 +413,7 @@ $$
 而$P$如下，最后可以求解$Pm=0$
 
 $$
+P=
 \begin{bmatrix}
 P_1^T & 0 & -u_1P_1^T \\
 0 & P_1^T & -v_1P_1^T \\
@@ -409,5 +423,140 @@ P_n^T & 0 & -u_nP_n^T \\
 \end{bmatrix}
 $$
 
-但是由于方程行数一定大于列数，所以方程只有零解。解决这个问题，需要使用到**奇异值分解**
+但是由于方程行数一定大于列数，所以方程只有零解。**这里求解超定方程需要用到奇异值分解和最小二乘，只能求得近似的最优解（使得方程组左侧最接近于0）**
 
+这里限制$|| m || = 1$，设$P=UDV^T$进行奇异值分解，**那么$m$为最小奇异值的右奇异向量**，由此求出$m1,m2,m3$，$M=\begin{bmatrix} m1 \\ m2 \\ m3 \end{bmatrix}$
+
+**接下来可以根据$M$提取摄像机内参数$K$和外参数$\begin{bmatrix} R & T \end{bmatrix}$**
+
+由于$K = \begin{bmatrix} \alpha & -\alpha\cot\theta & c_x \\ 0 & \dfrac{\beta}{\sin\theta} & c_y \\ 0 & 0 & 1 \\ \end{bmatrix}$，$R = \begin{bmatrix} r_1^T \\ r_2^T \\ r_3^T \end{bmatrix}$，$T = \begin{bmatrix} \Delta x \\ \Delta y \\ \Delta z \end{bmatrix}$
+
+如下，设$A = \begin{bmatrix} a_1^T \\ a_2^T \\ a_3^T \end{bmatrix}, b = \begin{bmatrix} b_1 \\ b_2 \\ b_3 \end{bmatrix}$可以算已知，实际中$\begin{bmatrix} A & b \end{bmatrix}$一般需要加上一个常数系数$\rho$，那么
+
+$$
+M = K\begin{bmatrix} R & T \end{bmatrix} = \rho\begin{bmatrix} A & b \end{bmatrix} = \begin{bmatrix} \alpha r_1^T - \alpha \cot{\theta} r_2^T + c_x r_3^T & \alpha \Delta x - \alpha \cot{\theta} \Delta y + c_x \Delta z \\
+\dfrac{\beta}{\sin{\theta}} r_2^T + c_y r_3^T & \dfrac{\beta}{\sin{\theta}} \Delta y + c_y \Delta z \\
+r_3^T & \Delta z
+\end{bmatrix}
+$$
+
+**先从旋转矩阵入手，求解$c_x$和$c_y$**
+
+$$
+\rho A = \begin{bmatrix}
+\alpha r_1^T - \alpha \cot{\theta} r_2^T + c_x r_3^T \\
+\dfrac{\beta}{\sin{\theta}} r_2^T + c_y r_3^T \\
+r_3^T \\
+\end{bmatrix}
+$$
+
+由于$r_3^T$是一个旋转矩阵的一行，**所以为单位向量**，可以得到以下结论
+
+$$
+|| \rho a_3 || = || r_3^T || = 1 \Rightarrow \rho = \dfrac{\pm 1}{| a_3 |}
+$$
+
+将$\rho A$第一行和第三行点积，**由于$r_1^T,r_2^T,r_3^T$两两正交**，所以点积为0；**而两个单位向量$r_3^T$点积之后为1**，所以可以得到如下等式
+
+$$
+c_x = \rho^2(a_1\cdot a_3)
+$$
+
+同理
+
+$$
+c_y = \rho^2(a_2\cdot a_3)
+$$
+
+**接下来求解参数$\theta$**
+
+> 这里再引入一条~~显而易见的~~定理：如果$\vec x \vec y \vec z$为单位向量，两两正交且成右手系，那么$\vec x \times \vec y = \vec z$
+
+运用以上定理，可以对$\theta$的求解作以下分析：
+
+对$\rho A$行之间作叉积，可以得到
+
+$$
+\begin{cases}
+\rho^2 (a_1 \times a_3) = \alpha r_2 - \alpha \cot{\theta} r_1 \\
+\rho^2 (a_2 \times a_3) = \dfrac{\beta}{\sin{\theta}} r_1
+\end{cases}
+$$
+
+两边取模（推导过程较为复杂，略）
+
+$$
+\begin{cases}
+\rho^2 |a_1 \times a_3| = \dfrac{|\alpha|}{sin{\theta}} \\
+\rho^2 |a_2 \times a_3| = \dfrac{|\beta|}{sin{\theta}}
+\end{cases}
+$$
+
+综合以上推导，可以由下求出$\theta$
+
+$$
+\dfrac{(a_1 \times a_3)\cdot(a_2 \times a_3)}{|a_1 \times a_3|\cdot|a_2 \times a_3|} = \dfrac{\dfrac{-\alpha \beta \cos{\theta}}{\sin^2{\theta}}}{\dfrac{\alpha \beta}{\sin^2{\theta}}} = -\cos{\theta}
+$$
+
+如果这个式子为0，那么$\theta=90\degree$，这里就得到了之前[1.2.5章](210320a_3drebuild.md#125-Faugeras定理)讲过的Faugeras定理，好理解
+
+**既然已经求得$\theta$，那么最后内参数$\alpha$和$\beta$直接使用上式即可求得**
+
+**求解旋转外参数**
+
+$\vec r_1 \vec r_2 \vec r_3$都是正交单位向量
+
+所以
+
+$$
+\begin{cases}
+r_1 = \dfrac{(a_2 \times a_3)}{| a_2 \times a_3 |} \\
+r_2 = r_3 \times r_1 \\
+r_3 = \dfrac{\pm a_3}{| a_3 |} \\
+\end{cases}
+$$
+
+**最后算出平移外参数**
+
+$$
+\rho b = KT \Rightarrow T = K^{-1}\rho b
+$$
+
+
+### 1.6 径向畸变的处理
+
+径向畸变包括之前讲过的**桶形畸变**和**枕形畸变**
+
+桶形畸变将平面理想位置坐标乘以一个小于1的正数
+
+枕形畸变将平面理想位置坐标乘以一个大于1的正数
+
+具体转换如下，其中$\lambda = 1 \pm \sum_{p=1}^3 K_p d^{2p} $
+
+$$
+p = 
+\begin{bmatrix}
+\dfrac{1}{\lambda} & 0 & 0 \\
+0 & \dfrac{1}{\lambda} & 0 \\
+0 & 0 & 1
+\end{bmatrix}
+MP
+$$
+
+设$Q = \begin{bmatrix} q_1 \\ q_2 \\ q_3 \end{bmatrix} = \begin{bmatrix} \dfrac{1}{\lambda} & 0 & 0 \\ 0 & \dfrac{1}{\lambda} & 0 \\ 0 & 0 & 1 \end{bmatrix} M$，那么$p_i = QP_i = \begin{bmatrix} \dfrac{q_1P_i}{q_3P_i} \\ \dfrac{q_2P_i}{q_3P_i} \end{bmatrix}$，**但是这不是线性方程组**
+
+可以使用**列文伯格-马夸尔特（L-M）** 法求解最近似值，但是直接求解过程非常复杂
+
+可以先将$\dfrac{1}{\lambda}$分开算
+
+$$
+p_i = \begin{bmatrix} u_i \\ v_i \end{bmatrix} = \begin{bmatrix} \dfrac{q_1P_i}{q_3P_i} \\ \dfrac{q_2P_i}{q_3P_i} \end{bmatrix} 
+= \dfrac{1}{\lambda} \begin{bmatrix} \dfrac{m_1P_i}{m_3P_i} \\ \dfrac{m_2P_i}{m_3P_i} \end{bmatrix}
+\Rightarrow
+\dfrac{u_i}{v_i} = \dfrac{m_1P_i}{m_2P_i}
+$$
+
+先求出前两行$m_1,m_2$，再使用**L-M法**求解$m_3$和$\lambda$
+
+
+### 1.7 2D变换
