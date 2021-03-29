@@ -556,7 +556,212 @@ p_i = \begin{bmatrix} u_i \\ v_i \end{bmatrix} = \begin{bmatrix} \dfrac{q_1P_i}{
 \dfrac{u_i}{v_i} = \dfrac{m_1P_i}{m_2P_i}
 $$
 
-先求出前两行$m_1,m_2$，再使用**L-M法**求解$m_3$和$\lambda$
+先求出前两行$m_1,m_2$，再使用**L-M**求解$m_3$和$\lambda$
 
 
 ### 1.7 2D变换
+
+### 1.7.1 等距变换（欧氏变换）
+
+特性：描述平移和旋转，面积和形状不变，有个3自由度
+
+$$
+\begin{bmatrix} x' \\ y' \\ 1 \end{bmatrix} = \begin{bmatrix} R & T \\ 0 & 1 \end{bmatrix} \begin{bmatrix} x \\ y \\ 1 \end{bmatrix}
+$$
+
+
+### 1.7.2 相似变换
+
+在等距变换基础上加一个缩放$S$
+
+特性：形状不变，有4个自由度
+
+$$
+\begin{bmatrix} x' \\ y' \\ 1 \end{bmatrix} = \begin{bmatrix} SR & T \\ 0 & 1 \end{bmatrix} \begin{bmatrix} x \\ y \\ 1 \end{bmatrix}, S = \begin{bmatrix} s & 0 \\ 0 & s \end{bmatrix}
+$$
+
+
+### 1.7.3 仿射变换
+
+$A$没有特殊要求
+
+特性：平行线不变，有6个自由度
+
+$$
+\begin{bmatrix} x' \\ y' \\ 1 \end{bmatrix} = \begin{bmatrix} A & T \\ 0 & 1 \end{bmatrix} \begin{bmatrix} x \\ y \\ 1 \end{bmatrix}
+$$
+
+
+### 1.7.4 射影（透视）变换
+
+特性：共线性不变，有8个自由度，相对于坐标轴做透视变换
+
+$$
+\begin{bmatrix} x' \\ y' \\ 1 \end{bmatrix} = \begin{bmatrix} A & T \\ v & 1 \end{bmatrix} \begin{bmatrix} x \\ y \\ 1 \end{bmatrix}
+$$
+
+
+### 1.8 影消点和影消线
+
+### 1.8.1 平面直线以及透视坐标系中平行线的相交
+
+平面上的一条直线可以使用$ax+by+c=0$的形式表示，可以设$l = \begin{bmatrix} a \\ b \\ c \end{bmatrix}$，设直线上有一个点$x = \begin{bmatrix} x_1 \\ x_2 \end{bmatrix}$，那么$\begin{bmatrix} x_1 \\ x_2 \\ 1 \end{bmatrix}^T \begin{bmatrix} a \\ b \\ c \end{bmatrix} = 0$
+
+> 这里直接引入一条结论：平面两条直线的交点，就是这两条直线参数向量的叉乘，即$x = l \times l'$，原因如下
+>
+> 由于叉乘得到的结果向量一定垂直于原向量，所以$ (l \times l')\cdot l = 0 $
+>
+> 同理$ (l \times l')\cdot l' = 0 $
+> 
+> 而由于直线的定义，直线上两点的坐标代入正好是0，所以得证
+
+> 无穷远点：齐次坐标$\begin{bmatrix} x \\ y \\ 0 \end{bmatrix}$转换为欧氏坐标为$(\infty,\infty)$
+>
+> 无穷远点经过仿射变换之后依然是无穷远点，但是经过射影（透视）变换之后就不是无穷远点了
+>
+> $$ \begin{bmatrix} A & T \\ 0 & 1 \end{bmatrix} \begin{bmatrix} 1 \\ 1 \\ 0 \end{bmatrix} = \begin{bmatrix} p_x \\ p_y \\ 0 \end{bmatrix}$$
+> $$ \begin{bmatrix} A & T \\ v & 1 \end{bmatrix} \begin{bmatrix} 1 \\ 1 \\ 0 \end{bmatrix} = \begin{bmatrix} p_x \\ p_y \\ p_z \end{bmatrix}$$
+
+**平行线的相交**
+
+设两条平行线
+
+$$
+ax + by + c = 0 \\
+a'x + b'y + c' = 0
+$$
+
+其中$\dfrac{b}{a} = \dfrac{b'}{a'}$
+
+那么$l \times l' \propto \begin{bmatrix} b \\ -a \\ 0 \end{bmatrix} = x_\infty$
+
+验证，可以反过来将坐标代入可得
+
+$$
+\begin{bmatrix}
+a & b & c
+\end{bmatrix}
+\begin{bmatrix}
+b \\ -a \\ 0
+\end{bmatrix}
+= 0
+$$
+
+> 无穷远线：$l_\infty = \begin{bmatrix} 0 \\ 0 \\ 1 \end{bmatrix}$
+>
+> 可以将无穷远点代入：$\begin{bmatrix} b & -a & 0 \end{bmatrix} \begin{bmatrix} 0 \\ 0 \\ 1 \end{bmatrix} = 0$
+> 
+> 无穷远线的变换，可以设直线上一个点$x$，那么$l'^THx=0$，$H = \begin{bmatrix} A & T \\ 0 & 1 \end{bmatrix}$，而$l^Tx = 0 \Rightarrow l^T H^{-1}Hx = 0 \Rightarrow (H^{-1T}l)^T Hx = 0$，**所以$l' = H^{-1T}l$**
+>
+> 无穷远线的透视变换：$H^{-T} l_{\infty} = \begin{bmatrix} A & t \\ v & b \end{bmatrix}^{-T} \begin{bmatrix} 0 \\ 0 \\ 1 \end{bmatrix} = \begin{bmatrix} t_x \\ t_y \\ b \end{bmatrix}$
+> 
+> 可以发现，无穷远线经过透视变换之后得到的不再是无穷远线
+>
+> 同无穷远点的仿射变换，无穷远线仿射变换之后依然是无穷远线
+
+
+### 1.8.2 三维空间中的点和面
+
+空间中一个点的齐次坐标为
+
+$$
+x = 
+\begin{bmatrix}
+x_1 \\
+x_2 \\
+x_3 \\
+1
+\end{bmatrix}
+$$
+
+类似平面中直线的表示，空间中一个平面的表示如下
+
+$$
+\Pi=\begin{bmatrix}
+a \\
+b \\
+c \\
+d
+\end{bmatrix}
+$$
+
+三维平面上一个点，可以表示为$x^T\Pi=0$
+
+**三维空间中的直线具有4个自由度，一般使用两个平面相交的形式表示。一般会定义直线的方向$d = \begin{bmatrix} a & b & c \end{bmatrix}^T$**
+
+> 三维空间中的无穷远点（空间中平行线的交点，平行线方向为$\begin{bmatrix} a & b & c \end{bmatrix}^T$）：表示形式为$x_\infty = \begin{bmatrix} a \\ b \\ c \\ 0 \end{bmatrix}$
+
+
+### 1.8.3 影消点
+
+**三维空间中的无穷远点在图像平面上的投影点，成为影消点，不再是无穷远点**
+
+$$
+p_\infty = \begin{bmatrix} p_1 \\ p_2 \\ p_3 \end{bmatrix}
+= v = Kd = K \begin{bmatrix} a \\ b \\ c \end{bmatrix}
+$$
+
+$$
+d = \dfrac{K^{-1}v}{||K^{-1}v||}  
+$$
+
+> 可以作如下推导（K为摄像机内参数矩阵）：
+>
+> $$ x_\infty = \begin{bmatrix} a \\ b \\ c \\ 0 \end{bmatrix} \Rightarrow v = Mx_\infty = K \begin{bmatrix} I & 0 \end{bmatrix} \begin{bmatrix} a \\ b \\ c \\ 0 \end{bmatrix} = K\begin{bmatrix} a \\ b \\ c \end{bmatrix}$$
+
+
+### 1.8.4 影消线
+
+**三维空间中的无穷远线在图像平面上的投影线，成为影消线**
+
+$$
+l_{horiz} = H_P^{-T}l_\infty
+$$
+
+两条平行线一定交于影消线
+
+> 影消线和平面法向量的关系：
+> $$ \vec n = K^T l_{horiz} $$
+>
+> 其中K为摄像机内参数矩阵（投影）
+>
+> 推导：设水平面参数为$\Pi$，数值和法向量相同，那么平面上$X^T\Pi = 0$，经过投影矩阵$P$之后可以得到$(PX)^T l_{horiz} = 0 \Rightarrow X^T(P^Tl_{horiz}) = 0$，所以$\Pi = P^Tl_{horiz}$，即$ \vec n = P^T l_{horiz} $
+
+> 无穷远平面：平行平面在无穷远处交于**无穷远直线**，多条无穷远直线组成无穷远平面$\Pi$
+>
+> $$ \Pi_\infty = \begin{bmatrix} 0 \\ 0 \\ 0 \\ 1 \end{bmatrix} $$
+
+
+### 1.8.5 两组平行线夹角和影消点的关系
+
+由于空间一个无穷远点坐标可以通过影消点反向求得
+
+$$
+d = \dfrac{K^{-1}v}{||K^{-1}v||}
+$$
+
+空间两对平行线夹角可以如下求解
+
+$$
+\cos\theta = \dfrac{d_1 \cdot d_2}{|d_1||d_2|}
+\dfrac{v_1^T \omega v_2}{\sqrt{v_1^T \omega v_1} \sqrt{v_2^T \omega v_2}}
+$$
+
+其中
+
+$$
+\omega = (KK^T)^{-1} = 
+\begin{bmatrix}
+\omega_1 & \omega_2 & \omega_4 \\
+\omega_2 & \omega_3 & \omega_5 \\
+\omega_4 & \omega_5 & \omega_6 \\
+\end{bmatrix}
+$$
+
+是一个对称矩阵，若$\omega_2 = 0$那么零倾斜，若同时$\omega_1 = \omega_3$那么是方形像素，$\omega$只有5个自由度
+
+并且
+
+$$
+\theta = 90\degree \rightarrow v_1^T \omega v_2 = 0
+$$
