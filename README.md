@@ -136,4 +136,4 @@
 12. 《计算机图形学（第2版）》，Peter Shirley著，人民邮电出版社
 13. 《Vulkan应用开发指南》，Graham Sellers，John Kessenich著，人民邮电出版社
 14. 《Vulkan学习指南》，Parminder Singh著，机械工业出版社
-15. 《三维计算机视觉技术和算法导论》，Boguslaw Cyganek，J. Paul Siebert著，国防工业出版社
+15. 《三维计算机视觉技术和算法导论》，Boguslaw lyganek，J. Paulsiebert著，国防工业出版社
