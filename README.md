@@ -97,7 +97,7 @@
 | 200908a | 计算机存储：SDRAM                   | Finished      |
 | 200908b | LFS并使用QEMU运行Linux（ARMv7）     | Finished      |
 | 200920a | ARM汇编以及内存架构（ARMv7 Cortex-A）       | Hang up       |
-| 200920b | 信号与系统，DSP数字信号处理         | Hang up       |
+| 200920b | 信号与系统，DSP数字信号处理         | In process    |
 | 200920c | 数字逻辑以及Verilog                 | In process    |
 | 201002a | 高数                                | In process    |
 | 201020a | STM32开发以及ARM汇编（ARMv7 Cortex-M）      | Hang up       |
@@ -111,7 +111,7 @@
 | 201230a | 加密算法，密码学                    | New           |
 | 210108a | AutoCAD基本操作                     | Finished      |
 | 210110a | 计算机体系结构以及处理器的设计      | Hang up       |
-| 210111a | Qt应用开发                          | In process    |
+| 210111a | Qt应用开发                          | Hang up       |
 | 210115a | FreeBSD安装并作为桌面系统使用       | Hang up       |
 | 210130a | 各种类Unix的管理维护以及安全优化    | Update ondemand |
 | 210216a | Rust语言入门                        | New           |
