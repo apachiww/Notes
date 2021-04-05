@@ -1,12 +1,12 @@
 # 计算机视觉/3D重构
 
-关键词： SLAM
+关键词： SLAM SfM
 
 ## 参考
 
 *An Introduction to 3D Computer Vision Techniques and Algorithms, Boguslaw lyganek, J. Paulsiebert, 2010*
 
-计算机视觉之三维重建篇（精简版）北京邮电大学 鲁鹏 [Bilibili](https://www.bilibili.com/video/BV15f4y1v7pa)
+计算机视觉之三维重建篇（精简版）北京邮电大学 鲁鹏 https://www.bilibili.com/video/BV15f4y1v7pa
 
 
 ## 0 图像的表示
@@ -24,10 +24,11 @@ YUV表示方式中，**Y表示亮度（Luma），而U和V分别表示两种色�
 
 RGB转YUV标准公式为
 
-$$
-Y = 0.299 R + 0.587 G + 0.114 B \\
-U = -0.1687 R - 0.3313 G + 0.5 B + 128 \\
-V = 0.5 R - 0.4187 G - 0.0813 B + 128 \\
+$$ \begin{aligned}
+Y &= 0.299 R + 0.587 G + 0.114 B \\
+U &= -0.1687 R - 0.3313 G + 0.5 B + 128 \\
+V &= 0.5 R - 0.4187 G - 0.0813 B + 128 \\
+\end{aligned}
 $$
 
 其中$UV$值都要加128，无加法时转换矩阵为（UV先减去128）
@@ -52,18 +53,20 @@ $$
 
 YCbCr转RGB
 
-$$
-Y=0.299R+0.587G+0.114B \\
-Cb=0.564(B-Y) \\
-Cr=0.713(R-Y)
+$$\begin{aligned}
+Y&=0.299R+0.587G+0.114B \\
+Cb&=0.564(B-Y) \\
+Cr&=0.713(R-Y)
+\end{aligned}
 $$
 
 RGB转YCbCr
 
-$$
-R=Y+1.402Cr \\
-G=Y-0.344Cb-0.714Cr \\
-B=Y+1.772Cb
+$$\begin{aligned}
+R&=Y+1.402Cr \\
+G&=Y-0.344Cb-0.714Cr \\
+B&=Y+1.772Cb
+\end{aligned}
 $$
 
 
@@ -851,13 +854,13 @@ $$
 
 **接下来作如下推导**
 
-> 已知$P_r = R(P_l  - T)$，并且由图可知$P_l$和$T$在$\Pi_e$内，那么$P_l - T$也在$\Pi_e$上，可得
+> 已知$P_r = R(P_l  - T) \Rightarrow R^TP_r = P_l - T$，并且由图可知$P_l$和$T$在$\Pi_e$内，那么$P_l - T$也在$\Pi_e$上，可得
 >
 > $$ (P_l - T) \cdot (T \times P_l) = 0 $$
 >
 > 接下来分析$T \times P_l$。由于向量叉乘可以化为矩阵和向量点乘的形式，如下
 >
-> $$ T \times P_l = [T_\times]P_l = \begin{bmatrix} 0 & -T_3 & T_2 \\ T_3 & 0 & -T_1 \\ T_2 & -T_1 & 0 \end{bmatrix} \begin{bmatrix} P_{l1} \\ P_{l2} \\ P_{l3} \end{bmatrix} = AP_l$$
+> $$ T \times P_l = [T_\times]P_l = \begin{bmatrix} 0 & -T_3 & T_2 \\ T_3 & 0 & -T_1 \\ -T_2 & T_1 & 0 \end{bmatrix} \begin{bmatrix} P_{l1} \\ P_{l2} \\ P_{l3} \end{bmatrix} = AP_l$$
 >
 > 那么最后代入得到
 >
@@ -878,14 +881,6 @@ $$
 >
 > $$ p_r^TEp_l = 0 $$
 > 
-> 设$p_r$所在极线为$u_r$，$p_l$所在极线为$u_l$，那么有
->
-> $$ p_ru_r = 0 \\ p_lu_l = 0 $$
->
-> 所以有
->
-> $$ u_r = Ep_l \\ u_l = E^Tp_r $$
->
 > 由实际情况中摄像机的内参数矩阵分别为$K_lK_r$，$\bar p_l = K_lp_l$，$\bar p_r = K_rp_r$**（其中$\bar p_l$和$\bar p_r$分别是$p_lp_r$经过投影之后的齐次坐标）**，那么
 >
 > $$ (K_r^{-1}\bar p_r)^TEK_l^{-1}\bar p_l = 0 \Rightarrow \bar p_r^TK_r^{-T}EK_l^{-1}\bar p_l = 0 $$
@@ -925,28 +920,68 @@ $$
 
 所以改良这种算法得到了**归一化8点算法**，如下
 
-> 对左右两张图分别施加平移和缩放（变换$T$和$T'$），使得图像原点为图像重心，且各像点到原点均方根距离为$\sqrt{2}$
+> 对左右两张图分别施加平移和缩放（变换$T_l$和$T_r$），使得图像原点为图像重心，且各像点到原点均方根距离为$\sqrt{2}$
 >
-> $$ q_i = Tp_i, q_i' = Tp_i' $$
+> $$ q_{li} = T_lp_{li}, q_{ri} = T_rp_{ri} $$
 >
-> 之后计算$F_q$，然后进行逆归一化$F = T'^TF_qT$
+> 之后计算$F_q$，然后进行逆归一化$F = T_r^TF_qT_l$
 
 
 ### 8 双目立体视觉系统
 
+双目立体视觉系统是重构的方法之一，模仿生物视觉，一般使用两台摄像机同时拍摄的平行视图
+
 ### 8.1 平行视图
 
+> 这里先补充一些概念：极点$e_r$也是左摄像机的光心$O_l$在右摄像机平面$\Pi_r$的投影
+>
+> 所以极点的计算中，$e_r = K_r \begin{bmatrix} R & T \end{bmatrix} O_l$，又因为$O_l = \begin{bmatrix} 0 \\ 0 \\ 0 \\ 1 \end{bmatrix}$，所以$e_r = K_rT$
+>
+> 另外引入矩阵叉乘性质：$[t_\times]M = M^{-T}[(M^{-1}t)_\times]$
+>
+> 之前已经提到基础矩阵$F = K_r^{-T}RAK_l^{-1}$，这里换一种表达方式（推导过程类似），设$F = K_r^{-T}[T_\times]RK_l^{-1}$，**其中$T$为坐标点的平移（同上，和摄像机平移相反），$R$为旋转**
 
+由上叉乘性质，可得
+
+$$ [T_\times] K_r^{-1} = K_r^{T}[(K_rT)_\times] \Rightarrow [T_\times]  = K_r^{T}[(K_rT)_\times]K_r$$
+
+那么可以得到如下结论
+
+$$ \begin{aligned} F &= K_r^{-T}[T_\times]RK_l^{-1} \\ &= K_r^{-T}K_r^T[(K_rT)_\times]K_rRK_l^{-1} \\ &= [(K_rT)_\times]K_rRK_l^{-1} \\ \Rightarrow F &= [e_{r\times}]K_rRK_l^{-1} \end{aligned}$$
+
+**这里就引入平行视图的巧妙利用：由于平行视图中，两个相机成像平面互相平行且和基线$O_lO_r$平行，所以极点$e_le_r$位于无穷远处，齐次坐标第三位为0**
+
+设两相机参数相同，$K_l = K_r$，并且由于旋转矩阵$R = I$，$T = \begin{bmatrix} T \\ 0 \\ 0 \end{bmatrix}$，$e_r = \begin{bmatrix} 1 \\ 0 \\ 0 \end{bmatrix}$，所以
+
+$$ F = [e_{r\times}] = \begin{bmatrix} 0 & 0 & 0 \\ 0 & 0 & -1 \\ 0 & 1 & 0 \end{bmatrix}$$
+
+> 这里再对极线进行推导：设$p_r$所在极线为$u_r$，$p_l$所在极线为$u_l$，那么有
+>
+> $$ p_ru_r = 0 \\ p_lu_l = 0 $$
+>
+> 由于$p_r^TFp_l$ = 0，所以有
+>
+> $$ u_r = Fp_l \\ u_l = F^Tp_r $$
+
+由之前的极几何可知，极线$l = F^Tp_r = \begin{bmatrix} 0 & 0 & 0 \\ 0 & 0 & 1 \\ 0 & -1 & 0 \end{bmatrix} \begin{bmatrix} p_{ru} \\ p_{rv} \\ 1 \end{bmatrix} = \begin{bmatrix} 0 \\ 1 \\ -p_{rv} \end{bmatrix}$
 
 
 ### 8.2 平行视图校正
 
+
+
+
 ### 8.3 平行视图对应点搜索
 
-### 8.4 运动结构恢复
 
-### 8.4.1 欧氏结构恢复
 
-### 8.4.2 仿射结构恢复
 
-### 8.4.3 透视结构恢复
+### 9 运动恢复结构
+
+运动恢复结构是另一种重构方法，使用同一摄像机在不同角度拍摄进行重构
+
+### 9.1 欧氏结构恢复
+
+### 9.2 仿射结构恢复
+
+### 9.3 透视结构恢复
