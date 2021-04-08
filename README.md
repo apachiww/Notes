@@ -90,6 +90,10 @@
 
     计算机视觉，三维重构 [210320a_3drebuild.md](210320a_3drebuild.md)
 
++ 2021.04.09添加
+
+    函数式编程，Haskell入门 [210409a_haskell.md](210409a_haskell.md)
+
 ## 进度状态
 
 | No. | Content | Status |
@@ -119,6 +123,7 @@
 | 210316a | 计算机图形学和Vulkan                 | In process    |
 | 210317a | 并行计算                            | New           |
 | 210320a | 计算机视觉，平面图形的3D重构         | In process    |
+| 210409a | 函数式编程，Haskell                 | New           |
 
 ### 参考书收藏列表
 
