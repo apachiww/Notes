@@ -1133,10 +1133,35 @@ $$
 
 求解可以使用代数法或因式分解法，这里使用**因式分解法**
 
-因式分解分两步
+因式分解法分两步
 
 > 1. 数据中心化
 > 2. 因式分解 
+
+其中数据中心化求解：
+
+> 数据中心化就是将所有点减去图像点的质心$\dot x_i$（坐标均值）
+> $$ \begin{aligned} \hat x_{ij} &= x_{ij} - \dot x_i \\ \dot x_i &= \dfrac{1}{n} \sum^n_{k=1} x_{ik} \\ x_{ij} &= A_iX_j + b_i\end{aligned}$$
+> 那么
+> $$ \begin{aligned} \hat x_{ij} &= A_iX_j + b_i - \dfrac{1}{n} \sum^n_{k=1} x_{ik} \\ &= A_iX_j + b_i - \dfrac{1}{n} \sum^n_{k=1}A_iX_k - \dfrac{1}{n}nb_i \\ &= A_iX_j - \dfrac{1}{n} \sum^n_{k=1}A_iX_k \\ &= A_i(X_j - \bar X) \\ &= A_i\hat X_j \end{aligned} $$
+> 如果3D点质心和世界坐标系中心重合
+> $$ A_i\hat X_j = A_iX_j $$
+>
+> 开始求解（因式分解），首先将去质心（均值）之后的测量值写成矩阵，其中每个元素都是一个$2\times 1$向量
+> $$ D = \begin{bmatrix} \hat x_{11} & \hat x_{12} & \cdots & \hat x_{1n} \\ & & \ddots & \\ \hat x_{m1} & \hat x_{m2} & \cdots & \hat x_{mn} \end{bmatrix}  = \begin{bmatrix} A_1 \\ A_2 \\ \vdots \\ A_m \end{bmatrix} \begin{bmatrix} X_1 & X_2 & \cdots & X_n \end{bmatrix} = MS $$
+> 在以上矩阵中，每一列代表一个三维点，所有行中元素不可缺失。$A$为$2 \times 3$维，$X$为$3 \times 1$维。**$D$的秩为3，因为$MS$的秩都为3**
+>
+> 接下来问题就变成了求解$M$**运动矩阵**和$S$**结构矩阵**（点三维坐标）
+>
+> 可以直接对$D$进行**SVD**
+> $$ D = UWV^T $$
+> 由于$D$的秩为3，所以$W$只有3个非零奇异值$\sigma_1,\sigma_2,\sigma_3$。只取前3个，所以$D$又可以写成以下形式
+> $$ D = U_3W_3V_3^T = U_3(W_3V_3^T) = (U_3W_3)V_3^T = MS $$
+> 由此求得$MS$
+
+但是很显然以上方法可以得到多种结果
+
+> 设$M^* = MH, S^* = H^{-1}S$，其中$H$可以为任意可逆$3 \times 3$矩阵，其确定化需要通过添加约束来实现，比如直角约束
 
 
 ### 9.3 透视结构恢复
@@ -1147,4 +1172,89 @@ $$
 
 **问题建模**：
 
+> 透视摄像机的参数矩阵$M = \begin{bmatrix} A & b \\ v & 1 \end{bmatrix} = \begin{bmatrix} m_1 \\ m_2 \\ m_3 \end{bmatrix}$
+> $$ x^E = (\dfrac{m_1X}{m_3X}, \dfrac{m_2X}{m_3X})^T $$
+> 有11个摄像机参数，求解
+> $$ x_{ij} = M_iX_j, M_i = K_i\begin{bmatrix} R_i & T_i \end{bmatrix} $$
+> 同之前，其中只有$x_{ij}$已知
+
 **求解过程**：
+
+同之前的仿射结构恢复，透视结构恢复也有歧义问题，如下
+
+> $$ x_{ij} = M_iX_j \\ M^*X^* = (M_iH^{-1})(HX_j) $$
+>
+> 所以求解有一个前提条件：**求得结果和真实结果之间相差一个$4 \times 4$可逆变换**
+
+求解可以使用代数法（基础矩阵）、因式分解法（SVD）和捆绑调整法
+
+这里提供代数法和捆绑调整法的求解过程
+
+**代数法**：
+
+代数法适用于两视图的计算，通过两两计算视图适用于多视图的计算，分为3步
+
+> 设三维坐标中点$X_j$在两个平面中的投影点分别为$x_{1j}$和$x_{2j}$
+> 1. 归一化八点法求解$F$
+> 2. 利用$F$求解摄像机矩阵$M_1$和$M_2$
+> 3. 三角化计算三维点坐标
+
+其中1和3在之前的[欧氏结构恢复](210320a_3drebuild.md#91-欧氏结构恢复)章节已经讲过，这里只讲述步骤2的过程
+
+> 设
+>
+> $$ x_{1j} = M_1X_j \\ x_{2j} = M_2X_j $$
+>
+> 由于歧义的存在，设矩阵$H$使得
+>
+> $$ M_1H^{-1} = [I|0] \\ M_2H^{-1} = [A|b] $$
+>
+> 那么接下来可以这样设
+>
+> $$ \begin{cases} \tilde M_1 = M_1H^{-1} = \begin{bmatrix} I & 0 \end{bmatrix} \\ \tilde M_2 = M_2H^{-1} = \begin{bmatrix} A & b  \end{bmatrix} \\ \tilde X = HX \end{cases} $$
+>
+> 其中$x_l = M_1X, x_r = M_2X \\ \Rightarrow x_l = M_1H^{-1}HX = [I|0]\tilde X, x_r = M_2H^{-1}HX = [A|b]\tilde X$
+>
+> 由于$[I|0]$看作已知，所以很容易就可以建立$x_lx_r$的联系如下
+>
+> $$ x_r =  [A|b]\tilde X = [A|b]\begin{bmatrix} \tilde X_1 \\ \tilde X_2 \\ \tilde X_3 \\ 1 \end{bmatrix} = A[I|0] \begin{bmatrix} \tilde X_1 \\ \tilde X_2 \\ \tilde X_3 \\ 1 \end{bmatrix} + b = Ax_l + b$$
+>
+> 接下来作如下推导
+>
+> $$ x_r \times b = (Ax_l + b) \times b = Ax_l \times b \\ \Rightarrow x_r^T \cdot (x_r \times b) = x_r^T \cdot (Ax_l \times b) = 0 \\ x_r^T (b \times Ax_l) = 0 \Rightarrow x_r^T[b_\times]Ax_l = 0 $$
+>
+> 由$x_r^TFx_l = 0$，所以可以得出
+>
+> $$ F = [b_\times]A $$
+> 
+> 接下来尝试求$b$
+>
+> $$ F^T\cdot b = ([b_\times]A)^T\cdot b = A^T[b_\times]^T\cdot b = -A^T[b_\times]\cdot b = 0 $$
+>
+> 即$ F^T\cdot b = 0 $，**就是一个求解齐次线性方程组的过程**。直接对$F^T$进行**SVD**，$b$就是$F^T$最小奇异值的右奇异向量，且$|| b || = 1$
+>
+> 求得$b$以后$A$的求解就比较方便了，令
+>
+> $$ A' = -[b_\times]F \Rightarrow F = [b_\times]A' $$
+>
+> 证明：由$F^T\cdot b = 0 \Rightarrow b^T F = 0, || b || = 1$
+>
+> $$ [b_\times]A' = -[b_\times][b_\times]F = -bb^TF + | b |^2F = 0 + 1\cdot F = F \\ \Rightarrow A = A' = -[b_\times]F $$
+>
+> 由此求出$A$
+>
+> $F^T\cdot b = 0$的实际意义就是：由于$F^T\cdot e_r = 0$，所以$b$实际是极点
+
+**捆绑调整法**：
+
+由于因式分解法**假定所有点都是可见（$D$不能有无效坐标）**，所以不适用于**存在遮挡**和**对应点关系建立失败**的情况，并且重建点数少
+
+而代数法应用于多视图的场景容易出现**误差累积**
+
+最小重投影误差定义如下
+
+> $$ E(M,X) = \sum_{i = 1}^m \sum_{j = 1}^n D(x_{ij}, M_iX_j)^2 $$
+
+所以捆绑调整法是个**非线性最小化问题**，可以使用**牛顿法**或**L-M法（推荐）**求解，优势是可以同时求解大量视图，并且可以处理丢失数据，劣势是参数非常多，需要求解大量参数最小化问题，并且对初始条件要求较高
+
+**实际问题的求解中，一般将以上3种方法结合，使用分解或代数法作为优化的初始解，而将捆绑调整法作为最后一步提升解的精度**
