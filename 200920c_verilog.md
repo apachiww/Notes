@@ -1570,7 +1570,7 @@ gtkwave innovate.vcd
 
 File->New Project Wizard
 
-指定工作目录和工程名称，顶层设计名保持和工程名相同，可以直接点Finish
+指定工作目录和工程名称，顶层设计名保持和工程名相同，**注意工程名不要有数字，否则之后仿真容易出错**，可以直接点Finish
 
 ![新建工程1](images/200920c131.png)
 

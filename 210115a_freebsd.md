@@ -52,42 +52,49 @@ gpart add -t efi -s 200M ada0
 gpart add -t freebsd-ufs -s 32G ada0
 ```
 
-格式化分区
+格式化分区，其中EFI分区格式化为FAT32，根目录格式化为UFS2
 
 ```shell
 newfs_msdos -F 32 -c 1 /dev/ada0p1
 newfs -U -L FreeBSD /dev/ada0p2
 ```
 
-如果想要创建swap分区的可以如以下操作，比如创建一个2G的swap分区（ada0p3）并挂载
+如果是SSD，可以使用`tunefs`打开UFS2的TRIM功能
+
+```shell
+tunefs -t enable /dev/ada0p2
+```
+
+如果想要创建swap分区的可以如以下操作，比如创建一个2G的swap分区（ada0p3）
 
 ```shell
 gpart add -t freebsd-swap -s 2G ada0
-swapon /dev/ada0p3
 ```
 
-最后别忘了生成**fstab**
+最后使用`ee`编辑fstab，在/tmp/bsdinstall_etc/fstab
 
-```shell
-echo "/dev/ada0p2 / ufs rw 1 1" >> /tmp/bsdinstall_etc/fstab
+个人分区方案参考
+
 ```
-
-如果有swap需要加上一条
-
-```shell
-echo "/dev/ada0p3 none swap sw 0 0" >> /tmp/bsdinstall_etc/fstab
+/dev/ada0p3       /         ufs       rw              0 1
+/dev/ada1p3       none      swap      sw              0 0
+/dev/ada1p5       /var      ufs       rw              0 2
+/dev/ada1p6       /usr/src  ufs       rw              0 2
+/dev/ada1p8       /home     ufs       rw              0 2
+tmpfs             /tmp      tmpfs     rw,mode=1777    0 0
 ```
 
 `exit`退出Shell，bsdinstall即开始自动安装
 
 ### 2.2 启动引导
 
-先将loader.efi拷贝到ESP分区下的EFI/FreeBSD/BOOTX64.efi
+将loader.efi拷贝到ESP分区下EFI/FreeBSD/BOOTX64.efi，也可以叫其他的
 
 ```shell
 mount -t msdosfs /dev/ada0p1 /mnt
 mkdir -p /mnt/EFI/FreeBSD
 cp /boot/loader.efi /mnt/EFI/FreeBSD/BOOTX64.efi
+umount /mnt
 ```
 
 ### 2.2.1 单系统引导
@@ -133,7 +140,7 @@ if [ ${grub_platform} == "efi"]; then
 
 ~~选择困难症ww~~
 
-安装部分：一般只选择kernel-dbg，ports，src三项，去掉lib32兼容库
+安装部分：一般只选择kernel-dbg，ports，src三项，不使用lib32
 
 服务启动：一般开启moused，ntpd，powerd，dumpdev。有需要可以开启sshd远程访问
 
@@ -153,7 +160,9 @@ FreeBSD使用ports和pkg两种方法安装软件包，pkg是已经编译好的�
 
 + 马来西亚镜像 pkg0.kul.freebsd.org
 
-这里再列举少数几个国内的非官方镜像站：
+> 现在FreeBSD官方已经改善大陆地区的访问情况，直接使用官方源也可
+
+几个国内的非官方镜像站：
 
 + 北交大镜像 mirror.bjtu.edu.cn 有反向代理的pkg，portsnap，update（但是目前好像不能用），但是安装镜像比较全，有Release，Current，Stable安装镜像
 
@@ -161,7 +170,7 @@ FreeBSD使用ports和pkg两种方法安装软件包，pkg是已经编译好的�
 
 + 网易镜像 mirrors.163.com 有pkg和ports，有Release安装镜像，目前Current和Stable镜像无法下载
 
-+ chinafreebsd镜像 freebsd.cn 据说是私人搭建的镜像（还活着），有ports，portsnap，pkg，update，但没有安装镜像。速度较快，可以设为默认镜像
++ freebsdcn镜像 freebsd.cn 是私人搭建的镜像，有ports，portsnap，pkg，update，但没有安装镜像。速度较快，可以设为默认镜像
 
 修改举例：
 
@@ -200,16 +209,33 @@ MASTER_SITE_OVERRIDE?=http://mirrors.163.com/freebsd-ports/distfiles/${DIST_SUBD
 SERVERNAME=portsnap.freebsd.cn
 ```
 
-修改后运行`portsnap fetch`获取安装包，第一次需要再运行`portsnap extract`。以后更新只要`portsnap fetch update`即可
+修改后运行`portsnap fetch`获取安装包，**如果在之前的安装过程中没有安装ports那么第一次需要再运行**`portsnap extract`。以后更新只要`portsnap fetch update`即可
 
 ### 3.2 安装图形界面
 
 ### 3.2.1 安装显卡驱动
 
-安装intel显卡kms`pkg install drm-kmod`。
+安装intel显卡kms`pkg install drm-kmod`
 
-> 显卡驱动是作为普通用户想将FreeBSD作为桌面系统使用需要克服的最大困难之一，FreeBSD的显卡驱动相比linux要稍显落后（好像就是直接从Linux移植而来），包括intel的核显驱动。这次使用的Celeron J3160属于intel的低功耗SoC产品线，在RELEASE-13.0之前不被正常支持（13.0更新了来自Linux的显卡驱动，很奇怪的是同属Braswell的N3160据说早在11.2核显就可以正常工作，按理应该没区别，FreeBSD论坛[链接](https://forums.freebsd.org/threads/xcfe-login-gui-doesnt-show-up.66419/)）。建议安装FreeBSD之前先考察显卡驱动的支持状况。
+> FreeBSD的显卡驱动相比Linux要稍显落后（就是直接从Linux的版本移植而来），包括intel的核显驱动。这次使用的Celeron J3160属于intel的低功耗SoC产品线，在RELEASE-13.0之前不被正常支持（13.0更新了来自Linux的显卡驱动，然而同属Braswell的N3160早在11.2核显就可以正常工作，见[FreeBSD论坛相关贴](https://forums.freebsd.org/threads/xcfe-login-gui-doesnt-show-up.66419/)）。建议安装FreeBSD之前先考察显卡驱动的支持状况。
 
-> 附：有人之前在FreeBSD论坛写了一篇文章讨论intel不同产品线的核显的区别，大概也顺带批评了intel的SoC产品线的混乱，[链接](https://forums.freebsd.org/threads/how-to-use-the-old-or-the-new-i915kms-driver-for-intel-integrated-graphics-with-xorg.66732/)
+> 附：[2018年FreeBSD论坛的英特尔集显驱动讨论](https://forums.freebsd.org/threads/how-to-use-the-old-or-the-new-i915kms-driver-for-intel-integrated-graphics-with-xorg.66732/)（仅供参考，实际现在新版驱动已经变化）
 
-想要查看自己的显卡或平台是否确实被FreeBSD支持，这里推荐一个[网站](https://bsd-hardware.info)
+> 想要查看自己的显卡或其他硬件是否确实被FreeBSD支持，这里推荐一个[网站](https://bsd-hardware.info)
+
+安装3D库
+
+安装视频解码库
+
+
+### 3.2.2 安装X
+
+
+### 3.2.3 安装DE/WM以及配置
+
+
+### 3.3 内核模块加载
+
+### 3. 其他
+
+### 3. 关闭蜂鸣器
