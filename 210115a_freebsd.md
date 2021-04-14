@@ -1,6 +1,6 @@
 # FreeBSD作为桌面系统使用的安装过程以及注意事项
 
-上一次更新日期：2021-01-17
+上一次更新日期：2021-04-14
 
 ## 简介
 
@@ -59,7 +59,7 @@ newfs_msdos -F 32 -c 1 /dev/ada0p1
 newfs -U -L FreeBSD /dev/ada0p2
 ```
 
-如果是SSD，可以使用`tunefs`打开UFS2的TRIM功能
+如果是SSD，可以使用`tunefs`打开UFS2的TRIM功能，可以定期TRIM延长SSD寿命
 
 ```shell
 tunefs -t enable /dev/ada0p2
@@ -73,20 +73,29 @@ gpart add -t freebsd-swap -s 2G ada0
 
 最后使用`ee`编辑fstab，在/tmp/bsdinstall_etc/fstab
 
-个人分区方案参考
+> 附：个人分区方案参考
+>
+> ```
+> /dev/ada0p3       /         ufs       rw              0 1
+> /dev/ada1p3       none      swap      sw              0 0
+> /dev/ada1p5       /var      ufs       rw              0 2
+> /dev/ada1p8       /home     ufs       rw              0 2
+> tmpfs             /tmp      tmpfs     rw,mode=1777    0 0
+> ```
 
-```
-/dev/ada0p3       /         ufs       rw              0 1
-/dev/ada1p3       none      swap      sw              0 0
-/dev/ada1p5       /var      ufs       rw              0 2
-/dev/ada1p6       /usr/src  ufs       rw              0 2
-/dev/ada1p8       /home     ufs       rw              0 2
-tmpfs             /tmp      tmpfs     rw,mode=1777    0 0
+最后挂载分区到/mnt，如果想要将其他分区挂载到/home，就要创建目录挂载，以下为例
+
+```shell
+mount /dev/ada0p2 /mnt
+mkdir /mnt/home
+mount /dev/ada1p1 /mnt/home
 ```
 
 `exit`退出Shell，bsdinstall即开始自动安装
 
 ### 2.2 启动引导
+
+启动引导可以在分区之前处理，也可以到所有安装都结束以后再进入Shell处理
 
 将loader.efi拷贝到ESP分区下EFI/FreeBSD/BOOTX64.efi，也可以叫其他的
 
@@ -94,7 +103,6 @@ tmpfs             /tmp      tmpfs     rw,mode=1777    0 0
 mount -t msdosfs /dev/ada0p1 /mnt
 mkdir -p /mnt/EFI/FreeBSD
 cp /boot/loader.efi /mnt/EFI/FreeBSD/BOOTX64.efi
-umount /mnt
 ```
 
 ### 2.2.1 单系统引导
@@ -121,20 +129,26 @@ umount /mnt
 
 其实硬盘原来已经装了ArchLinux，这里用最笨的方法，用GRUB来chainload FreeBSD的bootloader
 
-进ArchLinux配置/etc/grub.d/40_custom如下，将XXXX-XXXX更换为ESP分区的UUID
+进ArchLinux配置/etc/grub.d/40_custom添加启动入口如下，将XXXX-XXXX替换为ESP分区的UUID（可以通过`blkid`命令获取），其他hints的获取具体可以参考Archwiki中[手动配置Windows双启动](https://wiki.archlinux.org/index.php/GRUB#Windows_installed_in_UEFI/GPT_mode)
 
 ```
-if [ ${grub_platform} == "efi"]; then
-    menuentry "FreeBSD Bootloader" {
-        insmod part_gpt
-        insmod fat
-        insmod chain
-        search --no-floppy --fs-uuid --set=root --hint-ieee1275='ieee1275//disk@0,gpt1' --hint-bios=hd0,gpt1 --hint-efi=hd0,gpt1 --hint-baremetal=ahci0,gpt1 XXXX-XXXX
-        chainloader /EFI/FreeBSD/BOOTX64.efi
-    }
+# /etc/grub.d/40_custom
+menuentry "FreeBSD Bootloader" {
+    insmod part_gpt
+    insmod fat
+    insmod chain
+    search --no-floppy --fs-uuid --set=root --hint-ieee1275='ieee1275//disk@0,gpt1' --hint-bios=hd0,gpt1 --hint-efi=hd0,gpt1 --hint-baremetal=ahci0,gpt1 XXXX-XXXX
+    chainloader /EFI/FreeBSD/BOOTX64.efi
+}
 ```
 
-再重新生成grub配置文件`grub-mkconfig -o /boot/grub/grub.cfg`即可
+再重新生成grub配置文件即可
+
+```shell
+grub-mkconfig -o /boot/grub/grub.cfg
+```
+
+加下重启进入GRUB界面就应该看到`FreeBSD Bootloader`选项了
 
 ### 2.3 个人设置偏好参考（不代表建议的选择）
 
