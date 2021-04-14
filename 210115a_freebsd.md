@@ -6,7 +6,7 @@
 
 记录有关FreeBSD作为桌面系统使用的安装过程，以及注意事项
 
-## 测试平台
+## 平台配置
 
 > CPU：Intel Celeron J3160(4) @ 1.6GHz \
   GPU：Intel HD Graphics 400 \
@@ -19,23 +19,23 @@
 
 ## 1 下载镜像
 
-[北交大镜像站](https://mirror.bjtu.edu.cn/freebsd/snapshots/ISO-IMAGES/12.2/)
+[FreeBSD官网镜像下载](https://download.freebsd.org/ftp/releases/amd64/amd64/ISO-IMAGES/13.0/)
 
 使用U盘启动安装，下载memstick安装镜像，使用`xz -dk`解压后，再使用`dd`命令将.img镜像刻录到u盘
 
 ## 2 基本安装
 
-现在所有新的x86PC都支持UEFI启动。其实UEFI启动比传统Legacy模式好用多了，这里就只记录UEFI启动模式的安装方法
+从Intel的H7x/B7x（差不多也就是Ivy Bridge的3代酷睿时代，2012年左右）开始绝大部分Intelx86平台都支持UEFI启动，这里就只记录UEFI启动模式的安装方法。Legacy模式基本不用太复杂的操作就不赘述了
 
 安装前建议将RTC时钟设置成UTC时间。开机进启动项选择U盘启动，到Bootloader界面，按B启动多用户模式
 
-基本安装没什么好说的，照着bsdinstall的提示一步一步走就行了
+基本安装非常简单，大部分步骤照着bsdinstall的提示走就行了
 
-主要问题在于磁盘分区和启动引导的解决，另外有一些设置杂项的个人偏好，其他基本默认就行
+UEFI安装的主要难点在于磁盘分区和启动引导的解决，另外给出一些设置杂项的个人偏好，其他基本默认就行
 
 ### 2.1 磁盘分区
 
-bsdinstall自带的磁盘分区界面操作太蛋疼了，建议选择Shell分区
+bsdinstall自带的磁盘分区界面不太友好，这里提供使用Shell分区的方法，便于灵活操作分区
 
 UEFI启动模式需要一个ESP分区，一般为FAT32格式
 
@@ -52,14 +52,14 @@ gpart add -t efi -s 200M ada0
 gpart add -t freebsd-ufs -s 32G ada0
 ```
 
-格式化分区，其中EFI分区格式化为FAT32，根目录格式化为UFS2
+格式化分区，其中EFI分区格式化为FAT32，根目录分区格式化为UFS2
 
 ```shell
 newfs_msdos -F 32 -c 1 /dev/ada0p1
 newfs -U -L FreeBSD /dev/ada0p2
 ```
 
-如果是SSD，可以使用`tunefs`打开UFS2的TRIM功能，可以定期TRIM延长SSD寿命
+如果是SSD，可以使用`tunefs`打开UFS2的TRIM功能，经常使用的情况下可以定期TRIM延长SSD寿命
 
 ```shell
 tunefs -t enable /dev/ada0p2
@@ -71,7 +71,13 @@ tunefs -t enable /dev/ada0p2
 gpart add -t freebsd-swap -s 2G ada0
 ```
 
-最后使用`ee`编辑fstab，在/tmp/bsdinstall_etc/fstab
+swap分区可以通过`swapon`挂载，这里先不用挂载
+
+```shell
+swapon /dev/ada0p3
+```
+
+最后使用`ee`编辑fstab，文件位于/tmp/bsdinstall_etc/fstab
 
 > 附：个人分区方案参考
 >
@@ -95,7 +101,7 @@ mount /dev/ada1p1 /mnt/home
 
 ### 2.2 启动引导
 
-启动引导可以在分区之前处理，也可以到所有安装都结束以后再进入Shell处理
+启动引导问题可以在分区之前处理，也可以到所有安装都结束以后再进入Shell处理，只要有ESP分区就可以
 
 将loader.efi拷贝到ESP分区下EFI/FreeBSD/BOOTX64.efi，也可以叫其他的
 
@@ -129,7 +135,7 @@ umount /mnt
 
 其实硬盘原来已经装了ArchLinux，这里用最笨的方法，用GRUB来chainload FreeBSD的bootloader
 
-进ArchLinux配置/etc/grub.d/40_custom添加启动入口如下，将XXXX-XXXX替换为ESP分区的UUID（可以通过`blkid`命令获取），其他hints的获取具体可以参考Archwiki中[手动配置Windows双启动](https://wiki.archlinux.org/index.php/GRUB#Windows_installed_in_UEFI/GPT_mode)
+重启进ArchLinux配置/etc/grub.d/40_custom添加启动入口如下，将XXXX-XXXX替换为ESP分区的UUID（可以通过`blkid`命令获取），**而hints参数对于不同机器配置可能会不一样**，其他hints的获取具体可以参考Archwiki中[手动配置Windows双启动](https://wiki.archlinux.org/index.php/GRUB#Windows_installed_in_UEFI/GPT_mode)
 
 ```
 # /etc/grub.d/40_custom
@@ -148,11 +154,9 @@ menuentry "FreeBSD Bootloader" {
 grub-mkconfig -o /boot/grub/grub.cfg
 ```
 
-加下重启进入GRUB界面就应该看到`FreeBSD Bootloader`选项了
+重启进入GRUB界面就应该看到`FreeBSD Bootloader`选项了，可以正常引导FreeBSD
 
 ### 2.3 个人设置偏好参考（不代表建议的选择）
-
-~~选择困难症ww~~
 
 安装部分：一般只选择kernel-dbg，ports，src三项，不使用lib32
 
@@ -178,7 +182,7 @@ FreeBSD使用ports和pkg两种方法安装软件包，pkg是已经编译好的�
 
 几个国内的非官方镜像站：
 
-+ 北交大镜像 mirror.bjtu.edu.cn 有反向代理的pkg，portsnap，update（但是目前好像不能用），但是安装镜像比较全，有Release，Current，Stable安装镜像
++ 北交大镜像 mirror.bjtu.edu.cn 有反向代理的pkg，portsnap，update（目前好像不能用），但是安装镜像比较全，有Release，Current，Stable安装镜像
 
 + 中科大镜像 mirrors.ustc.edu.cn 有pkg和ports，但是只有Release安装镜像
 
@@ -191,14 +195,14 @@ FreeBSD使用ports和pkg两种方法安装软件包，pkg是已经编译好的�
 修改pkg镜像：添加/usr/local/etc/pkg/repos/mymirror.conf如下（可以直接从/etc/pkg/FreeBSD.conf复制修改）
 
 ```
-# 使用网易163源，最新latest，否则quarterly
-163:{
-　　url: "pkg+http://mirrors.163.com/freebsd-pkg/${ABI}/latest", 
-　　mirror_type: "srv",
-　　signature_type: "none",
-　　fingerprints: "/usr/share/keys/pkg",
-　　enabled: yes
-　　}
+# 使用freebsd.cn，最新latest，否则quarterly
+freebsdcn:{
+　url: "pkg+http://pkg.freebsd.cn/${ABI}/latest", 
+　mirror_type: "srv",
+　signature_type: "none",
+　fingerprints: "/usr/share/keys/pkg",
+　enabled: yes
+}
 
 # 禁用原/etc/pkg/FreeBSD.conf
 FreeBSD:{
@@ -214,7 +218,7 @@ FreeBSD:{
 # 启用线程数
 FETCH_CMD=axel -n 4 -a
 DISABLE_SIZE=yes
-MASTER_SITE_OVERRIDE?=http://mirrors.163.com/freebsd-ports/distfiles/${DIST_SUBDIR}/
+MASTER_SITE_OVERRIDE?=http://ports.freebsd.cn/distfiles/${DIST_SUBDIR}/
 ```
 
 修改portsnap源，/etc/portsnap.conf
@@ -223,7 +227,7 @@ MASTER_SITE_OVERRIDE?=http://mirrors.163.com/freebsd-ports/distfiles/${DIST_SUBD
 SERVERNAME=portsnap.freebsd.cn
 ```
 
-修改后运行`portsnap fetch`获取安装包，**如果在之前的安装过程中没有安装ports那么第一次需要再运行**`portsnap extract`。以后更新只要`portsnap fetch update`即可
+修改后运行`portsnap fetch`获取安装包，**第一次需要再运行**`portsnap extract`。以后更新只要`portsnap fetch update`即可
 
 ### 3.2 安装图形界面
 
@@ -231,7 +235,7 @@ SERVERNAME=portsnap.freebsd.cn
 
 安装intel显卡kms`pkg install drm-kmod`
 
-> FreeBSD的显卡驱动相比Linux要稍显落后（就是直接从Linux的版本移植而来），包括intel的核显驱动。这次使用的Celeron J3160属于intel的低功耗SoC产品线，在RELEASE-13.0之前不被正常支持（13.0更新了来自Linux的显卡驱动，然而同属Braswell的N3160早在11.2核显就可以正常工作，见[FreeBSD论坛相关贴](https://forums.freebsd.org/threads/xcfe-login-gui-doesnt-show-up.66419/)）。建议安装FreeBSD之前先考察显卡驱动的支持状况。
+> FreeBSD的显卡驱动相比Linux要稍显落后（就是直接从Linux的版本移植而来），包括Intel的核显驱动。这次使用的Celeron J3160属于Intel的低功耗SoC产品线，经测试在RELEASE-13.0之前不被正常支持（13.0更新了来自Linux的显卡驱动，然而同属Braswell的N3160早在11.2核显就可以正常工作，见[FreeBSD论坛相关贴](https://forums.freebsd.org/threads/xcfe-login-gui-doesnt-show-up.66419/)）。建议安装FreeBSD之前先考察显卡驱动的支持状况，尤其是使用类似产品的用户（Intel的低功耗奔腾、赛扬、凌动系列，一般使用Nxxxx/Jxxxx/Zxxxx命名方式）
 
 > 附：[2018年FreeBSD论坛的英特尔集显驱动讨论](https://forums.freebsd.org/threads/how-to-use-the-old-or-the-new-i915kms-driver-for-intel-integrated-graphics-with-xorg.66732/)（仅供参考，实际现在新版驱动已经变化）
 
