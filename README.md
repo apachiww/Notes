@@ -32,7 +32,7 @@
 
 + 2020.12.20添加
 
-    使用Eclipse搭建ARM mcu开发环境 [201220a_mcu-ide.md](201220a_mcu-ide.md)
+    类Unix下的通用MCU开发环境，包括8051，AVR，ARM（ST，TI，Atmel） [201220a_mcu-ide.md](201220a_mcu-ide.md)
 
     使用Hashcat或JohntheRipper破解密码 [201220b_crack.md](201220b_crack.md)
 
@@ -107,7 +107,7 @@
 | 201020a | STM32开发以及ARM汇编（ARMv7 Cortex-M）      | Hang up       |
 | 201219a | Linux命令行以及Shell脚本            | Update ondemand |
 | 201219b | C语言Makefile以及交叉编译           | In process    |
-| 201220a | 基于Eclipse的通用MCU开发环境        | New           |
+| 201220a | 类Unix下的通用MCU开发环境        | New           |
 | 201220b | 密码爆破                            | New           |
 | 201220c | 使用Metasploit的渗透测试，社工      | New           |
 | 201225a | 固态硬盘工作原理与优化方法          | Finished      |
