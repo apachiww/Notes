@@ -229,31 +229,132 @@ SERVERNAME=portsnap.freebsd.cn
 
 修改后运行`portsnap fetch`获取安装包，**第一次需要再运行**`portsnap extract`。以后更新只要`portsnap fetch update`即可
 
+
 ### 3.2 安装图形界面
 
 ### 3.2.1 安装显卡驱动
 
-安装intel显卡kms`pkg install drm-kmod`
+安装kms
 
-> FreeBSD的显卡驱动相比Linux要稍显落后（就是直接从Linux的版本移植而来），包括Intel的核显驱动。这次使用的Celeron J3160属于Intel的低功耗SoC产品线，经测试在RELEASE-13.0之前不被正常支持（13.0更新了来自Linux的显卡驱动，然而同属Braswell的N3160早在11.2核显就可以正常工作，见[FreeBSD论坛相关贴](https://forums.freebsd.org/threads/xcfe-login-gui-doesnt-show-up.66419/)）。建议安装FreeBSD之前先考察显卡驱动的支持状况，尤其是使用类似产品的用户（Intel的低功耗奔腾、赛扬、凌动系列，一般使用Nxxxx/Jxxxx/Zxxxx命名方式）
+```shell
+pkg install drm-fbsd13-kmod
+```
+
+之后通过`kldload`加载intel的驱动模块查看驱动是否工作正常
+
+```shell
+kldload i915kms
+```
+
+出现如下显示代表模块加载成功。如果没有出现类似输出，代表驱动可能不支持该显卡
+
+![模块加载](images/210115a001.jpg)
+
+如果没有问题，编辑`/etc/rc.conf`添加一行，在启动时加载模块
+
+```
+# Load i915kms
+kld_list="i915kms"
+```
+
+编辑`/boot/loader.conf`，使能vt
+
+```
+kern.vty=vt
+```
+
+> FreeBSD的显卡驱动相比Linux要稍显落后（就是直接从Linux的版本移植而来），包括Intel的核显驱动。这次使用的Celeron J3160属于Intel的低功耗SoC产品线，经测试在RELEASE-13.0的`drm-fbsd13-kmod`之前的驱动中不被正常支持（13.0更新了来自Linux的显卡驱动，然而同属Braswell的N3160早在11.2核显就可以正常工作，见[FreeBSD论坛相关贴](https://forums.freebsd.org/threads/xcfe-login-gui-doesnt-show-up.66419/)）。建议安装FreeBSD之前先考察显卡驱动的支持状况，尤其是使用类似产品的用户（Intel的低功耗奔腾、赛扬、凌动系列，一般使用Nxxxx/Jxxxx/Zxxxx命名方式）
 
 > 附：[2018年FreeBSD论坛的英特尔集显驱动讨论](https://forums.freebsd.org/threads/how-to-use-the-old-or-the-new-i915kms-driver-for-intel-integrated-graphics-with-xorg.66732/)（仅供参考，实际现在新版驱动已经变化）
 
 > 想要查看自己的显卡或其他硬件是否确实被FreeBSD支持，这里推荐一个[网站](https://bsd-hardware.info)
 
-安装3D库
+安装3D库（mesa）
 
-安装视频解码库
+```shell
+pkg install mesa-libs mesa-dri
+```
+
+安装intel硬件视频解码支持
+
+```shell
+pkg install libva-intel-media-driver # 适用于HD5000以及更新的显卡
+```
+
+或
+
+```shell
+pkg install libva-intel-driver # 旧驱动，最高支持到UHD630
+```
+
+最后注意必须要将用户添加到`video`或`wheel`组才能访问3D加速，示例
+
+```shell
+pw groupmod video -m me
+```
 
 
 ### 3.2.2 安装X
 
+```shell
+pkg install xorg
+```
 
-### 3.2.3 安装DE/WM以及配置
+此时`startx`，可以尝试启动一个简易的TWM，如下，说明xorg可以使用，关闭只要在左侧窗口`exit`即可
+
+![启动X](images/210115a002.jpg)
 
 
-### 3.3 内核模块加载
+### 3.2.3 安装中文字体
 
-### 3. 其他
+```shell
+pkg install wqy-fonts # 安装文泉驿字体
+```
 
-### 3. 关闭蜂鸣器
+
+### 3.2.4 安装DE/WM以及配置
+
+安装xfce
+
+```shell
+pkg install xfce
+```
+
+使能dbus，在`/etc/rc.conf`
+
+```
+dbus_enable="YES"
+```
+
+编辑`~/.xinitrc`
+
+```
+. /usr/local/etc/xdg/xfce4/xinitrc
+```
+
+重启，登陆后直接`startx`就可以启动xfce了
+
+注意，`startx`之后X默认使用的虚拟终端为`ttyv8`，切换到其他虚拟终端后通过`Ctrl+Alt+F9`返回图形界面
+
+
+### 3.2.5 图标
+
+安装Papirus扁平风格图标
+
+```shell
+pkg install papirus-icon-theme
+```
+
+
+### 3.2.6 禁用蜂鸣器
+
+编辑`/boot/loader.conf`，添加一行
+
+```
+kern.vt.enable_bell=0
+```
+
+
+### 4 最终效果
+
+![桌面截图](images/210115a003.jpg)
