@@ -23,6 +23,7 @@
 
 使用U盘启动安装，下载memstick安装镜像，使用`xz -dk`解压后，再使用`dd`命令将.img镜像刻录到u盘
 
+
 ## 2 基本安装
 
 从Intel的H7x/B7x（差不多也就是Ivy Bridge的3代酷睿时代，2012年左右）开始绝大部分Intelx86平台都支持UEFI启动，这里就只记录UEFI启动模式的安装方法。Legacy模式基本不用太复杂的操作就不赘述了
@@ -32,6 +33,7 @@
 基本安装非常简单，大部分步骤照着bsdinstall的提示走就行了
 
 UEFI安装的主要难点在于磁盘分区和启动引导的解决，另外给出一些设置杂项的个人偏好，其他基本默认就行
+
 
 ### 2.1 磁盘分区
 
@@ -99,6 +101,7 @@ mount /dev/ada1p1 /mnt/home
 
 `exit`退出Shell，bsdinstall即开始自动安装
 
+
 ### 2.2 启动引导
 
 启动引导问题可以在分区之前处理，也可以到所有安装都结束以后再进入Shell处理，只要有ESP分区就可以
@@ -110,6 +113,7 @@ mount -t msdosfs /dev/ada0p1 /mnt
 mkdir -p /mnt/EFI/FreeBSD
 cp /boot/loader.efi /mnt/EFI/FreeBSD/BOOTX64.efi
 ```
+
 
 ### 2.2.1 单系统引导
 
@@ -130,6 +134,7 @@ efibootmgr -B 0001
 ```shell
 umount /mnt
 ```
+
 
 ### 2.2.2 双系统/多系统引导
 
@@ -156,6 +161,7 @@ grub-mkconfig -o /boot/grub/grub.cfg
 
 重启进入GRUB界面就应该看到`FreeBSD Bootloader`选项了，可以正常引导FreeBSD
 
+
 ### 2.3 个人设置偏好参考（不代表建议的选择）
 
 安装部分：一般只选择kernel-dbg，ports，src三项，不使用lib32
@@ -163,6 +169,7 @@ grub-mkconfig -o /boot/grub/grub.cfg
 服务启动：一般开启moused，ntpd，powerd，dumpdev。有需要可以开启sshd远程访问
 
 安全特性：一般开启clear_tmp，disable_syslogd，disable_sendmail，secure_console，disable_ddtrace
+
 
 ## 3 安装后杂项
 
@@ -346,7 +353,7 @@ pkg install papirus-icon-theme
 ```
 
 
-### 3.2.6 禁用蜂鸣器
+### 3.3 禁用蜂鸣器
 
 编辑`/boot/loader.conf`，添加一行
 
@@ -355,6 +362,40 @@ kern.vt.enable_bell=0
 ```
 
 
-### 4 最终效果
+### 3.4 无线网卡驱动
+
+主板的minipcie有一张Realtek的RTL8188EE网卡
+
+编辑`/boot/loader.conf`，添加如下内容，在启动时加载Realtek驱动
+
+```shell 
+if_rtwn_pci_load="YES"
+if_rtwn_usb_load="YES"
+```
+
+编辑`/etc/rc.conf`，创建`wlan0`。这里是`rtwn0`，可以通过`sysctl net.wlan.devices`获取名称
+
+```
+wlans_rtwn0="wlan0"
+ifconfig_wlan0="WPA SYNCDHCP"
+```
+
+在`/etc/wpa_supplicant.conf`根据ssid和密码添加配置
+
+```
+network={
+  ssid="myssid"
+  psk="mypasswd"
+}
+```
+
+之后重启`netif`即可
+
+```
+service netif restart
+```
+
+
+## 最终效果
 
 ![桌面截图](images/210115a003.jpg)
