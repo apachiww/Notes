@@ -2,8 +2,6 @@
 
 ~~这个其实基本就是Linux From Scratch(LFS)~~
 
-生命在于折腾x
-
 ## 1. 环境
 
 ArchLinux with kernel version 5.4.46-1-lts
@@ -22,7 +20,7 @@ qemu-arm 5.0.0
 
 ## 3. 安装工具链
 
-ArchLinux官方仓库的arm工具链是arm-none-eabi-，这个工具链是用于裸机程序的，不能用于Linux内核以及应用程序的构建编译，可以使用以上提供的工具链，开箱即用
+ArchLinux官方仓库的arm工具链是`arm-none-eabi-`，这个工具链是用于裸机程序的，不能用于Linux内核以及应用程序的构建编译，可以使用以上提供的工具链，开箱即用
 
 其他有些发行版仓库默认就有工具链，直接安装即可
 
@@ -38,21 +36,21 @@ ArchLinux官方仓库的arm工具链是arm-none-eabi-，这个工具链是用于
     make -j12
     make install
     ```
-    *注意：menuconfig可以选择设置busybox为静态链接（一般不动），make -jx视CPU核心数自定*
+    注意：`menuconfig`可以选择设置`busybox`为静态链接（一般不动），`make -jx`视CPU核心数自定
 
 + 创建基本目录
 
-    编译完成以后，在./_install可以找到编译好的文件，就是之后整个文件系统的根目录，在./_install下创建以下目录
+    编译完成以后，在`./_install`可以找到编译好的文件，就是之后整个文件系统的根目录，在`./_install`下创建以下目录
 
     ```shell
     mkdir etc proc sys tmp dev lib
     ```
 
-    完成后，./_install下出现bin sbin usr mkdir etc proc sys tmp dev lib
+    完成后，`./_install`下出现`bin sbin usr mkdir etc proc sys tmp dev lib`
 
 + 创建设备节点
 
-    在dev下创建节点
+    在`./_install/dev/`下创建节点
 
     ```shell
     sudo mknod -m 666 tty1 c 4 1
@@ -65,7 +63,7 @@ ArchLinux官方仓库的arm工具链是arm-none-eabi-，这个工具链是用于
 
 + 创建fstab
 
-    etc/fstab
+    `./_install/etc/fstab`
 
     ```fs
     #Device	mountpoint	type	option	dump	fsckorder
@@ -78,7 +76,7 @@ ArchLinux官方仓库的arm工具链是arm-none-eabi-，这个工具链是用于
 
 + 创建inittab
 
-    etc/inittab
+    `./_install/etc/inittab`
 
     ```
     ::sysinit:/etc/init.d/rcS
@@ -94,7 +92,7 @@ ArchLinux官方仓库的arm工具链是arm-none-eabi-，这个工具链是用于
 
 + 创建init脚本
 
-    创建./_install/etc/init.d/rcS，并且chmod 777
+    创建`./_install/etc/init.d/rcS`，并且`chmod 777`
 
     ```shell
     mount -a
@@ -111,7 +109,7 @@ ArchLinux官方仓库的arm工具链是arm-none-eabi-，这个工具链是用于
     /path/to/toolchain/bin/arm-none-linux-gnueabihf-readelf -d busybox | grep NEEDED
     ```
 
-    一般可以得到libc.so.6 libm.so.6 libresolv.so.2，需要添加上ld-linux.so.3拷贝
+    一般可以得到`libc.so.6 libm.so.6 libresolv.so.2`，需要添加上`ld-linux.so.3`
 
     ```shell
     cp /path/to/toolchain/arm-none-linux-gnueabihf/libc/lib/ld-linux-armhf.so.3 _install/lib
@@ -133,20 +131,20 @@ ArchLinux官方仓库的arm工具链是arm-none-eabi-，这个工具链是用于
     make -j12
     ```
 
-+ 可能需要先安装flex和bison
++ 可能需要先安装`flex`和`bison`
 
     ```shell
     sudo pacman -S flex bison
     ```
 
-+ 编译完成后，将zImage以及vexpress的.dtb设备树文件拷贝出来方便使用
++ 编译完成后，将`zImage`以及`vexpress`的`.dtb`设备树文件拷贝出来方便使用
 
     ```shell
     cp arch/arm/boot/zImage ./
     cp arch/arm/boot/dts/*.dtb ./dtbs
     ```
 
-+ 安装模块，在lib下创建modules目录
++ 安装模块，在`lib`下创建`modules`目录
 
     ```shell
     make modules_install INSTALL_MOD_PATH=/path/to/busybox/_install/
@@ -213,9 +211,7 @@ ArchLinux官方仓库的arm工具链是arm-none-eabi-，这个工具链是用于
 
     内核<a href="https://raw.githubusercontent.com/dhruvvyas90/qemu-rpi-kernel/master/kernel-qemu-4.4.34-jessie" target="_blank">下载</a> 
 
-    *注：githubusercontent.com域名被污染，可以改hosts下载*
-
-+ 解压raspbian镜像，使用fdisk查看分区，并挂载
++ 解压raspbian镜像，使用`fdisk`查看分区，并挂载
 
     应该可以看到两个分区，将img2的起始sector乘512得到offset
 
@@ -227,13 +223,13 @@ ArchLinux官方仓库的arm工具链是arm-none-eabi-，这个工具链是用于
 
 + 修改镜像文件
 
-    编辑ld.so.preload，注释掉所有行
+    编辑`ld.so.preload`，注释掉所有行
 
     ```shell
     sudo vim /mountpath/etc/ld.so.preload
     ```
 
-    编辑fstab，将所有mmcblk分区更改为sda1，sda2
+    编辑fstab，将所有`mmcblk`分区更改为sda1，sda2
 
     ```shell
     sudo vim /mountpath/etc/fstab
@@ -253,4 +249,4 @@ ArchLinux官方仓库的arm工具链是arm-none-eabi-，这个工具链是用于
 
 + 后记
 
-    经过尝试以上方法最后成功启动，但是有图形界面的raspbian极其占用资源，还只能用arm11单核，实际运行非常卡顿，最后关机还出现了kernel panic，只能kill掉，不知道是哪里的问题，只好暂时放弃。
+    经过尝试以上方法最后成功启动，但是实际运行非常卡顿。有更好的办法以后再补充。

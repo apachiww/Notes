@@ -6,6 +6,18 @@
 
 记录有关FreeBSD作为桌面系统使用的安装过程，以及注意事项
 
+常用参考
+
+[FreeBSD Handbook](https://docs.freebsd.org/en/books/handbook/)
+
+[FreeBSD Manual Pages](https://www.freebsd.org/cgi/man.cgi)
+
+[FreeBSD Wiki](https://wiki.freebsd.org/)
+
+[FreeBSD 论坛](https://forums.freebsd.org/)
+
+[FreshPorts](https://www.freshports.org/)
+
 ## 平台配置
 
 > CPU：Intel Celeron J3160(4) @ 1.6GHz \
@@ -32,7 +44,7 @@
 
 基本安装非常简单，大部分步骤照着bsdinstall的提示走就行了
 
-UEFI安装的主要难点在于磁盘分区和启动引导的解决，另外给出一些设置杂项的个人偏好，其他基本默认就行
+UEFI安装的主要难点在于磁盘分区和启动引导的解决，另外给出一些设置杂项的个人偏好，其他大部分默认就行
 
 
 ### 2.1 磁盘分区
@@ -138,9 +150,11 @@ umount /mnt
 
 ### 2.2.2 双系统/多系统引导
 
-其实硬盘原来已经装了ArchLinux，这里用最笨的方法，用GRUB来chainload FreeBSD的bootloader
+大部分用户一般都会在已经安装了其他操作系统的电脑上安装FreeBSD作为尝试
 
-重启进ArchLinux配置/etc/grub.d/40_custom添加启动入口如下，将XXXX-XXXX替换为ESP分区的UUID（可以通过`blkid`命令获取），**而hints参数对于不同机器配置可能会不一样**，其他hints的获取具体可以参考Archwiki中[手动配置Windows双启动](https://wiki.archlinux.org/index.php/GRUB#Windows_installed_in_UEFI/GPT_mode)
+这块240G的硬盘原来已经安装了ArchLinux，这里用最笨的方法，用GRUB来chainload FreeBSD的bootloader（原理和UEFI模式手动配置Windows双启动基本相同，不需要`os-prober`）
+
+重启进ArchLinux配置/etc/grub.d/40_custom添加启动入口如下，将XXXX-XXXX替换为ESP分区的UUID（可以通过`blkid`命令获取），**而hints参数对于不同机器配置可能会不一样**，其他hints的获取具体可以参考[Archwiki](https://wiki.archlinux.org/index.php/GRUB#Windows_installed_in_UEFI/GPT_mode)
 
 ```
 # /etc/grub.d/40_custom
@@ -189,7 +203,7 @@ FreeBSD使用ports和pkg两种方法安装软件包，pkg是已经编译好的�
 
 几个国内的非官方镜像站：
 
-+ 北交大镜像 mirror.bjtu.edu.cn 有反向代理的pkg，portsnap，update（目前好像不能用），但是安装镜像比较全，有Release，Current，Stable安装镜像
++ 北交大镜像 mirror.bjtu.edu.cn 有反向代理的pkg，portsnap，update（目前不能用），但是安装镜像比较全，有Release，Current，Stable安装镜像
 
 + 中科大镜像 mirrors.ustc.edu.cn 有pkg和ports，但是只有Release安装镜像
 
@@ -234,14 +248,14 @@ MASTER_SITE_OVERRIDE?=http://ports.freebsd.cn/distfiles/${DIST_SUBDIR}/
 SERVERNAME=portsnap.freebsd.cn
 ```
 
-修改后运行`portsnap fetch`获取安装包，**第一次需要再运行**`portsnap extract`。以后更新只要`portsnap fetch update`即可
+修改后运行`portsnap fetch`获取安装包，**如果之前bsdinstall安装时没有选择Ports，第一次需要再运行**`portsnap extract`（速度可能会很慢）。以后更新只要`portsnap fetch update`即可
 
 
 ### 3.2 安装图形界面
 
 ### 3.2.1 安装显卡驱动
 
-安装kms
+安装kms，不需要安装xf86的驱动（目前已经被很多Linux发行版弃用，原因参考[ArchWiki](https://wiki.archlinux.org/index.php/Intel_graphics#Installation)）
 
 ```shell
 pkg install drm-fbsd13-kmod
@@ -394,6 +408,21 @@ network={
 ```
 service netif restart
 ```
+
+
+### 3.5 网络配置
+
+
+### 3.6 中文输入法
+
+
+### 3.7 ZFS使用简记
+
+
+### 3.8 jails使用简记
+
+
+### 3.9 服务管理
 
 
 ## 最终效果

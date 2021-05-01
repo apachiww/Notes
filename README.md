@@ -94,6 +94,10 @@
 
     函数式编程，Haskell入门 [210409a_haskell.md](210409a_haskell.md)
 
++ 2021.05.01添加
+
+    计算机音乐原理（~~计算机音乐史~~），乐理基础/和声学/编曲入门，以及基于FamiTracker的8bit音乐制作教程 [210501a_famitracker.md](210501a_famitracker.md)
+
 ## 进度状态
 
 | No. | Content | Status |
@@ -124,6 +128,7 @@
 | 210317a | 并行计算                            | New           |
 | 210320a | 计算机视觉，平面图形的3D重构         | In process    |
 | 210409a | 函数式编程，Haskell                 | New           |
+| 210501a | 计算机音乐原理，编曲作曲入门，和声学，FamiTracker       | New         |
 
 ### 参考书收藏列表
 

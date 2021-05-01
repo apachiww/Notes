@@ -82,13 +82,13 @@ CPU： Qualcomm MSM8974PRO-AC (SnapDragon 801)
     | UND | 11011 | PL1 |  | 未定义指令 |
     | HYP | 11010 | PL2 | 需要带虚拟扩展的处理器，运行在非安全状态 | 超级管理 |
 
-    *注：在有虚拟化扩展的ARMv7 CPU中有PL0到PL2三级优先级，其他的只有PL0和PL1两级。常见的ARM CPU中，Cortex-a7 Cortex-a15 Cortex-a17带虚拟化扩展，而Cortex-a9 Cortex-a8等较老的IP不带虚拟化扩展，**本学习记录只针对没有虚拟化扩展的CPU，对于虚拟化不会过多的去涉及（一般用不上）*** 
+    注：在有虚拟化扩展的ARMv7 CPU中有PL0到PL2三级优先级，其他的只有PL0和PL1两级。常见的ARM CPU中，Cortex-a7 Cortex-a15 Cortex-a17带虚拟化扩展，而Cortex-a9 Cortex-a8等较老的IP不带虚拟化扩展，**本学习记录只针对没有虚拟化扩展的CPU，对于虚拟化不会过多的去涉及（一般用不上）**
 
 + **各模式下的寄存器**
 
     ![寄存器表（截自ARM官方文档）](images/200920a001.png "寄存器表（截自ARM官方文档）")
 
-    *注：上图中，空白部分不是代表没有该寄存器，而是代表和User模式下用的是同一个寄存器*
+    注：上图中，空白部分不是代表没有该寄存器，而是代表和User模式下用的是同一个寄存器
 
 ## 5. 内存系统架构（VMSAv7 A-Profile）
 
@@ -106,11 +106,11 @@ CPU： Qualcomm MSM8974PRO-AC (SnapDragon 801)
     | Device | 设备内存，一般是IO，控制寄存器等外设。对于设备的访问需要内存屏障（Memory Barrier）以保证访问顺序符合预期（无论读写）（现代引入乱序执行技术的CPU会导致访问乱序，多CPU系统因此受影响较大），通常系统总线（访问WatchDog和中断控制器）是Shared，外设是Non-Shared | Device类型内存不会被记入Cache |
     | Strongly-Ordered | 强顺序， ARMv8中被废除，强制要求所有都严格按顺序读写，都是Shared | Strongly-Ordered内存不会被记入Cache |
 
-    *注：Write-Through即写入到Cache的内容同步写回到内存，速度较慢，Write-Back即一般写回，只更新Cache不更新内存，只有到Cache被换出时才被写回，速度快，但存在同步问题*
+    注：Write-Through即写入到Cache的内容同步写回到内存，速度较慢，Write-Back即一般写回，只更新Cache不更新内存，只有到Cache被换出时才被写回，速度快，但存在同步问题
     
-    *在ARM预取指操作中，预取指最多可能先行于当前执行指令64字节*
+    在ARM预取指操作中，预取指最多可能先行于当前执行指令64字节
 
-    *非显式的访存即除访存指令之外对内存的访问操作，如取指，缓存交换，Tranlation Table Walk*
+    非显式的访存即除访存指令之外对内存的访问操作，如取指，缓存交换，Tranlation Table Walk
 
 + **显式内存屏障（Explicit Memory Barrier）**
 
