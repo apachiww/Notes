@@ -1,6 +1,6 @@
 # FreeBSD作为桌面系统使用的安装过程以及注意事项
 
-上一次更新日期：2021-04-14
+上一次更新日期：2021-05-04
 
 ## 简介
 
@@ -21,7 +21,7 @@
 ## 平台配置
 
 > CPU：Intel Celeron J3160(4) @ 1.6GHz \
-  GPU：Intel HD Graphics 400 \
+  GPU：Intel HD Graphics 400 (Gen8) \
   内存：2 x 2GB DDR3 \
   硬盘：KIOXIA 240G SATA SSD & Seagate 500G 5400rpm HDD \
   启动模式：UEFI x64 \
@@ -85,7 +85,7 @@ tunefs -t enable /dev/ada0p2
 gpart add -t freebsd-swap -s 2G ada0
 ```
 
-swap分区可以通过`swapon`挂载，这里先不用挂载
+swap分区可以通过`swapon`挂载，这里先不必挂载
 
 ```shell
 swapon /dev/ada0p3
@@ -154,7 +154,7 @@ umount /mnt
 
 这块240G的硬盘原来已经安装了ArchLinux，这里用最笨的方法，用GRUB来chainload FreeBSD的bootloader（原理和UEFI模式手动配置Windows双启动基本相同，不需要`os-prober`）
 
-重启进ArchLinux配置/etc/grub.d/40_custom添加启动入口如下，将XXXX-XXXX替换为ESP分区的UUID（可以通过`blkid`命令获取），**而hints参数对于不同机器配置可能会不一样**，其他hints的获取具体可以参考[Archwiki](https://wiki.archlinux.org/index.php/GRUB#Windows_installed_in_UEFI/GPT_mode)
+重启进ArchLinux配置/etc/grub.d/40_custom添加启动入口如下，将XXXX-XXXX替换为ESP分区的UUID（可以通过`blkid`命令获取），**而hints参数对于不同机器配置可能会不一样**，其他hints的获取具体可以参考[ArchWiki](https://wiki.archlinux.org/index.php/GRUB#Windows_installed_in_UEFI/GPT_mode)
 
 ```
 # /etc/grub.d/40_custom
@@ -178,7 +178,7 @@ grub-mkconfig -o /boot/grub/grub.cfg
 
 ### 2.3 个人设置偏好参考（不代表建议的选择）
 
-安装部分：一般只选择kernel-dbg，ports，src三项，不使用lib32
+安装部分：一般选择kernel-dbg，ports，src三项，不使用lib32，作为纯64位环境。如果之后有运行wine的需求，建议勾上lib32
 
 服务启动：一般开启moused，ntpd，powerd，dumpdev。有需要可以开启sshd远程访问
 
@@ -209,7 +209,7 @@ FreeBSD使用ports和pkg两种方法安装软件包，pkg是已经编译好的�
 
 + 网易镜像 mirrors.163.com 有pkg和ports，有Release安装镜像，目前Current和Stable镜像无法下载
 
-+ freebsdcn镜像 freebsd.cn 是私人搭建的镜像，有ports，portsnap，pkg，update，但没有安装镜像。速度较快，可以设为默认镜像
++ freebsdcn镜像 freebsd.cn 是国内一个爱好者搭建的镜像，有ports，portsnap，pkg，update，但没有安装镜像。速度较快，可以设为默认镜像
 
 修改举例：
 
@@ -220,7 +220,7 @@ FreeBSD使用ports和pkg两种方法安装软件包，pkg是已经编译好的�
 freebsdcn:{
 　url: "pkg+http://pkg.freebsd.cn/${ABI}/latest", 
 　mirror_type: "srv",
-　signature_type: "none",
+　signature_type: "fingerprints",
 　fingerprints: "/usr/share/keys/pkg",
 　enabled: yes
 }
@@ -248,14 +248,14 @@ MASTER_SITE_OVERRIDE?=http://ports.freebsd.cn/distfiles/${DIST_SUBDIR}/
 SERVERNAME=portsnap.freebsd.cn
 ```
 
-修改后运行`portsnap fetch`获取安装包，**如果之前bsdinstall安装时没有选择Ports，第一次需要再运行**`portsnap extract`（速度可能会很慢）。以后更新只要`portsnap fetch update`即可
+修改后运行`portsnap fetch`获取，**如果之前bsdinstall安装时没有选择Ports，第一次需要再运行**`portsnap extract`（速度可能会很慢）。以后更新只要`portsnap fetch update`即可
 
 
 ### 3.2 安装图形界面
 
 ### 3.2.1 安装显卡驱动
 
-安装kms，不需要安装xf86的驱动（目前已经被很多Linux发行版弃用，原因参考[ArchWiki](https://wiki.archlinux.org/index.php/Intel_graphics#Installation)）
+安装`drm-kmod`，不需要安装`xf86-video-xxx`（目前很多Linux发行版建议不安装该DDX驱动，参考[ArchWiki](https://wiki.archlinux.org/index.php/Intel_graphics#Installation)）
 
 ```shell
 pkg install drm-fbsd13-kmod
@@ -335,10 +335,12 @@ pkg install wqy-fonts # 安装文泉驿字体
 
 ### 3.2.4 安装DE/WM以及配置
 
+~~个人不使用DM，通过tty界面登录后startx，这里只安装DE~~
+
 安装xfce
 
 ```shell
-pkg install xfce
+pkg install xfce xfce4-goodies
 ```
 
 使能dbus，在`/etc/rc.conf`
@@ -369,6 +371,8 @@ pkg install papirus-icon-theme
 
 ### 3.3 禁用蜂鸣器
 
+FreeBSD默认开启主板蜂鸣器
+
 编辑`/boot/loader.conf`，添加一行
 
 ```
@@ -376,7 +380,7 @@ kern.vt.enable_bell=0
 ```
 
 
-### 3.4 无线网卡驱动
+### 3.4 网络配置，无线网卡驱动
 
 主板的minipcie有一张Realtek的RTL8188EE网卡
 
@@ -410,10 +414,36 @@ service netif restart
 ```
 
 
-### 3.5 网络配置
+### 3.5 声卡
 
 
-### 3.6 中文输入法
+### 3.6 输入法
+
+安装`fcitx`，添加中文和日语输入支持
+
+```shell
+pkg install zh-fcitx zh-fcitx-configtool zh-fcitx-libpinyin ja-fcitx-mozc
+```
+
+如果使用的是`sh`，那么编辑`.shrc`如下，添加几行设置环境变量。`csh`使用`setenv`
+
+```shell
+# fcitx env setup
+export XMODIFIERS='@im=fcitx'
+export GTK_IM_MODULE=fcitx
+export GTK2_IM_MODULE=fcitx
+export GTK3_IM_MODULE=fcitx
+export QT_IM_MODULE=fcitx
+export QT4_IM_MODULE=fcitx
+```
+
+自启动
+
+```shell
+cp /usr/local/share/applications/fcitx.desktop ~/.config/autostart
+```
+
+重启进入fcitx设置即可
 
 
 ### 3.7 ZFS使用简记
