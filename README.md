@@ -98,6 +98,15 @@
 
     计算机音乐原理（~~计算机音乐史~~），乐理基础/和声学/编曲入门，以及基于FamiTracker的8bit音乐制作教程 [210501a_famitracker.md](210501a_famitracker.md)
 
++ 2021.05.15添加
+
+    Go笔记，[210515a_go.md](210515a_go.md)
+
+    Python笔记，[210515b_python.md](210515b_python.md)
+
+    服务器部署，[210515c_nginx.md](210515c_nginx.md)
+
+
 ## 进度状态
 
 | No. | Content | Status |
@@ -109,26 +118,29 @@
 | 200920c | 数字逻辑以及Verilog                 | In process    |
 | 201002a | 高数                                | In process    |
 | 201020a | STM32开发以及ARM汇编（ARMv7 Cortex-M）      | Hang up       |
-| 201219a | Linux命令行以及Shell脚本            | Update ondemand |
+| 201219a | Linux命令行以及Shell脚本，Awk字符串处理     | Update ondemand |
 | 201219b | C语言Makefile以及交叉编译           | In process    |
 | 201220a | 类Unix下的通用MCU开发环境        | New           |
 | 201220b | 密码爆破                            | New           |
-| 201220c | 使用Metasploit的渗透测试，社工      | New           |
+| 201220c | 使用Metasploit的渗透测试，社工基础  | New           |
 | 201225a | 固态硬盘工作原理与优化方法          | Finished      |
-| 201229a | Ruby语言以及Ruby On Rails           | New           |
+| 201229a | Ruby学习笔记以及Ruby On Rails Web开发   | New           |
 | 201230a | 加密算法，密码学                    | New           |
 | 210108a | AutoCAD基本操作                     | Finished      |
 | 210110a | 计算机体系结构以及处理器的设计      | Hang up       |
 | 210111a | Qt应用开发                          | Hang up       |
 | 210115a | FreeBSD安装并作为桌面系统使用       | Hang up       |
 | 210130a | 各种类Unix的管理维护以及安全优化    | Update ondemand |
-| 210216a | Rust语言入门                        | New           |
-| 210313a | Octave入门                                | In process    |
-| 210316a | 计算机图形学和Vulkan                 | In process    |
-| 210317a | 并行计算                            | New           |
-| 210320a | 计算机视觉，平面图形的3D重构         | In process    |
+| 210216a | Rust学习笔记                        | New           |
+| 210313a | Octave/Matlab入门                   | In process    |
+| 210316a | 计算机图形学和Vulkan，OpenGL（GLSL）    | In process    |
+| 210317a | 并行计算，OpenMP                    | New           |
+| 210320a | 计算机视觉，3D重构                  | In process    |
 | 210409a | 函数式编程，Haskell                 | New           |
 | 210501a | 计算机音乐原理，编曲作曲入门，和声学，FamiTracker       | New         |
+| 210515a | Go学习笔记                          | New           |
+| 210515b | Python学习笔记                      | New           |
+| 210515c | Nginx/Apache服务器部署              | New           |
 
 ### 参考书收藏列表
 
@@ -147,3 +159,15 @@
 13. 《Vulkan应用开发指南》，Graham Sellers，John Kessenich著，人民邮电出版社
 14. 《Vulkan学习指南》，Parminder Singh著，机械工业出版社
 15. 《三维计算机视觉技术和算法导论》，Boguslaw lyganek，J. Paulsiebert著，国防工业出版社
+
+C CPP Go Rust Python Ruby JavaScript Haskell
+
+Verilog ARM_asm
+
+Shell Awk
+
+Make CMake
+
+Matlab
+
+GLSL

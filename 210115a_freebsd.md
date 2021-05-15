@@ -414,7 +414,7 @@ service netif restart
 ```
 
 
-### 3.5 声卡
+### 3.5 声音配置，声卡驱动
 
 
 ### 3.6 输入法
@@ -443,7 +443,7 @@ export QT4_IM_MODULE=fcitx
 cp /usr/local/share/applications/fcitx.desktop ~/.config/autostart
 ```
 
-重启进入fcitx设置即可
+重启进入fcitx设置添加中文日语输入法即可
 
 
 ### 3.7 ZFS使用简记
