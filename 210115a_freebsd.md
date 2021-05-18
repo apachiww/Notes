@@ -178,7 +178,7 @@ grub-mkconfig -o /boot/grub/grub.cfg
 
 ### 2.3 个人设置偏好参考（不代表建议的选择）
 
-安装部分：一般选择kernel-dbg，ports，src三项，不使用lib32，作为纯64位环境。如果之后有运行wine的需求，建议勾上lib32
+安装部分：一般选择kernel-dbg，ports，src三项，不使用lib32，作为纯64位环境使用。如果之后有运行wine的需求，建议勾上lib32
 
 服务启动：一般开启moused，ntpd，powerd，dumpdev。有需要可以开启sshd远程访问
 
@@ -204,6 +204,8 @@ FreeBSD使用ports和pkg两种方法安装软件包，pkg是已经编译好的�
 几个国内的非官方镜像站：
 
 + 北交大镜像 mirror.bjtu.edu.cn 有反向代理的pkg，portsnap，update（目前不能用），但是安装镜像比较全，有Release，Current，Stable安装镜像
+
++ 兰大镜像 mirror.lzu.edu.cn 目前只有安装镜像可用
 
 + 中科大镜像 mirrors.ustc.edu.cn 有pkg和ports，但是只有Release安装镜像
 
@@ -231,9 +233,9 @@ FreeBSD:{
 }
 ```
 
-首次使用pkg会自动安装，安装完成以后运行`pkg update -f`更新索引
+首次使用`pkg`会自动安装，安装完成以后运行`pkg update -f`更新索引
 
-修改ports源，/etc/make.conf
+修改ports源，/etc/make.conf，4为使用的线程数，根据需要更改
 
 ```
 # 启用线程数
@@ -242,14 +244,27 @@ DISABLE_SIZE=yes
 MASTER_SITE_OVERRIDE?=http://ports.freebsd.cn/distfiles/${DIST_SUBDIR}/
 ```
 
-修改portsnap源，/etc/portsnap.conf
+~~修改portsnap源，/etc/portsnap.conf~~
 
 ```
 SERVERNAME=portsnap.freebsd.cn
 ```
 
-修改后运行`portsnap fetch`获取，**如果之前bsdinstall安装时没有选择Ports，第一次需要再运行**`portsnap extract`（速度可能会很慢）。以后更新只要`portsnap fetch update`即可
+~~修改后运行`portsnap fetch`获取，**如果之前bsdinstall安装时没有选择Ports，第一次需要再运行**`portsnap extract`（速度可能会很慢）。以后更新只要`portsnap fetch update`即可~~
 
+> 注意，由于FreeBSD从SVN改为Git管理，`portsnap`即将在未来的版本中被废弃，以后将会改为使用`gitup`更新ports
+
+安装`gitup`
+
+```shell
+pkg install gitup
+```
+
+更新ports
+
+```shell
+gitup ports
+```
 
 ### 3.2 安装图形界面
 
@@ -321,7 +336,7 @@ pw groupmod video -m me
 pkg install xorg
 ```
 
-此时`startx`，可以尝试启动一个简易的TWM，如下，说明xorg可以使用，关闭只要在左侧窗口`exit`即可
+此时`startx`，可以尝试启动一个简易的TWM，如下，说明xorg可以使用，关闭X只要在左侧窗口`exit`即可
 
 ![启动X](images/210115a002.jpg)
 
@@ -349,7 +364,7 @@ pkg install xfce xfce4-goodies
 dbus_enable="YES"
 ```
 
-编辑`~/.xinitrc`
+编辑`~/.xinitrc`，`source`一下xinitrc
 
 ```
 . /usr/local/etc/xdg/xfce4/xinitrc

@@ -136,11 +136,11 @@
 | 210316a | 计算机图形学和Vulkan，OpenGL（GLSL）    | In process    |
 | 210317a | 并行计算，OpenMP                    | New           |
 | 210320a | 计算机视觉，3D重构                  | In process    |
-| 210409a | 函数式编程，Haskell                 | New           |
+| 210409a | 函数式编程，Haskell学习笔记         | New           |
 | 210501a | 计算机音乐原理，编曲作曲入门，和声学，FamiTracker       | New         |
 | 210515a | Go学习笔记                          | New           |
 | 210515b | Python学习笔记                      | New           |
-| 210515c | Nginx/Apache服务器部署              | New           |
+| 210515c | Nginx/Apache服务器原理以及部署      | New           |
 
 ### 参考书收藏列表
 

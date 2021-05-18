@@ -1,4 +1,4 @@
-# 计算机图形学入门，以及Vulkan API上手
+# 计算机图形学入门，基本算法，以及OpenGL/Vulkan API上手
 
 ## 参考
 
@@ -10,6 +10,8 @@
 
 GAMES101-现代计算机图形学入门-闫令琪 https://www.bilibili.com/video/BV1X7411F744
 
-## 计算机图形学
+## 1 计算机图形学
 
-## Vulkan学习
+## 2 OpenGL学习笔记
+
+## 3 Vulkan学习笔记
