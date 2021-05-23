@@ -160,7 +160,7 @@
 14. 《Vulkan学习指南》，Parminder Singh著，机械工业出版社
 15. 《三维计算机视觉技术和算法导论》，Boguslaw lyganek，J. Paulsiebert著，国防工业出版社
 
-C CPP Go Rust Python Ruby JavaScript Haskell
+C CPP Go Rust Python Ruby Haskell JavaScript CSS HTML5
 
 Verilog ARM_asm
 
@@ -171,3 +171,5 @@ Make CMake
 Matlab
 
 GLSL
+
+Qt Rails
