@@ -2411,6 +2411,8 @@ V的本质是用于表示**0111_1111**和**1000_0000**之间跳转的边界行�
 
 [IEEE754-2019官方文档](https://ieeexplore.ieee.org/document/8766229)
 
+[IEEE754-2008官方文档](https://ieeexplore.ieee.org/document/4610935)
+
 ### 5.1. 浮点数的表示
 
 ### 5.1. 舍入

@@ -28,11 +28,11 @@
 
     shell脚本 [201219a_shell.md](201219a_shell.md)
 
-    arm单片机makefile以及命令行编译方法 [201219b_makefile.md](201219b_makefile.md)
+    makefile用法，cmake，GNU make [201219b_makefile.md](201219b_makefile.md)
 
 + 2020.12.20添加
 
-    类Unix下的通用MCU开发环境，包括8051，AVR，ARM（ST，TI，Atmel） [201220a_mcu-ide.md](201220a_mcu-ide.md)
+    基于vscode的通用MCU开发环境，以及下载调试操作，包括8051，AVR，ARM [201220a_mcu-ide.md](201220a_mcu-ide.md)
 
     使用Hashcat或JohntheRipper破解密码 [201220b_crack.md](201220b_crack.md)
 
@@ -56,7 +56,7 @@
 
 + 2021.01.10添加
 
-    《计算机体系结构量化研究方法》以及《大话处理器》阅读笔记 [210110a_computer-arch.md](210110a_computer-arch.md)
+    《计算机体系结构量化研究方法》以及《深入理解计算机系统》阅读笔记 [210110a_computer-arch.md](210110a_computer-arch.md)
 
 + 2021.01.11添加
 
@@ -76,11 +76,11 @@
 
 + 2021.03.13添加
 
-    Octave使用，和[线性代数](201002a_maths.md#1-线性代数)同步更新 [210313a_octave.md](210313a_octave.md)
+    Matlab/Octave使用，和[线性代数](201002a_maths.md#1-线性代数)同步更新 [210313a_octave.md](210313a_octave.md)
 
 + 2021.03.16添加
 
-    计算机图形学和vulkan，[210316a_computer-graphics.md](210316a_computer-graphics.md)
+    计算机图形学基础和常用API，[210316a_computer-graphics.md](210316a_computer-graphics.md)
 
 + 2021.03.17添加
 
@@ -106,6 +106,10 @@
 
     服务器部署，[210515c_nginx.md](210515c_nginx.md)
 
++ 2021.05.24添加
+
+    8051单片机开发，[210524a_8051.md](210524a_8051.md)
+
 
 ## 进度状态
 
@@ -119,7 +123,7 @@
 | 201002a | 高数                                | In process    |
 | 201020a | STM32开发以及ARM汇编（ARMv7 Cortex-M）      | Hang up       |
 | 201219a | Linux命令行以及Shell脚本，Awk字符串处理     | Update ondemand |
-| 201219b | C语言Makefile以及交叉编译           | In process    |
+| 201219b | Makefile的用法，基于cmake和GNU make     | In process    |
 | 201220a | 类Unix下的通用MCU开发环境        | New           |
 | 201220b | 密码爆破                            | New           |
 | 201220c | 使用Metasploit的渗透测试，社工基础  | New           |
@@ -127,20 +131,21 @@
 | 201229a | Ruby学习笔记以及Ruby On Rails Web开发   | New           |
 | 201230a | 加密算法，密码学                    | New           |
 | 210108a | AutoCAD基本操作                     | Finished      |
-| 210110a | 计算机体系结构以及处理器的设计      | Hang up       |
+| 210110a | 计算机体系结构以及处理器的设计，阅读笔记     | Hang up       |
 | 210111a | Qt应用开发                          | Hang up       |
-| 210115a | FreeBSD安装并作为桌面系统使用       | Hang up       |
+| 210115a | FreeBSD安装并作为桌面系统使用       | Update ondemand       |
 | 210130a | 各种类Unix的管理维护以及安全优化    | Update ondemand |
 | 210216a | Rust学习笔记                        | New           |
 | 210313a | Octave/Matlab入门                   | In process    |
-| 210316a | 计算机图形学和Vulkan，OpenGL（GLSL）    | In process    |
+| 210316a | 计算机图形学算法和Vulkan，OpenGL（GLSL）    | In process    |
 | 210317a | 并行计算，OpenMP                    | New           |
 | 210320a | 计算机视觉，3D重构                  | In process    |
 | 210409a | 函数式编程，Haskell学习笔记         | New           |
-| 210501a | 计算机音乐原理，编曲作曲入门，和声学，FamiTracker       | New         |
+| 210501a | 计算机音乐原理，编曲作曲入门，和声学基础，FamiTracker，以及经典计算机音乐集成电路解析（YM3812，YM2413，YM2149，AY-3-8910，SAA1099等）       | New         |
 | 210515a | Go学习笔记                          | New           |
 | 210515b | Python学习笔记                      | New           |
 | 210515c | Nginx/Apache服务器原理以及部署      | New           |
+| 210524a | 8051单片机开发入门      | New           |
 
 ### 参考书收藏列表
 
@@ -159,17 +164,27 @@
 13. 《Vulkan应用开发指南》，Graham Sellers，John Kessenich著，人民邮电出版社
 14. 《Vulkan学习指南》，Parminder Singh著，机械工业出版社
 15. 《三维计算机视觉技术和算法导论》，Boguslaw lyganek，J. Paulsiebert著，国防工业出版社
+16. 《深入理解计算机系统》，Randal E. Bryant，David R. O'Hallaron著，机械工业出版社
 
-C CPP Go Rust Python Ruby Haskell JavaScript CSS HTML5
 
-Verilog ARM_asm
+🍥 C CPP Go Rust Python Ruby Haskell JavaScript CSS HTML5
 
-Shell Awk
+🍡 Verilog
 
-Make CMake
+🥚 x86_64 ARM Assembly
 
-Matlab
+🍜 Shell Awk
 
-GLSL
+🍐 Make CMake
 
-Qt Rails
+🥥 Matlab
+
+🍓 GLSL
+
+🍉 Qt Rails
+
+🍋 ARM AVR 8051 FPGA
+
+🍍 Linux FreeBSD
+
+🌽 DSP
