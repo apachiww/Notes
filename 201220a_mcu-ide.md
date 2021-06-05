@@ -23,6 +23,7 @@
 如果是Windows，安装[MSYS2](https://www.msys2.org/)
 
 > MSYS2是一个Windows下的类Unix环境，类似并**包含了mingw和llvm-clang软件集，集成`pacman`包管理器**，可以方便下载安装各种开源软件比如Git，Make，GCC，LLVM，CMake，像使用ArchLinux一样使用Windows
+>
 > MSYS2还有一个非常有趣的地方在于，插上CH340或者CP2102之后你甚至可以直接在Shell下操作串口，一般在`/dev/ttySx`
 
 **首先配置Windows环境变量**，这样可以直接使用`bash`，也可以`Win+R`调出`msys2`或`mingw64`
@@ -200,9 +201,9 @@ Windows下SDCC的目录如下
 
 ![目录](images/201220a001.png)
 
-| Windows目录 | Linux安装目录 | FreeBSD安装目录 | 内容 |
+| Windows目录 | Linux安装路径 | FreeBSD安装路径 | 内容 |
 | :-: | :-: | :-: | :-: |
-| bin | /usr/bin | /usr/local/bin | 二进制文件，SDCC的各种工具，包括编译器，汇编器，连接器，调试器，模拟器，hex文件生成器等 |
+| bin | /usr/bin | /usr/local/bin | 二进制文件，SDCC的各种工具，包括编译器，汇编器，链接器，调试器，模拟器，hex文件生成器等 |
 | include | /usr/share/sdcc/include | /usr/local/share/sdcc/include | 头文件 |
 | lib | /usr/share/sdcc/lib | /usr/local/share/sdcc/lib | 库文件 |
 | non-free/include | /usr/share/sdcc/non-free/include | /usr/local/share/sdcc/non-free/include | 非自由许可证头文件 |
@@ -214,10 +215,10 @@ Windows下SDCC的目录如下
 | :-: | :-: |
 | `sdcc` | 主要的编译器，将根据不同的指令集生成不同的汇编代码 |
 | `sdcpp` | 预处理器 |
-| `sdas8051 sdas390 sdasz80 sdasgb sdas6808 sdasstm8` | 不同指令集的汇编器 |
+| `sdas8051 sdas390 sdasz80 sdasgb sdas6808 sdasstm8` | 不同系统的汇编器 |
 | `sdld sdldz80 sdldgb sdld6808` | 链接器 |
 | `sdcdb` | 调试器 |
-| `s51 sz80 shc08 sstm8`  | ucSim模拟器 |
+| `s51 sz80 shc08 sstm8`  | 各系统的ucSim模拟器 |
 | `sdar sdranlib sdnm sdobjcopy` | 用于库文件的操作 |
 | `packihx` | 将.ihx文件转换为.hex文件用于烧录，输出到标准输出 |
 | `makebin` | 将.hex转换为二进制.bin文件，输出到标准输出 |
@@ -245,8 +246,8 @@ Windows下SDCC的目录如下
 | `-o` | 指定输出文件名或输出到目录，目录名必须带`/` |
 | `--debug` | 如果需要使用`sdcdb`和模拟器调试，那么编译时在最后添加该选项 |
 | `-V`或`-v` | 显示过程 |
-| `--opt-code-size` | 向程序大小优化 |
-| `--opt-code-speed` | 向程序速度优化 |
+| `--opt-code-size` | 优化程序大小 |
+| `--opt-code-speed` | 优化程序速度 |
 | `-Wp option1,option2` | 向`sdcpp`传参 |
 | `-Wa option1,option2` | 向汇编器传参 |
 | `-Wl option1,option2` | 向链接器传参 |
@@ -342,7 +343,9 @@ sdcc main.rel lib1.rel lib2.rel
 
 ### 2.1.4 使用库
 
-`sdcc`同样支持`.lib`库的使用，生成`.lib`库时最好将不同的功能模块写到不同源文件
+`sdcc`同样支持`.lib`库的使用，生成`.lib`库时最好将不同的功能模块写到不同源文件。**`.lib`文件的作用和一般GCC标准库使用到的`.a`库文件类似，GCC中`.a`包含了多个`.o`文件，而SDCC的`.lib`包含了多个`.rel`文件**
+
+**用于SDCC库操作的命令全部来自`sdbinutils`**，功能和常用GNU工具链中的相应命令基本相同
 
 ```shell
 sdcc main.c mylib.lib -L libdir
@@ -353,6 +356,92 @@ sdcc main.c mylib.lib -L libdir
 ```shell
 sdar -rc mylib.lib module1.rel module2.rel module3.rel
 ```
+
+**`sdbinutils`包括`sdar` `sdnm` `sdobjcopy` `sdranlib`**
+
+**`sdar`用法**
+
+`sdar`用于创建库以及管理库成员
+
+```shell
+sdar -options mylib.lib file1.rel file2.rel
+```
+
+| 命令行参数 | 作用 |
+| :-: | :-: |
+| `p` | 显示文件成员 |
+| `t` | 显示库内容 |
+| `r[a|b][f][u]` | 替换或添加文件成员，其中`a`或`b`为成员名，分别代表某个成员之后和之前，`f`截断输入文件名，`u`仅更新改变的成员 |
+| `d` | 删除文件成员 |
+| `m[a|b]` | 移动文件成员 |
+| `x[o]` | 提取文件成员，`o`保留原始日期 |
+| `s` | 相当于`ranlib` |
+| `q[f]` | 快速添加文件成员 |
+| `c` | 通用参数，需要创建库时不提示 |
+| `T` | 通用参数，创建thin archive |
+| `v` | 通用参数，显示过程 |
+
+**`sdnm`用法**
+
+`sdnm`用于列出一个目标文件里的符号
+
+| 命令行参数 | 作用 |
+| :-: | :-: |
+| `a` | 过滤参数，显示调试标记 |
+| `D` | 过滤参数，显示动态标记而不是普通标记 |
+| `--defined-only` | 过滤参数，仅显示已定义 |
+| `u` | 过滤参数，仅显示未定义 |
+| `--special-syms` | 过滤参数，显示特殊标记 |
+| `--synthetic` | 过滤参数，显示synthetic标记 |
+| `g` | 过滤参数，仅显示外部标记 |
+| `l` | 显示每个标记的文件名与行号 |
+| `n` | 按地址排序 |
+| `S` | 显示已定义符号所占空间 |
+
+
+**`sdobjcopy`用法**
+
+`sdobjcopy`用于将一种目标文件中的内容复制到另一种目标文件中，也可以用于将一种目标文件格式转换成为另一种目标文件格式
+
+`sdobjcopy`支持的文件格式有`asxxxx` `symbolsrec` `verilog` `tekhex` `binary` `ihex`
+
+```shell
+sdobjcopy -options infile outfile
+```
+
+| 命令行参数 | 作用 |
+| :-: | :-: |
+| `-I bfdname` | 指定输入文件格式，可以是以上支持的文件格式的一种 |
+| `-O bfdname` | 指定输出文件格式 |
+| `-F bfdname` | 指定输入输出文件格式 |
+| `-p` | 保留时间戳 |
+| `-B arch` | 指定输出指令集架构 |
+| `-D` | 产生的文件不可逆转，`-U`可逆转 |
+| `-j name` | 仅拷贝名为`name`的section |
+| `-R name` | 在输出中去除`name` |
+| `-S` `--strip-all` | 除去所有`symbol`和重定位信息 |
+| `-g` `--strip-debug` | 除去所有调试信息 |
+| `--strip-dwo` | 除去所有DWO |
+| `--strip-symbol sym` | 不复制指定标记 |
+| `-K sym` | 保留指定标记 |
+| `-G sym` | 指定某个为全局标记，其他为局部标记 |
+| `-L sym` | 指定某个为局部标记 |
+| `-W sym` | 弱化标记 |
+| `--globalize-symbol=sym` | 指定某个为全局标记 |
+| `-x` | 不拷贝非全局 |
+| `-X` | 不拷贝局部 |
+| `-i interleave` | 每隔interleave字节拷贝1byte |
+| `-b byte` | 和`-i`一起使用，拷贝每个interleave中的第byte字节（0到i-1），一般用于srec的输出 |
+
+
+**`sdranlib`用法**
+
+`ranlib`用于更新库文件的符号索引，一般在追加新的成员之后，本质是`sdar`的另一种形式
+
+| 命令行参数 | 作用 |
+| :-: | :-: |
+| `t` | 更新时间戳 |
+
 
 ### 2.1.5 基于sdcdb的调试
 
@@ -381,8 +470,8 @@ sdcdb -cpu 8051 sample
 
 | 命令 | 作用 | 使用方法 |
 | :-: | :-: | :-: |
-| `break` | 设置断点 | `break [file:]<line|func>` |
-| `clear` | 清除断点 | `clear [file:]<line|func>` |
+| `break` | 设置断点 | `break [file:]{line|func}` |
+| `clear` | 清除断点 | `clear [file:]{line|func}` |
 | `continue` | 断点后继续 |  |
 | `finish` | 执行到当前函数末尾 |  |
 | `delete` | 删除断点n，不指定断点则删除所有 | `delete [n]` |
