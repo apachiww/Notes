@@ -114,6 +114,10 @@
 
     UEFI开发，[210625a_UEFI.md](210625a_UEFI.md)
 
++ 2021.07.02添加
+
+    AVR单片机开发，基于Arduino开发板以及GCC，[210702a_AVR.md](210702a_AVR.md)
+
 
 ## 进度状态
 
@@ -151,6 +155,7 @@
 | 210515c | Nginx/Apache服务器原理以及部署      | New           |
 | 210524a | 8051单片机开发入门      | New           |
 | 210625a | UEFI开发入门            | New           |
+| 210702a | AVR单片机开发，基于Arduino，不使用Arduino IDE，Arduino固件研究，AVRISP协议       | New          |
 
 ### 参考书收藏列表
 
@@ -170,7 +175,7 @@
 14. 《Vulkan学习指南》，Parminder Singh著，机械工业出版社
 15. 《三维计算机视觉技术和算法导论》，Boguslaw lyganek，J. Paulsiebert著，国防工业出版社
 16. 《深入理解计算机系统》，Randal E. Bryant，David R. O'Hallaron著，机械工业出版社
-
+17. 《AVR单片机实战：Arduino方法》，Alan Trevennor著，机械工业出版社
 
 🍥 C CPP Go Rust Python Ruby Haskell JavaScript CSS HTML5
 
@@ -180,7 +185,7 @@
 
 🍜 Shell Awk
 
-🍐 Make CMake
+🍐 Makefile CMake
 
 🥥 Matlab
 
