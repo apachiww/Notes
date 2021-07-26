@@ -144,7 +144,7 @@ pkg install llvm
 
 OpenOCD是一个开源的调试服务器，会连接调试器（比如ST-LINK）驱动并负责接受`arm-none-eabi-gdb`的连接与调试。**建议安装最新版**
 
-[官网](openocd.org)
+[官网](http://openocd.org)
 
 [GNU toolchains](https://gnutoolchains.com/arm-eabi/openocd/)
 

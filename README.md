@@ -80,7 +80,7 @@
 
 + 2021.03.16添加
 
-    计算机图形学基础和常用API，[210316a_computer-graphics.md](210316a_computer-graphics.md)
+    计算机图形学基础和常用API入门，包括OpenGL以及Vulkan，[210316a_computer-graphics.md](210316a_computer-graphics.md)
 
 + 2021.03.17添加
 
@@ -96,7 +96,7 @@
 
 + 2021.05.01添加
 
-    计算机音乐原理（~~计算机音乐史~~），乐理基础/和声学/编曲入门，以及基于FamiTracker的8bit音乐制作教程 [210501a_famitracker.md](210501a_famitracker.md)
+    计算机音乐原理（~~计算机音乐史~~），乐理基础/和声学/编曲入门，经典计算机音频集成电路应用设计与解析（YM3812，YM2413，YM2149，AY-3-8910，SAA1099等），以及基于FamiTracker的8bit音乐制作教程 [210501a_famitracker.md](210501a_famitracker.md)
 
 + 2021.05.15添加
 
@@ -104,7 +104,7 @@
 
     Python笔记，[210515b_python.md](210515b_python.md)
 
-    服务器部署，[210515c_nginx.md](210515c_nginx.md)
+    Web服务器部署，包括apache以及nginx，[210515c_nginx.md](210515c_nginx.md)
 
 + 2021.05.24添加
 
@@ -112,11 +112,11 @@
 
 + 2021.06.25添加
 
-    UEFI开发，[210625a_UEFI.md](210625a_UEFI.md)
+    UEFI开发，现代x86计算机硬件结构以及启动流程 [210625a_UEFI.md](210625a_UEFI.md)
 
 + 2021.07.02添加
 
-    AVR单片机开发，基于Arduino开发板以及GCC，[210702a_AVR.md](210702a_AVR.md)
+    AVR单片机开发，基于Arduino开发板以及GCC，不使用Arduino IDE，AVR单片机固件研究（包括Arduino UNO, DUE, Nano, Leonardo, 以及其中用于usb通信的16u2芯片固件），AVRISP协议 [210702a_AVR.md](210702a_AVR.md)
 
 
 ## 进度状态
@@ -149,13 +149,13 @@
 | 210317a | 并行计算，OpenMP                    | New           |
 | 210320a | 计算机视觉，3D重构                  | In process    |
 | 210409a | 函数式编程，Haskell学习笔记         | New           |
-| 210501a | 计算机音乐原理，编曲作曲入门，和声学基础，FamiTracker，以及经典计算机音乐集成电路解析（YM3812，YM2413，YM2149，AY-3-8910，SAA1099等）       | New         |
+| 210501a | 计算机音乐原理，编曲作曲入门，和声学基础，FamiTracker，以及经典计算机音乐集成电路解析       | New         |
 | 210515a | Go学习笔记                          | New           |
 | 210515b | Python学习笔记                      | New           |
 | 210515c | Nginx/Apache服务器原理以及部署      | New           |
 | 210524a | 8051单片机开发入门      | New           |
 | 210625a | UEFI开发入门            | New           |
-| 210702a | AVR单片机开发，基于Arduino，不使用Arduino IDE，Arduino固件研究，AVRISP协议       | New          |
+| 210702a | AVR单片机开发       | New          |
 
 ### 参考书收藏列表
 
