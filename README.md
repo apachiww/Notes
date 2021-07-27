@@ -28,7 +28,7 @@
 
     shell脚本 [201219a_shell.md](201219a_shell.md)
 
-    makefile用法，cmake，GNU make [201219b_makefile.md](201219b_makefile.md)
+    Makefile用法以及编写，cmake，GNU make，BSD make [201219b_makefile.md](201219b_makefile.md)
 
 + 2020.12.20添加
 
@@ -40,7 +40,7 @@
 
 + 2020.12.25添加
 
-    有关固态硬盘SSD的内部工作原理 [201225a_ssd.md](201225a_ssd.md)
+    有关闪存技术，以及固态硬盘SSD的内部工作原理 [201225a_ssd.md](201225a_ssd.md)
 
 + 2020.12.29添加
 
@@ -60,7 +60,7 @@
 
 + 2021.01.11添加
 
-    Qt开发，见 [210111a_qt.md](210111a_qt.md)
+    Qt开发，应用界面美化，UI设计，见 [210111a_qt.md](210111a_qt.md)
 
 + 2021.01.15添加
 
@@ -68,7 +68,7 @@
 
 + 2021.01.30添加
 
-    有关Linux以及FreeBSD使用以及系统优化杂项，见 [210130a_install-notice.md](210130a_install-notice.md)
+    有关Linux以及FreeBSD的安装、使用以及系统优化杂项，见 [210130a_install-notice.md](210130a_install-notice.md)
 
 + 2021.02.16添加
 
@@ -108,7 +108,7 @@
 
 + 2021.05.24添加
 
-    8051单片机开发，[210524a_8051.md](210524a_8051.md)
+    8051单片机开发与深入解析，基于STC89C52RC，[210524a_8051.md](210524a_8051.md)
 
 + 2021.06.25添加
 
