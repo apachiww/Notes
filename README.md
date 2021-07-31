@@ -1,5 +1,7 @@
 # 日常笔记，备忘
 
+进行一个坑的填
+
 ![](images/000000a001.png)
 
 ## 更新记录
@@ -126,6 +128,10 @@
 
     AI入门，基本的概念以及常用算法 [210729a_ai.md](210729a_ai.md)
 
++ 2021.07.31添加
+
+    LLVM定制开发，开发属于自己的编译器，LLVM Cookbook阅读笔记 [210731a_llvm.md](210731a_llvm.md)
+
 
 ## 进度状态
 
@@ -157,7 +163,7 @@
 | 210317a | 并行计算，OpenMP                    | New           |
 | 210320a | 计算机视觉，3D重构                  | In process    |
 | 210409a | 函数式编程，Haskell学习笔记         | New           |
-| 210501a | 计算机音乐原理，编曲作曲入门，和声学基础，FamiTracker，以及经典计算机音乐集成电路解析       | New         |
+| 210501a | 计算机音乐原理，编曲作曲入门，和声学基础，FamiTracker，经典计算机音乐集成电路解析       | New         |
 | 210515a | Go学习笔记                          | New           |
 | 210515b | Python学习笔记                      | New           |
 | 210515c | Nginx/Apache服务器原理以及部署      | New           |
@@ -165,6 +171,7 @@
 | 210625a | UEFI开发入门            | New           |
 | 210702a | AVR单片机开发       | New          |
 | 210729a | AI入门               | New      |
+| 210731a | LLVM开发         | New        |
 
 ## 参考书收藏列表
 
@@ -184,7 +191,9 @@
 14. 《Vulkan学习指南》，Parminder Singh著，机械工业出版社
 15. 《三维计算机视觉技术和算法导论》，Boguslaw lyganek，J. Paulsiebert著，国防工业出版社
 16. 《深入理解计算机系统》，Randal E. Bryant，David R. O'Hallaron著，机械工业出版社
-17. 《AVR单片机实战：Arduino方法》，Alan Trevennor著，机械工业出版社
+17. 《AVR单片机实战：Arduino方法（Practical AVR Microcontrollers）》，Alan Trevennor（不推荐cc翻译的中文版，是谔谔的野蛮机翻x）
+18. 《UEFI原理与编程》，戴正华著，机械工业出版社
+19. 《LLVM Cookbook》，Mayur Pandey，Suyog Sarda著，电子工业出版社
 
 🍥 C CPP Go Rust Python Ruby Haskell JavaScript CSS HTML5
 
@@ -210,10 +219,12 @@
 
 🥑 Algorithms
 
+---
 
-## fufufu
 
-文明和谐领域x
+# 文明和谐领域
+
+🥚
 
 妖怪之山的新闻社📰📷📱💤
 
@@ -231,7 +242,7 @@
 
 ![](images/000000a005.jpg)
 
-夜宵🥩🍶🍱🍖🍤🍻🍴，老板娘与uuz🍥
+夜宵🥩🍶🍱🍖🍤🍻🍴，老板娘与幽幽子🍥
 
 ![](images/000000a006.jpg)
 
@@ -251,7 +262,7 @@
 
 ![](images/000000a010.jpg)
 
-玉米地🧊🌽
+玉米🧊🌽
 
 ![](images/000000a011.png)
 
