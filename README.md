@@ -132,6 +132,8 @@
 
     LLVM定制开发，开发属于自己的编译器，LLVM Cookbook阅读笔记 [210731a_llvm.md](210731a_llvm.md)
 
+    USB通信协议，应用设计，USB驱动开发 [210731b_usb.md](210731b_usb.md)
+
 
 ## 进度状态
 
@@ -167,11 +169,12 @@
 | 210515a | Go学习笔记                          | New           |
 | 210515b | Python学习笔记                      | New           |
 | 210515c | Nginx/Apache服务器原理以及部署      | New           |
-| 210524a | 8051单片机开发入门      | New           |
-| 210625a | UEFI开发入门            | New           |
-| 210702a | AVR单片机开发       | New          |
+| 210524a | 8051单片机开发入门      | Finished           |
+| 210625a | UEFI开发入门            | In process           |
+| 210702a | AVR单片机开发       | In process          |
 | 210729a | AI入门               | New      |
 | 210731a | LLVM开发         | New        |
+| 210731b | USB协议，应用以及驱动开发 | New         |
 
 ## 参考书收藏列表
 
