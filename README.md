@@ -8,19 +8,19 @@
 
 + 2020.09.08添加
 
-    有关SDRAM以及DDR的工作原理学习笔记，见 [200908a_sdram.md](200908a_sdram.md)
+    有关计算机易失存储设备，SDRAM以及DDR的工作原理学习笔记，见 [200908a_sdram.md](200908a_sdram.md)
 
 + 2020.09.09添加
 
-    在安装了Linux的PC端构建并使用QEMU运行ARM Linux，见 [200908b_qemu-arm.md](200908b_qemu-arm.md)
+    在安装了Linux的PC端构建并使用QEMU运行ARMv7指令集的Linux，见 [200908b_qemu-arm.md](200908b_qemu-arm.md)
 
 + 2020.09.20添加
 
-    ARM汇编，学习记录 [200920a_arm-assembly.md](200920a_arm-assembly.md)
+    ARM汇编与体系结构，虚拟内存架构，JTAG协议，学习记录 [200920a_arm-assembly.md](200920a_arm-assembly.md)
 
     信号与系统以及DSP，学习记录 [200920b_dsp.md](200920b_dsp.md)
 
-    数字电路以及verilog，学习记录 [200920c_verilog.md](200920c_verilog.md)
+    数字电路以及verilog语言，FPGA开发入门，常用电路的设计，学习记录 [200920c_verilog.md](200920c_verilog.md)
 
 + 2020.10.02添加
 
@@ -32,13 +32,13 @@
 
 + 2020.12.19添加
 
-    shell脚本 [201219a_shell.md](201219a_shell.md)
+    Shell脚本，Awk字符串处理，sed使用教程 [201219a_shell.md](201219a_shell.md)
 
-    Makefile用法以及编写，cmake，GNU make，BSD make [201219b_makefile.md](201219b_makefile.md)
+    Makefile用法以及编写，基于GNU Make，外加CMake，autoconf，Ninja的使用 [201219b_makefile.md](201219b_makefile.md)
 
 + 2020.12.20添加
 
-    基于vscode的通用MCU开发环境，以及下载调试操作，包括8051，AVR，ARM [201220a_mcu-ide.md](201220a_mcu-ide.md)
+    基于vscode的通用MCU开发环境，支持下载调试操作，包括8051，AVR，ARM [201220a_mcu-ide.md](201220a_mcu-ide.md)
 
     使用Hashcat或JohntheRipper破解密码 [201220b_crack.md](201220b_crack.md)
 
@@ -46,7 +46,7 @@
 
 + 2020.12.25添加
 
-    有关闪存技术，以及固态硬盘SSD的内部工作原理 [201225a_ssd.md](201225a_ssd.md)
+    有关计算机闪存技术的简述，以及固态硬盘SSD的内部工作原理 [201225a_ssd.md](201225a_ssd.md)
 
 + 2020.12.29添加
 
@@ -70,7 +70,7 @@
 
 + 2021.01.15添加
 
-    FreeBSD安装以及注意事项，见 [210115a_freebsd.md](210115a_freebsd.md)
+    FreeBSD作为日常主力桌面系统的安装，配置以及注意事项，见 [210115a_freebsd.md](210115a_freebsd.md)
 
 + 2021.01.30添加
 
@@ -86,11 +86,11 @@
 
 + 2021.03.16添加
 
-    计算机图形学基础和常用API入门，包括OpenGL以及Vulkan，[210316a_computer-graphics.md](210316a_computer-graphics.md)
+    计算机图形学基础，常用算法，理论和常用API入门，包括OpenGL以及Vulkan，[210316a_computer-graphics.md](210316a_computer-graphics.md)
 
 + 2021.03.17添加
 
-    并行计算，[210317a_parallel.md](210317a_parallel.md)
+    并行计算，OpenMP，[210317a_parallel.md](210317a_parallel.md)
 
 + 2021.03.20添加
 
@@ -102,7 +102,7 @@
 
 + 2021.05.01添加
 
-    计算机音乐原理（~~计算机音乐史~~），乐理基础/和声学/编曲入门，经典计算机音频集成电路应用设计与解析（YM3812，YM2413，YM2149，AY-3-8910，SAA1099等），以及基于FamiTracker的8bit音乐制作教程 [210501a_famitracker.md](210501a_famitracker.md)
+    计算机音乐原理（~~计算机音乐史~~），乐理基础/和声学/爵士和声学/编曲入门，经典计算机音频集成电路应用设计与解析（YM3812，YM2413，YM2149，AY-3-8910，SAA1099等），以及基于FamiTracker的8bit音乐制作教程 [210501a_famitracker.md](210501a_famitracker.md)
 
 + 2021.05.15添加
 
@@ -114,15 +114,15 @@
 
 + 2021.05.24添加
 
-    8051单片机开发与深入解析，基于STC89C52RC，[210524a_8051.md](210524a_8051.md)
+    8051单片机开发与原理深入解析，基于STC89C52RC，[210524a_8051.md](210524a_8051.md)
 
 + 2021.06.25添加
 
-    UEFI开发，现代x86计算机硬件结构以及启动流程 [210625a_UEFI.md](210625a_UEFI.md)
+    UEFI开发，现代x86计算机硬件结构以及启动流程 [210625a_uefi.md](210625a_uefi.md)
 
 + 2021.07.02添加
 
-    AVR单片机开发，基于Arduino开发板以及GCC，不使用Arduino IDE，AVR单片机固件研究（包括Arduino UNO, DUE, Nano, Leonardo, 以及其中用于usb通信的16u2芯片固件），AVRISP协议 [210702a_AVR.md](210702a_AVR.md)
+    AVR单片机开发，基于Arduino开发板以及GCC，不使用Arduino IDE，AVR单片机固件研究（包括Arduino UNO, DUE, Nano, Leonardo, 以及其中用于usb通信的16u2芯片固件），AVRISP下载协议 [210702a_avr.md](210702a_avr.md)
 
 + 2021.07.29添加
 
