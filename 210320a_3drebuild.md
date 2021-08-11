@@ -20,11 +20,12 @@ RGB表示方式是最直接的表示方式，**分别代表红、绿、蓝三种
 
 ### 0.2 YUV
 
-YUV表示方式中，**Y表示亮度（Luma），而U和V分别表示两种色度**。
+YUV表示方式中，**Y表示亮度（Luma），而U和V分别表示两种色度**
 
 RGB转YUV标准公式为
 
-$$ \begin{aligned}
+$$ 
+\begin{aligned}
 Y &= 0.299 R + 0.587 G + 0.114 B \\
 U &= -0.1687 R - 0.3313 G + 0.5 B + 128 \\
 V &= 0.5 R - 0.4187 G - 0.0813 B + 128 \\
@@ -53,7 +54,8 @@ $$
 
 YCbCr转RGB
 
-$$\begin{aligned}
+$$
+\begin{aligned}
 Y&=0.299R+0.587G+0.114B \\
 Cb&=0.564(B-Y) \\
 Cr&=0.713(R-Y)
@@ -62,7 +64,8 @@ $$
 
 RGB转YCbCr
 
-$$\begin{aligned}
+$$
+\begin{aligned}
 R&=Y+1.402Cr \\
 G&=Y-0.344Cb-0.714Cr \\
 B&=Y+1.772Cb
