@@ -102,7 +102,7 @@
 
 + 2021.05.01添加
 
-    计算机音乐原理（~~计算机音乐史~~），乐理基础/和声学/爵士和声学/编曲入门，经典计算机音频集成电路应用设计与解析（YM3812，YM2413，YM2149，AY-3-8910，SAA1099等），以及基于FamiTracker的8bit音乐制作教程 [210501a_famitracker.md](210501a_famitracker.md)
+    计算机音乐原理（~~计算机音乐史~~），乐理基础/和声学/爵士和声学/编曲入门，经典计算机音频集成电路应用设计与解析（YM3812，YM2413，YM2149，YM2612，YM2203，AY-3-8910，SAA1099等），以及基于FamiTracker的8bit音乐制作教程 [210501a_famitracker.md](210501a_famitracker.md)
 
 + 2021.05.15添加
 
@@ -110,7 +110,7 @@
 
     Python笔记，[210515b_python.md](210515b_python.md)
 
-    Web服务器部署，包括apache以及nginx，[210515c_nginx.md](210515c_nginx.md)
+    Web服务器部署，包括apache以及nginx，计算机网络与编程（socket），http协议，ftp协议，ssh协议，[210515c_nginx.md](210515c_nginx.md)
 
 + 2021.05.24添加
 
@@ -140,7 +140,7 @@
 
 + 2021.08.11添加
 
-    有关计算机块存储设备基础知识，常用接口IDE，SCSI，PATA，SATA，SAS，NVMe，eMMC，MMC，SD，文件系统，RAID算法，以及计算机存储编程入门 [210811a_sata.md](210811a_sata.md)
+    有关计算机块存储设备基础知识，IDE，SCSI，PATA，SATA，SAS，NVMe，eMMC，MMC，SD，文件系统，RAID算法，以及计算机存储编程入门 [210811a_sata.md](210811a_sata.md)
 
 
 ## 进度状态
