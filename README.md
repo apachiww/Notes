@@ -122,7 +122,7 @@
 
 + 2021.07.02添加
 
-    AVR单片机开发，基于Arduino开发板以及GCC，不使用Arduino IDE，AVR单片机固件研究（包括Arduino UNO, DUE, Nano, Leonardo, 以及其中用于usb通信的16u2芯片固件），AVRISP下载协议 [210702a_avr.md](210702a_avr.md)
+    AVR单片机开发，基于Arduino开发板以及GCC，不使用Arduino IDE，AVR单片机Bootloader固件研究（包括Arduino UNO, DUE, Nano, Leonardo, 以及其中用于usb通信的16u2芯片固件），AVRISP下载协议 [210702a_avr.md](210702a_avr.md)
 
 + 2021.07.29添加
 
