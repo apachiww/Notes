@@ -470,6 +470,9 @@ cp /usr/local/share/applications/fcitx.desktop ~/.config/autostart
 ### 3.9 服务管理
 
 
+### 3.10 bhyve使用简记
+
+
 ## 最终效果
 
 ![桌面截图](images/210115a003.jpg)
