@@ -821,7 +821,7 @@ test = $(call reverse,a,b)
 | `$(info text)` | 显示一条`text`信息 |
 
 
-## 4 用于生成Makefile的工具之：CMake
+## 4 用于生成Makefile的工具之CMake
 
 CMake在默认情况下检查当前目录下的`CMakeLists.txt`作为输入
 
@@ -832,9 +832,9 @@ https://cmake.org/
 CMake是一个跨平台的构建工具
 
 
-## 5 用于生成Makefile的工具之：automake和autoconf
+## 5 用于生成Makefile的工具之automake和autoconf
 
 
-## 6 现代构建系统之：Ninja
+## 6 现代构建系统之Ninja：初探
 
 https://ninja-build.org/
