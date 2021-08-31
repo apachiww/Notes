@@ -134,15 +134,15 @@
 
     LLVM定制开发，开发属于自己的编译器，LLVM Cookbook阅读笔记 [210731a_llvm.md](210731a_llvm.md)
 
-    USB通信协议，应用设计，USB驱动开发 [210731b_usb.md](210731b_usb.md)
+    USB通信协议，应用设计，USB驱动开发，包括串口通信程序设计 [210731b_usb.md](210731b_usb.md)
 
 + 2021.08.08添加
 
-    有关常用LCD屏幕驱动IC的笔记，包括SSD1306，ST7565，ST7920 [210808a_lcd.md](210808a_lcd.md)
+    有关常用LCD屏幕驱动IC的笔记，包括SSD1306，ST7565，ST7920，以及类Unix下FrameBuffer的基本原理与概念 [210808a_lcd.md](210808a_lcd.md)
 
 + 2021.08.11添加
 
-    有关计算机块存储设备基础知识，IDE，SCSI，PATA，SATA，SAS，NVMe，eMMC，MMC，SD，文件系统，RAID算法，以及计算机存储编程入门 [210811a_sata.md](210811a_sata.md)
+    有关计算机块存储设备基础知识，IDE，SCSI，ATA，PATA，SATA，SAS，NVMe，eMMC，MMC，SD，文件系统，RAID原理与算法，以及计算机存储编程入门 [210811a_sata.md](210811a_sata.md)
 
 
 ## 进度状态
