@@ -92,7 +92,7 @@
 
 + 2021.03.17添加
 
-    并行计算，OpenMP，[210317a_parallel.md](210317a_parallel.md)
+    并行计算，C++11线程库，OpenMP，[210317a_parallel.md](210317a_parallel.md)
 
 + 2021.03.20添加
 
@@ -144,6 +144,12 @@
 
     有关计算机块存储设备基础知识，IDE，SCSI，ATA，PATA，SATA，SAS，NVMe，eMMC，MMC，SD，文件系统，RAID原理与算法，以及计算机存储编程入门 [210811a_sata.md](210811a_sata.md)
 
++ 2021.09.04添加
+
+    算法笔记，[210904a_algo.md](210904a_algo.md)
+
+    开关电源基础，[210904b_power.md](210904b_power.md)
+
 
 ## 进度状态
 
@@ -187,6 +193,7 @@
 | 210731b | USB协议，应用以及驱动开发 | New         |
 | 210808a | LCD驱动芯片     | New           |
 | 210811a | 计算机常用存储设备接口协议 | New           |
+| 210904a | 算法             | New           |
 
 ## 参考书收藏列表
 
@@ -209,6 +216,10 @@
 17. 《AVR单片机实战：Arduino方法（Practical AVR Microcontrollers）》，Alan Trevennor（不推荐cc翻译的中文版，是谔谔的野蛮机翻x）
 18. 《UEFI原理与编程》，戴正华著，机械工业出版社
 19. 《LLVM Cookbook》，Mayur Pandey，Suyog Sarda著，电子工业出版社
+20. 《LLVM编译器实战教程》，Bruno Cardoso Lopes，Rafael Auler著，机械工业出版社
+21. 《Haskell函数式程序设计》，Richard Bird著，机械工业出版社
+22. 《C++并发编程实战》，Anthony Williams著，人民邮电出版社
+23. 《精通开关电源（第3版）》，Keith Billings，Taylor Morey著，人民邮电出版社
 
 🍥 C CPP Go Rust Python Ruby Haskell JavaScript CSS HTML5
 

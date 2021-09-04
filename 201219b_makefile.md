@@ -823,13 +823,9 @@ test = $(call reverse,a,b)
 
 ## 4 用于生成Makefile的工具之CMake
 
-CMake在默认情况下检查当前目录下的`CMakeLists.txt`作为输入
-
-## 4.1 CMake简介
+CMake是一个跨平台的构建工具，一般用于生成其他make工具（GNU Make或Ninja等）的脚本，在默认情况下检查当前目录下的`CMakeLists.txt`作为输入
 
 https://cmake.org/
-
-CMake是一个跨平台的构建工具
 
 
 ## 5 用于生成Makefile的工具之automake和autoconf
