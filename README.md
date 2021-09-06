@@ -148,7 +148,7 @@
 
     算法笔记，[210904a_algo.md](210904a_algo.md)
 
-    开关电源基础，[210904b_power.md](210904b_power.md)
+    开关电源原理以及设计方法，[210904b_power.md](210904b_power.md)
 
 
 ## 进度状态
@@ -158,8 +158,8 @@
 | 200908a | 计算机存储：SDRAM                   | Finished      |
 | 200908b | LFS并使用QEMU运行Linux（ARMv7）     | Finished      |
 | 200920a | ARM汇编以及内存架构（ARMv7 Cortex-A）       | Hang up       |
-| 200920b | 信号与系统，DSP数字信号处理         | In process    |
-| 200920c | 数字逻辑以及Verilog                 | In process    |
+| 200920b | 信号与系统，DSP数字信号处理         | Hang up    |
+| 200920c | 数字逻辑以及Verilog                 | Update ondemand    |
 | 201002a | 高数                                | In process    |
 | 201020a | STM32开发以及ARM汇编（ARMv7 Cortex-M）      | Hang up       |
 | 201219a | Linux命令行以及Shell脚本，Awk字符串处理     | Update ondemand |
@@ -178,8 +178,8 @@
 | 210216a | Rust学习笔记                        | New           |
 | 210313a | Octave/Matlab入门                   | In process    |
 | 210316a | 计算机图形学算法和Vulkan，OpenGL（GLSL）    | In process    |
-| 210317a | 并行计算，OpenMP                    | New           |
-| 210320a | 计算机视觉，3D重构                  | In process    |
+| 210317a | 并行计算，C++11线程库，OpenMP           | New           |
+| 210320a | 计算机视觉，3D重构                  | Update ondemand    |
 | 210409a | 函数式编程，Haskell学习笔记         | New           |
 | 210501a | 计算机音乐原理，编曲作曲入门，和声学基础，FamiTracker，经典计算机音乐集成电路解析       | New         |
 | 210515a | Go学习笔记                          | New           |

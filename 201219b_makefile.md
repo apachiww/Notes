@@ -12,11 +12,11 @@ http://www.gnu.org/software/make/
 
 Make的思想起源于软件工程，随着编译技术的发展，以及软件本身的进化，一个软件的源文件结构不断变得复杂，程序员发现面对成千上万多种多样的源文件，手动编译一个程序变得不再现实，于是寻求一种可以根据规则自动进行文件处理的工具。这就是**Make**
 
-Make分为很多种，**它们几乎应用在目前所有的开发环境中，已经成为目前计算机软件的重要基础设施，学习Make的原理非常重要，这和多文件大型工程的开发与管理密切相关**。除目前最常用的**GNU Make**外，BSD也拥有遵循自己开源协议的**BSD Make**，常用的C++应用框架Qt拥有**QMake**，Ruby有自己的实现**Rake**，微软的VS有**msbuild.exe**，GNU Make有一个加强版**Remake**，还有常用的makefile工具**automake**和**autoconf**，近几年有流行的**Ninja**，还有强大的跨平台工具**CMake**等。我们在一般的IDE中接触不到make，因为IDE为方便用户，往往会隐藏底层的构建过程
+Make分为很多种，**它们几乎应用在目前所有的开发环境中，已经成为目前计算机软件开发领域的重要基础设施，学习Make非常重要，这和多文件大型工程的开发与管理密切相关**。除目前最常用的**GNU Make**外，FreeBSD的软件中也有使用自家开源许可证的**BSD Make**，常用的C++应用框架Qt拥有**QMake**，Ruby有自己的实现**Rake**，微软的VS有**msbuild.exe**和**nmake**，GNU Make有一个加强版**Remake**，还有常用的makefile工具**automake**和**autoconf**，近几年有流行的**Ninja**，还有强大的跨平台工具**CMake**等。我们在一般的IDE中接触不到make，因为IDE为方便用户，往往会隐藏底层的构建过程
 
 Make本质就是根据给定规则推导判断文件依赖，之后通过一系列处理步骤，生成或更新这些文件，一般根据文件的时间戳判断哪些文件需要更新（假设源文件时间戳比目标文件新，那么就代表这个目标文件需要更新）
 
-Make几乎可以算作是通用的文件处理脚本工具，Makefile就是它的脚本。在Linux、BSD等类UNIX环境中各种强大工具的支撑下，它不仅可以用于各种语言编写的程序编译与构建，甚至可以用于图片和音频文件的批处理
+Make几乎可以算作是通用的文件处理脚本工具，Makefile就是它的脚本。在Linux、BSD等类UNIX环境中各种强大工具的支撑下，它不仅可以用于各种语言编写的程序编译与构建，甚至可以用于图片和音频等文件的批处理
 
 
 ## 1.2 GNU GCC工具链
@@ -50,7 +50,7 @@ GNU Make的执行过程大致分为两个阶段（Phase）
 include share.mk
 ```
 
-**第二个阶段**make会判断哪些文件需要更新，并运行相应的构建方法（recipes）更新文件
+**第二个阶段**make会根据依赖树以及文件时间戳判断哪些文件需要更新，并运行相应的构建方法（recipes）更新文件
 
 对于这两个阶段的理解非常重要，之后有关变量的展开和这两个过程息息相关
 
@@ -91,7 +91,7 @@ Makefile的解析流程如下
 
 | 形式 | 解释 |
 | :-: | :-: |
-| `imm = def` | 递归展开变量，也是其他一些make软件支持的赋值方法。这种赋值**会将所有变量层层递归展开**。make首先会记录这些变量所有的上下文，在最终才会统一展开。比如`TEST = hello` `ME = ${TEST}`，那么最后`TEST`和`ME`都是`hello`。**缺点**是容易导致无限递归，并且如果使用了函数，这些函数每次都会执行，拖慢速度 |
+| `imm = def` | 递归展开变量，也是其他一些make软件支持的赋值方法。这种赋值**会将所有变量层层递归展开**。**make首先会记录这些变量所有的上下文，在最终才会将所有这些变量统一展开**。比如`TEST = hello` `ME = ${TEST}`，那么最后`TEST`和`ME`都是`hello`。**缺点**是容易导致无限递归，并且如果使用了函数，这些函数每次都会执行，拖慢速度 |
 | `imm := imm` | 一般变量，克服了以上赋值方法的缺点。这种变量的使用和一般的编程语言中的类似，赋值就是当前的值（其实就是立即展开，展开时间比`=`早）。而不像`=`一样在最终逐层展开，得到的是变量最终的值 |
 | `imm ::= imm` | 同`:=`，是POSIX标准规定的 |
 | `imm ?= def` | 如果变量还未被定义，就会进行赋值，否则不会执行赋值 |
@@ -105,15 +105,15 @@ Makefile的解析流程如下
 指定字符替换，示例
 
 ```makefile
-# 将所有a替换成为b
-OBJ = ${var:a=b}
+# 将一个变量中所有a替换成为b
+OBJ = $(VAR:a=b)
 ```
 
 替换后缀，使用通配符`%`
 
 ```makefile
-# 将.c后缀替换成为.o
-OBJ = ${var:%.c=%.o}
+# 将一个变量中所有.c后缀替换成为.o
+OBJ = $(VAR:%.c=%.o)
 ```
 
 **关键字`override`**
@@ -135,7 +135,7 @@ endef
 
 **注销变量**
 
-取消变量可以通过直接赋空值
+取消变量可以通过直接赋空值（之后可以再引用，为空值）
 
 ```makefile
 VAR :=
@@ -186,7 +186,7 @@ target-pattern : variable-assignment
 
 ### 3.1.3 自动变量（Automatic Variables）
 
-在此之前先看[3.2 规则](201219b_makefile.md#32-规则Rule)
+在此之前先看[3.2规则](201219b_makefile.md#32-规则Rule)
 
 **自动变量只在一条rule后的recipe中有效**，除非使用二次展开
 
@@ -285,7 +285,7 @@ OBJ := $(wildcard *.o)
 
 > **建议**
 >
-> 由于通配符在匹配文件失败时（如文件不存在），会直接将例如`*.c`作为文件名，所以尽量避免使用通配符，如下例，虽然`OBJ`变量最后会展开，但是在`.c`文件不存在时会发生异常
+> 由于通配符在匹配文件失败时（如文件不存在），会直接将例如`*.c`作为文件名，所以尽量避免使用`*`通配符，如下例，虽然`OBJ`变量最后会展开，但是在`.c`文件不存在时会发生异常
 
 ```makefile
 OBJ := *.c
@@ -367,7 +367,7 @@ test : test.c -lfftw
 | `.NOPARALLEL`          | 禁止并行执行，`make -jx`失效 |
 | `.ONESHELL`       | 每个target的recipe使用一个shell执行 |
 
-`.SECONDEXPANSION`解释：之前解释过make的执行过程分为两个阶段，第一个阶段会进行文件的读入，变量的展开以及依赖的分析；第二个阶段会执行文件操作。在第一个阶段中立即变量（immediate）只会得到一次展开。而使用`.SECONDEXPANSION`，在此之后的变量在两个阶段之间还会得到第二次展开
+`.SECONDEXPANSION`：之前解释过make的执行过程分为两个阶段，第一个阶段会进行文件的读入，变量的展开以及依赖的分析；第二个阶段会执行文件操作。在第一个阶段中立即变量（immediate）只会得到一次展开。而使用`.SECONDEXPANSION`，在此之后的变量在两个阶段之间还会得到第二次展开
 
 示例，此时的变量需要使用两个`$`符
 
@@ -480,7 +480,7 @@ gcc -MM main.c
 创建`.d`文件的规则
 
 ```makefile
-%.d: %.c
+%.d : %.c
     @set -e; rm -f $@; \
     $(CC) -M $(CPPFLAGS) $< > $@.$$$$; \
     sed ’s,\($*\)\.o[ :]*,\1.o $@ : ,g’ < $@.$$$$ > $@; \
@@ -596,7 +596,7 @@ hello   hello
 >
 > 在recipe的调用中，每一个新的recipe命令都是以制表符开头。所以make传送给shell的命令**本质就是去除掉制表符前缀的字符串（变量已经展开）**，其他行（多行命令除第一行以外的所有行）开头的制表符**不会去除**，因此在recipe中命令换行之后其实可以顶格写。同时用于表示多行命令的`\`以及换行符都**不会被去除**，原样传递给shell执行
 >
-> 在一般的shell中，如果遇到`\`，不同上下文处理方法不同。如果`\`在双引号`""`上下文，那么shell会自动去除`\`以及之后的一个制表符。如果`\`不在引号上下文，那么shell会自动去除`\`以及之后的多个制表符。
+> 在一般的shell中，如果遇到`\`，在不同上下文中shell的处理方法不同。如果`\`在双引号`""`上下文，那么shell会自动去除`\`以及之后的一个制表符。如果`\`不在引号上下文，那么shell会自动去除`\`以及之后的多个制表符。
 >
 > 这也是上文中双引号内多了一个制表符的原因
 
@@ -630,7 +630,7 @@ all :
 
 ### 3.4.4 recipe的并行执行
 
-make支持根据文件之间的依赖关系自动并行调用recipe，限制使用的线程数使用`make -jx`指定，如`make -j4`
+make支持根据文件之间的依赖关系自动并行调用recipe，限制使用的线程数使用`make -jx`指定，如`make -j4`。如果使用`make -j`的话make会自动调用所有CPU核心
 
 在并行执行下时make的输出可能会混乱，可以使用`make -O`或`make --output-sync`强制顺序输出。`line`以一行为单位，`target`以一个目标为单位，`recurse`以一次make调用为单位
 
@@ -714,7 +714,7 @@ make中的函数一般通过`$(func arg1,arg2)`或`${func arg1,arg2}`形式调�
 | 函数 | 解释 |
 | :-: | :-: |
 | `$(substr from,to,text)` | 将`text`中所有的`from`改为`to` |
-| `$(patsubstr pattern,replacement,text)` | 可以使用`%`通配符。将`text`中所有匹配的`pattern`替换为`replacement`，示例`$(patsubstr %.c,%.o,test.c hello.c)`。和化简格式`$(var:.c=.o)`等价 |
+| `$(patsubstr pattern,replacement,text)` | 可以使用`%`通配符。将`text`中所有匹配的`pattern`替换为`replacement`，示例`$(patsubstr %.c,%.o,test.c hello.c)`。和化简格式`$(VAR:%.c=%.o)`等价 |
 | `$(strip string)` | 去除字符串内所有开头以及结尾的空格符 |
 | `$(findstring find,string)` | 在`string`中查找`find`，如果找到返回该目标，未找到返回空 |
 | `$(filter pattern...,text)` | 过滤特定格式字符串，在`text`中只有pattern中指定的字符串才会通过，示例`$(filter %.c %.h,test.c test.h hello.c hello.o)`，其中`hello.o`会被过滤 |
@@ -823,14 +823,170 @@ test = $(call reverse,a,b)
 
 ## 4 用于生成Makefile的工具之CMake
 
-CMake是一个跨平台的构建工具，一般用于生成其他make工具（GNU Make或Ninja等）的脚本，在默认情况下检查当前目录下的`CMakeLists.txt`作为输入
+CMake是一个非常强大的跨平台的构建工具，一般用于生成其他make工具（GNU Make或Ninja等）的脚本，在默认情况下检查当前目录下的`CMakeLists.txt`作为输入，可以生成Buildsystem（一般是其他Make软件的脚本）
 
 https://cmake.org/
 
 
-## 5 用于生成Makefile的工具之automake和autoconf
+## 4.1 CMake的基本用法
+
+CMake最基本的命令行使用方法如示例，到需要构建的目录下
+
+```shell
+cmake --build .
+cmake --build . --target install # 使用install目标调用软件安装的过程
+```
+
+> 在第二行命令中使用到了一个内建的目标`install`，CMake还有其他的一些内建目标，如下
+
+| 内建目标名 | 释义 |
+| :-: | :-: |
+| `all` | 相当于Makefile和build.ninja中的默认目标all，构建所有文件 |
+| `help` | 列出可用的构建目标 |
+| `clean` | 清除所有生成的文件 |
+| `test` | 运行测试 |
+| `install` | 安装软件 |
+| `package` | 创建一个二进制包 |
+| `package_source` | 创建一个源码包 |
+
+在此之前需要生成构建系统（如Makefile或build.ninja等），可以使用`-G`命令行指定想要使用的构建系统。不指定默认使用通用的Makefile，可以用于`gmake`，`nmake`等。注意一旦指定一个构建目录的构建系统以后就**不可再次更改**
+
+```shell
+cmake .. -G Ninja
+cmake .. -G "Visual Studio 2019"
+cmake .. -G "Visual Studio 2019" -A x64 -Thost=x64 # 使用VS时可以通过-A指定目标CPU架构，使用-T指定使用的工具链（这里指定使用64位工具链）
+```
+
+在通过命令行调用`CMake`时可以使用`-D`指定变量，使用`-U`销毁变量，如下例
+
+```shell
+cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Debug
+```
+
+命令行常用变量如下
+
+| 变量 | 释义 |
+| :-: | :-: |
+| `CMAKE_PREFIX_PATH` | 指定依赖包的查找路径。适用于CMake的依赖包一般和第三方闭源库一起发行，向CMake指示这些二进制文件以及头文件的处理与使用方法 |
+| `CMAKE_MODULE_PATH` | 指定附加CMake模块的路径 |
+| `CMAKE_BUILD_TYPE` | 设置本次构建的类型，可以是`Debug`或`Release`，只对Make和Ninja有效，对VS和XCode无效 |
+| `CMAKE_INSTALL_PREFIX` | 指定安装路径，使用`install`目标进行软件的安装时使用。在类Unix上默认是`/usr/local` |
+| `CMAKE_TOOLCHAIN_FILE` | 指定CMake的工具链参数文件 |
+| `BUILD_SHARED_LIBS` | 选择是否构建共享库 |
+| `CMAKE_EXPORT_COMPILE_COMMANDS` | 生成适用于clang工具链的`compile_commands.json`文件 |
+
+> `CMAKE_MAKE_PROGRAM`用于指定直接使用`--build`运行构建过程时调用的构建工具，可以是`make`，`ninja`等
+
+CMake支持Cache，记录构建时使用到的各种参数（如工具链名称，工具链路径，依赖，命令行参数等），在第一次运行时会生成一个`CMakeCache.txt`用于存储这些信息的键值对，可以使用命令行工具`ccmake`编辑其中的键值对
+
+CMake还支持使用预设，CMake读取`CMakePresets.txt`以及`CMakeUserPresets.txt`获取预设参数，一般包含构建目录，环境变量，Cache变量等
+
+> 一般一个预设文件里面会有多个预设配置，每一个预设都有一个名称，可以在调用`cmake`的时候通过`--preset`参数指定，如下示例
+>
+> ```shell
+> cmake -S ~/repos/src --preset=ninja-release # 调用了名称为ninja-release的配置
+> ```
+>
+> ```shell
+> cmake -S ~/repos/src --list-presets # 列出源文件目录预设文件中的所有预设配置的名称
+> ```
 
 
-## 6 现代构建系统之Ninja：初探
+## 4.2 编写脚本CMakeLists.txt
 
-https://ninja-build.org/
+
+## 5 现代构建工具之Ninja
+
+Ninja名称来源于日语「忍者」，是一个专注于提高构建速度、缩短构建时间的类Make构建系统，在大型工程中相对于Make有明显的速度提升。Ninja最初是作者为提高Google Chrome的构建速度而设计，目前Ninja已经在很多开源项目（如LLVM）中得到了广泛应用。Ninja的默认构建脚本在当前目录下的`build.ninja`
+
+Ninja官网 https://ninja-build.org/
+
+Ninja作者 http://aosabook.org/en/posa/ninja.html
+
+Ninja在设计上是可读的（Human Readable），但是不适合人工手写（设计理念：如果说Make是高级语言，Ninja就是汇编语言），**一般结合其他Make生成工具如CMake使用（CMake这类构建工具一般被称为 meta-build system）**
+
+Ninja相对于Make，只支持非常简单直接的规则描述，支持隐式规则。构建命令的更改也会导致文件的重新构建。Ninja在运行时会自动创建需要的目录，而不像Make需要使用一个顺序依赖。同时Ninja在运行时默认总是使用最多的CPU核心数，同时并行执行的输出都会自动按顺序输出
+
+在Ninja中，**edge**基本相当于Make的**recipe**
+
+
+## 5.1 Ninja的基本用法
+
+和Make一样，Ninja使用时直接在当前目录执行`ninja`即可，用法基本是相同的，也可以通过`-j`参数指定使用的线程数量
+
+Ninja支持使用shell环境变量`NINJA_STATUS`指定其执行时输出信息格式
+
+示例
+
+```shell
+NINJA_STATUS = [%u/%r/%f] # 默认使用[%f/%t]
+```
+
+环境变量`NINJA_STATUS`可用输出信息
+
+| Format | 释义 |
+| :-: | :-: |
+| `%s` | 当前已经启动的edge数量 |
+| `%t` | 完成本次构建需要的edge数量 |
+| `%p` | 当前已经启动的edge的比例 |
+| `%r` | 当前正在运行的edge的数量 |
+| `%u` | 当前剩余未运行的edge的数量 |
+| `%f` | 当前已经完成的edge的数量 |
+| `%o` | 平均每秒完成edge数量（速度） |
+| `%c` | 1秒内完成edge的数量（实时速度） |
+| `%%` | 显示一个`%` |
+
+另外Ninja支持一些有用的小功能，可以在使用时通过命令行参数`-t`调用
+
+| 工具名 | 作用 | 示例 |
+| :-: | :-: | :-: |
+| `browse` | 启动一个端口（默认8000），调用浏览器显示依赖图 | `ninja -t browse --port=8080 mytarget` |
+| `graph` | 生成`graphviz`可用的文件 | `ninja -t browse --port=8000 --no-browser mytarget` |
+| `targets` | 用于显示适用于一种规则的目标文件，或按深度显示目标文件 | `ninja -t targets rule myrulename` `ninja -t targets depth 5` |
+| `commands` | 用于显示指定目标文件的构建命令 | `ninja -t commands mytarget` |
+| `clean` | 清除生成的文件 | `ninja -t clean` |
+| `cleandead` | 清除已经不包含在当前`build.ninja`中的文件 | `ninja -t cleandead` |
+| `deps` | 显示`.ninja_deps`中所有的依赖 | `ninja -t deps` |
+| `restat` | 更新`.ninja_log`中记录到的文件的时间戳 | `ninja -t restat` |
+| `rules` | 显示所有的rule规则名称 | `ninja -t rules` |
+
+
+## 5.2 Ninja语法简记
+
+一般日常使用中没有必要自己写`build.ninja`，这里只做一些简单的解释
+
+以Ninja官网示例为例
+
+```
+cflags = -Wall
+
+rule cc
+  command = gcc $cflags -c $in -o $out
+
+build foo.o: cc foo.c
+```
+
+> 在Ninja中，变量通过`$var`的形式引用，通过`=`直接赋值。
+>
+> 使用`rule`关键字指定一种规则，这种规则需要有一个名称（这里是`cc`），以及构建相应目标文件的shell命令（通过`command`指定）
+>
+> 而`build`关键字用于指定文件的依赖关系（Build Statement），需要指定对应目标文件使用的rule以及依赖文件名。可以在`build`关键字之后指定**专有变量**，例如
+> ```
+> build special.o: cc special.c
+>    cflags = -Wall
+> ```
+
+Ninja也支持`phony`的使用，如下示例，可以为一个目标创建一个别名（本身不是实际存在的文件）
+
+```
+build foo: phony dir/to/foo
+```
+
+可以使用关键字`default`指定默认的构建目标
+
+```
+default test.o hello.o 
+```
+
+
+## 6 用于生成Makefile的工具之automake和autoconf
