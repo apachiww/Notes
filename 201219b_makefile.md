@@ -1,6 +1,6 @@
 # Make原理和使用
 
-基于GNU Make，涵盖现代高级工具如CMake，autoconf和automake，Ninja的使用
+基于GNU Make，涵盖现代高级工具如CMake，autotools，Ninja的使用
 
 http://www.gnu.org/software/make/
 
@@ -12,11 +12,11 @@ http://www.gnu.org/software/make/
 
 Make的思想起源于软件工程，随着编译技术的发展，以及软件本身的进化，一个软件的源文件结构不断变得复杂，程序员发现面对成千上万多种多样的源文件，手动编译一个程序变得不再现实，于是寻求一种可以根据规则自动进行文件处理的工具。这就是**Make**
 
-Make分为很多种，**它们几乎应用在目前所有的开发环境中，已经成为目前计算机软件开发领域的重要基础设施，学习Make非常重要，这和多文件大型工程的开发与管理密切相关**。除目前最常用的**GNU Make**外，FreeBSD的软件中也有使用自家开源许可证的**BSD Make**，常用的C++应用框架Qt拥有**QMake**，Ruby有自己的实现**Rake**，微软的VS有**msbuild.exe**和**nmake**，GNU Make有一个加强版**Remake**，还有常用的makefile工具**automake**和**autoconf**，近几年有流行的**Ninja**，还有强大的跨平台工具**CMake**等。我们在一般的IDE中接触不到make，因为IDE为方便用户，往往会隐藏底层的构建过程
+Make分为很多种，**它们几乎应用在目前所有的开发环境中，已经成为目前计算机软件开发领域的重要基础设施，学习Make对于理解工程代码的管理非常重要，这和多文件大型工程的开发与管理密切相关**。除目前最常用的**GNU Make**外，FreeBSD的软件中也有使用自家开源许可证的**BSD Make**，常用的C++应用框架Qt拥有**QMake**，Ruby有自己的实现**Rake**，微软的VS有**msbuild.exe**和**nmake**，GNU Make有一个加强版**Remake**，还有常用的makefile工具**automake**和**autoconf**，近几年有流行的**Ninja**，还有强大的跨平台工具**CMake**等（类似CMake和automake这些工具**一般被称为元构建系统meta-build system**，它们不会直接和构建过程打交道，而是生成其他构建系统的脚本。Ninja有专用的元构建系统GN）。我们在一般的IDE中接触不到make，因为IDE为方便用户，往往会隐藏底层的构建过程
 
-Make本质就是根据给定规则推导判断文件依赖，之后通过一系列处理步骤，生成或更新这些文件，一般根据文件的时间戳判断哪些文件需要更新（假设源文件时间戳比目标文件新，那么就代表这个目标文件需要更新）
+Make本质就是根据给定规则推导判断文件依赖，之后通过一系列处理步骤，生成或更新这些文件，一般根据文件的时间戳判断哪些文件需要更新（假设源文件时间戳比目标文件新，那么就代表这个目标文件需要重新构建）
 
-Make几乎可以算作是通用的文件处理脚本工具，Makefile就是它的脚本。在Linux、BSD等类UNIX环境中各种强大工具的支撑下，它不仅可以用于各种语言编写的程序编译与构建，甚至可以用于图片和音频等文件的批处理
+Make几乎可以算作是通用的文件处理脚本工具，Makefile就是它的脚本。在Linux、BSD等类UNIX环境中各种强大工具的支撑下，它不仅可以用于各种语言编写的程序编译与构建，甚至可以用于图片和音频等文件的处理
 
 
 ## 1.2 GNU GCC工具链
@@ -497,6 +497,8 @@ include $(sources:.c=.d)
 
 ## 3.3 隐式规则（Implicit rules）
 
+**实际应用中，建议不要使用隐式规则，因为这容易导致问题并且难以排查**
+
 隐式规则和静态规则比较相似（其实就是make自动推导出来的静态规则），和之前所有的规则相对，前文所述的规则都是显式规则
 
 隐式规则其实是make中自带的一些文件的处理方法，make会根据文件依赖以及后缀名自动推导recipe
@@ -518,8 +520,6 @@ include $(sources:.c=.d)
 | `CXXFLAGS` | `CXX`的命令行参数 |
 | `LDFLAGS` | 调用链接器`ld`时的命令行参数 |
 | `LDLIBS` | 调用链接器`ld`时指定库参数以及名称 |
-
-**实际应用中，建议不要使用隐式规则，因为这容易导致问题并且难以排查**
 
 这里只简单介绍一下，只需要懂得基本的原理
 
@@ -821,96 +821,22 @@ test = $(call reverse,a,b)
 | `$(info text)` | 显示一条`text`信息 |
 
 
-## 4 用于生成Makefile的工具之CMake
-
-CMake是一个非常强大的跨平台的构建工具，一般用于生成其他make工具（GNU Make或Ninja等）的脚本，在默认情况下检查当前目录下的`CMakeLists.txt`作为输入，可以生成Buildsystem（一般是其他Make软件的脚本）
-
-https://cmake.org/
-
-
-## 4.1 CMake的基本用法
-
-CMake最基本的命令行使用方法如示例，到需要构建的目录下
-
-```shell
-cmake --build .
-cmake --build . --target install # 使用install目标调用软件安装的过程
-```
-
-> 在第二行命令中使用到了一个内建的目标`install`，CMake还有其他的一些内建目标，如下
-
-| 内建目标名 | 释义 |
-| :-: | :-: |
-| `all` | 相当于Makefile和build.ninja中的默认目标all，构建所有文件 |
-| `help` | 列出可用的构建目标 |
-| `clean` | 清除所有生成的文件 |
-| `test` | 运行测试 |
-| `install` | 安装软件 |
-| `package` | 创建一个二进制包 |
-| `package_source` | 创建一个源码包 |
-
-在此之前需要生成构建系统（如Makefile或build.ninja等），可以使用`-G`命令行指定想要使用的构建系统。不指定默认使用通用的Makefile，可以用于`gmake`，`nmake`等。注意一旦指定一个构建目录的构建系统以后就**不可再次更改**
-
-```shell
-cmake .. -G Ninja
-cmake .. -G "Visual Studio 2019"
-cmake .. -G "Visual Studio 2019" -A x64 -Thost=x64 # 使用VS时可以通过-A指定目标CPU架构，使用-T指定使用的工具链（这里指定使用64位工具链）
-```
-
-在通过命令行调用`CMake`时可以使用`-D`指定变量，使用`-U`销毁变量，如下例
-
-```shell
-cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Debug
-```
-
-命令行常用变量如下
-
-| 变量 | 释义 |
-| :-: | :-: |
-| `CMAKE_PREFIX_PATH` | 指定依赖包的查找路径。适用于CMake的依赖包一般和第三方闭源库一起发行，向CMake指示这些二进制文件以及头文件的处理与使用方法 |
-| `CMAKE_MODULE_PATH` | 指定附加CMake模块的路径 |
-| `CMAKE_BUILD_TYPE` | 设置本次构建的类型，可以是`Debug`或`Release`，只对Make和Ninja有效，对VS和XCode无效 |
-| `CMAKE_INSTALL_PREFIX` | 指定安装路径，使用`install`目标进行软件的安装时使用。在类Unix上默认是`/usr/local` |
-| `CMAKE_TOOLCHAIN_FILE` | 指定CMake的工具链参数文件 |
-| `BUILD_SHARED_LIBS` | 选择是否构建共享库 |
-| `CMAKE_EXPORT_COMPILE_COMMANDS` | 生成适用于clang工具链的`compile_commands.json`文件 |
-
-> `CMAKE_MAKE_PROGRAM`用于指定直接使用`--build`运行构建过程时调用的构建工具，可以是`make`，`ninja`等
-
-CMake支持Cache，记录构建时使用到的各种参数（如工具链名称，工具链路径，依赖，命令行参数等），在第一次运行时会生成一个`CMakeCache.txt`用于存储这些信息的键值对，可以使用命令行工具`ccmake`编辑其中的键值对
-
-CMake还支持使用预设，CMake读取`CMakePresets.txt`以及`CMakeUserPresets.txt`获取预设参数，一般包含构建目录，环境变量，Cache变量等
-
-> 一般一个预设文件里面会有多个预设配置，每一个预设都有一个名称，可以在调用`cmake`的时候通过`--preset`参数指定，如下示例
->
-> ```shell
-> cmake -S ~/repos/src --preset=ninja-release # 调用了名称为ninja-release的配置
-> ```
->
-> ```shell
-> cmake -S ~/repos/src --list-presets # 列出源文件目录预设文件中的所有预设配置的名称
-> ```
-
-
-## 4.2 编写脚本CMakeLists.txt
-
-
-## 5 现代构建工具之Ninja
+## 4 现代构建工具之Ninja
 
 Ninja名称来源于日语「忍者」，是一个专注于提高构建速度、缩短构建时间的类Make构建系统，在大型工程中相对于Make有明显的速度提升。Ninja最初是作者为提高Google Chrome的构建速度而设计，目前Ninja已经在很多开源项目（如LLVM）中得到了广泛应用。Ninja的默认构建脚本在当前目录下的`build.ninja`
 
 Ninja官网 https://ninja-build.org/
 
-Ninja作者 http://aosabook.org/en/posa/ninja.html
+Ninja作者的文章 http://aosabook.org/en/posa/ninja.html
 
-Ninja在设计上是可读的（Human Readable），但是不适合人工手写（设计理念：如果说Make是高级语言，Ninja就是汇编语言），**一般结合其他Make生成工具如CMake使用（CMake这类构建工具一般被称为 meta-build system）**
+Ninja在设计上是可读的（Human Readable），但是较为繁琐不适合人工手写（设计理念：如果说Make是高级语言，Ninja就是汇编语言），**一般结合其他Make生成工具（元构建系统）如CMake使用**
 
-Ninja相对于Make，只支持非常简单直接的规则描述，支持隐式规则。构建命令的更改也会导致文件的重新构建。Ninja在运行时会自动创建需要的目录，而不像Make需要使用一个顺序依赖。同时Ninja在运行时默认总是使用最多的CPU核心数，同时并行执行的输出都会自动按顺序输出
+Ninja相对于Make，只支持非常简单直接的规则描述，支持隐式规则。构建命令的更改也会导致文件的重新构建。Ninja在运行时会自动创建需要的目录，而不像Make需要使用一个顺序依赖。同时Ninja在运行时默认总是使用最多的CPU核心数，并行执行的输出都会通过缓冲自动按顺序输出
 
 在Ninja中，**edge**基本相当于Make的**recipe**
 
 
-## 5.1 Ninja的基本用法
+## 4.1 Ninja的基本用法
 
 和Make一样，Ninja使用时直接在当前目录执行`ninja`即可，用法基本是相同的，也可以通过`-j`参数指定使用的线程数量
 
@@ -936,7 +862,7 @@ NINJA_STATUS = [%u/%r/%f] # 默认使用[%f/%t]
 | `%c` | 1秒内完成edge的数量（实时速度） |
 | `%%` | 显示一个`%` |
 
-另外Ninja支持一些有用的小功能，可以在使用时通过命令行参数`-t`调用
+另外Ninja支持一些有用的小工具，可以在使用时通过命令行参数`-t`调用
 
 | 工具名 | 作用 | 示例 |
 | :-: | :-: | :-: |
@@ -951,7 +877,7 @@ NINJA_STATUS = [%u/%r/%f] # 默认使用[%f/%t]
 | `rules` | 显示所有的rule规则名称 | `ninja -t rules` |
 
 
-## 5.2 Ninja语法简记
+## 4.2 Ninja语法简记
 
 一般日常使用中没有必要自己写`build.ninja`，这里只做一些简单的解释
 
@@ -971,6 +897,7 @@ build foo.o: cc foo.c
 > 使用`rule`关键字指定一种规则，这种规则需要有一个名称（这里是`cc`），以及构建相应目标文件的shell命令（通过`command`指定）
 >
 > 而`build`关键字用于指定文件的依赖关系（Build Statement），需要指定对应目标文件使用的rule以及依赖文件名。可以在`build`关键字之后指定**专有变量**，例如
+>
 > ```
 > build special.o: cc special.c
 >    cflags = -Wall
@@ -989,4 +916,536 @@ default test.o hello.o
 ```
 
 
-## 6 用于生成Makefile的工具之automake和autoconf
+## 5 元构建系统之CMake
+
+CMake是一个非常强大的跨平台的构建工具，一般用于生成其他make工具（GNU Make或Ninja等）的脚本，在默认情况下检查当前目录下的`CMakeLists.txt`作为输入，可以生成Buildsystem（一般是其他Make软件的脚本）
+
+https://cmake.org/
+
+
+## 5.1 CMake的基本用法
+
+在构建之前首先需要生成构建系统（如Makefile或build.ninja等），可以使用`-G`命令行指定想要使用的构建系统。不指定**默认使用通用的Makefile**，可以用于`gmake`，`nmake`等。**构建系统文件依据CMakeLists.txt在当前目录下生成**，注意一旦指定一个构建目录的构建系统以后就**不可再次更改**，想要更改只能删除文件
+
+```shell
+cd ~/repos/hello    # ~/repos/hello为CMakeLists.txt所在目录，也是整个工程的目录
+cmake .             # 默认生成Makefile，这里的.用于指示CMakeLists.txt所在路径
+cmake . -G Ninja    # 指定使用ninja，会在当前目录下生成build.ninja
+cmake . -G "Visual Studio 2019"                     # 指定生成VS的工程文件
+cmake . -G "Visual Studio 2019" -A x64 -Thost=x64   # 使用VS时可以通过-A指定目标CPU架构，使用-T指定使用的工具链（这里指定使用64位工具链）
+```
+
+在通过命令行调用`CMake`时可以使用`-D`指定变量，使用`-U`销毁变量，如下例
+
+```shell
+cmake . -G Ninja -DCMAKE_BUILD_TYPE=Debug
+```
+
+命令行常用变量如下
+
+| 变量 | 释义 |
+| :-: | :-: |
+| `CMAKE_PREFIX_PATH` | 指定依赖包的查找路径。适用于CMake的依赖包一般和第三方闭源库一起发行，向CMake指示这些二进制文件以及头文件的处理与使用方法 |
+| `CMAKE_MODULE_PATH` | 指定附加CMake模块的路径 |
+| `CMAKE_BUILD_TYPE` | 设置本次构建的类型，可以是`Debug`或`Release`，只对Make和Ninja有效，对VS和XCode无效 |
+| `CMAKE_INSTALL_PREFIX` | 指定安装路径，使用`install`目标进行软件的安装时使用。在类Unix上默认是`/usr/local` |
+| `CMAKE_TOOLCHAIN_FILE` | 指定CMake的工具链参数文件 |
+| `BUILD_SHARED_LIBS` | 选择是否构建共享库 |
+| `CMAKE_EXPORT_COMPILE_COMMANDS` | 生成适用于clang工具链的`compile_commands.json`文件 |
+
+> `CMAKE_MAKE_PROGRAM`用于指定直接使用`--build`运行构建过程时调用的构建工具，可以是`make`，`ninja`等
+
+在生成构建系统之后就可以**进行真正的构建过程**了，可以使用`cmake --build`让cmake自动调用`make`或`ninja`（需要设定），也可以手动执行`make`或`ninja`（因为当前目录已经有Makefile了）
+
+```shell
+cmake --build .
+cmake --build . --target install # 使用install目标调用软件安装的过程
+```
+
+> 在第二行命令中使用到了一个内建的目标`install`，CMake还有其他的一些内建目标，如下
+
+| 内建目标名 | 释义 |
+| :-: | :-: |
+| `all` | 相当于Makefile和build.ninja中的默认目标all，构建所有文件 |
+| `help` | 列出可用的构建目标 |
+| `clean` | 清除所有生成的文件 |
+| `test` | 运行测试 |
+| `install` | 安装软件 |
+| `package` | 创建一个二进制包 |
+| `package_source` | 创建一个源码包 |
+
+除此之外，CMake支持Cache，记录构建时使用到的各种参数（如工具链名称，工具链路径，依赖，命令行参数等），在第一次运行时会生成一个`CMakeCache.txt`用于存储这些信息的键值对，可以使用命令行工具`ccmake`编辑其中的键值对
+
+CMake还支持使用预设，CMake读取`CMakePresets.txt`以及`CMakeUserPresets.txt`获取预设参数，一般包含构建目录，环境变量，Cache变量等
+
+> 一般一个预设文件里面会有多个预设配置，每一个预设都有一个名称，可以在调用`cmake`的时候通过`--preset`参数指定，如下示例
+>
+> ```shell
+> cmake -S ~/repos/hello --preset=ninja-release # 调用了名称为ninja-release的配置
+> ```
+>
+> ```shell
+> cmake -S ~/repos/hello --list-presets # 列出源文件目录预设文件中的所有预设配置的名称
+> ```
+
+
+## 5.2 编写脚本CMakeLists.txt
+
+CMake相比Make处于更加高级的层面，所以不能用写Makefile的思维去写CMakeLists.txt
+
+CMakeLists.txt由**命令**和**变量**两大基本要素构成。CMakeLists.txt唯一的基本构成单位称为**命令**（commands），形式类似于一般编程语言中常见的函数形式`func()`，其中的参数使用空格分隔。而**变量**（variables）一般用于控制行为，提供信息等，分为用户定义的临时变量和CMake的内建变量
+
+和Make不同，CMake将CMakeLists.txt中所有命令逐条执行，CMake只是相当于一个脚本解释器
+
+> CMake所有的命令参考见 https://cmake.org/cmake/help/v3.21/manual/cmake-commands.7.html
+>
+> CMake所有的内建变量参考见 https://cmake.org/cmake/help/v3.21/manual/cmake-variables.7.html
+
+**快捷入门**
+
+一个简单的示例如下
+
+```cmake
+# 首先指定要求的最低CMake版本
+cmake_minimum_required(VERSION 3.10)
+
+# 其次设定工程名，可以添加VERSION指定版本
+project(Hello VERSION 1.31)
+# 版本号也可以通过变量设定
+# set(Hello_VERSION_MAJOR 1)
+# set(Hello_VERSION_MINOR 31)
+
+# 指定使用的C++版本，设置为C++11，注意需要在所有add_executable()之前指定
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_SRANDARD_REQUIRED True)
+
+# 可以指定一个用于版本号管理的头文件，将版本号传入，头文件示例见下
+configure_file(helloconf.h.in helloconf.h)
+
+# 最重要的命令之一，设定生成的可执行文件名称，这里是Test，由main.cpp得出
+add_executable(Test main.cpp)
+```
+
+编写一个`helloconf.h.in`如下，使用CMake中的`configure_file()`命令会自动将所有使用`@@`括起来的文字替换为指定的版本号并输出为`helloconf.h`，这里分别为`1`和`31`。在`main.cpp`开头添加`#include "helloconf.h"`这样就可以在程序中使用版本号
+
+```c
+#define VERSION_MAJOR @Hello_VERSION_MAJOR@ // 主版本号，自动替换为1
+#define VERSION_MINOR @Hello_VERSION_MINOR@ // 次要版本号，自动替换为31
+```
+
+如果最终生成的Test由多个源文件构建（比如主进程代码在`main.cpp`，调用两个函数分别在`add.cpp`和`abs.cpp`，这两个函数声明在头文件`mylib.h`），那么就需要将这些文件都添加到Test的依赖中，把最后一行`add_executable()`更改如下
+
+```cmake
+add_executable(Test main.cpp add.cpp abs.cpp)
+```
+
+也可以使用`aux_source_directory()`命令，使用该命令可以查找一个目录下所有的源文件，存储到一个变量中，之后在`add_executable()`中引用这个变量
+
+```cmake
+aux_source_directory(. ALL_SRC)
+add_executable(Test ${ALL_SRC})
+```
+
+如果想要在工程中使用静态库，可以将所有的源文件存入一个目录。这里设`add.cpp`和`abs.cpp`以及`mylib.h`都在`./lib`目录下，要编译出一个名为`Myfunc`的静态库文件，就要在`lib`目录下创建一个子CMakeLists.txt，如下所示
+
+```cmake
+add_library(Myfunc add.cpp abs.cpp)
+```
+
+然后在主CMakeLists.txt中添加如下内容
+
+```cmake
+add_subdirectory(lib)
+
+add_executable(Test main.cpp)
+
+target_link_libraries(Test Myfunc)
+```
+
+这样CMake会自动在子目录`lib`中编译出库文件`libMyfunc.a`，最后再和`main.cpp.o`链接
+
+**编译选项**
+
+CMake可以使用`option()`指定一个选项（**也相当于在C语言中使用`#define`关键字定义，但是需要在`*.in`中配置**），形式如下
+
+```cmake
+option(USE_MYLIB "Use the tailored library" ON)
+option(ENABLE_OPTIMIZATION "Optimize the code" OFF)
+```
+
+其中，括号内第一个参数为用户自定义的一个选项，第二个参数为该选项的描述，第三个参数可以是`ON`或`OFF`，指定该选项的有效与否。之后`if()`条件判断命令的使用涉及到这里的设定。`if()`语句的一个示例如下
+
+```cmake
+if(ENABLE_OPTIMIZATION)
+    # Commands
+endif(ENABLE_OPTIMIZATION)
+```
+
+这个选项在编译的C代码中使用方法如下，用于条件编译
+
+```c
+#include "helloconf.h"
+
+#ifdef ENABLE_OPTIMIZATION
+    #define USE_FAST_FUNCTION
+#endif
+```
+
+需要在`helloconf.h.in`添加如下内容，CMake会自动处理`helloconf.h`，决定是否定义`ENABLE_OPTIMIZATION`
+
+```c
+#cmakedefine ENABLE_OPTIMIZATION
+```
+
+这些选项可以使用`ccmake`图形界面配置更改`ON`或`OFF`，也可以使用`cmake -i`配置
+
+**安装**
+
+可以指定生成目标文件的安装目录，使用`install()`命令指定。目标文件可以是可执行文件，也可以是库文件或头文件等
+
+```cmake
+install(TARGETS Test DESTINATION bin)
+install(FILES "test.h" DESTINATION include)
+```
+
+这样CMake默认将文件安装到`/usr/local/`下的`bin`或`include`，默认安装的路径前缀可以通过变量`CMAKE_INSTALL_PREFIX`设定
+
+**测试**
+
+CMake可以使用`add_test()`指定一次测试，也可以使用`set_tests_properties()`检验测试结果的正确性
+
+测试在对应`CMakeLists.txt`中的写法如下
+
+```cmake
+# 首先启动测试
+enable_testing()
+
+# 首先确保程序能正常运行，使用add_test()会检测程序运行后是否返回0。括号内第一个参数为本次测试的名称，第二个参数为测试的可执行文件以及对应的命令行参数（其实就是测试使用的命令行）
+add_test(test_run Test)
+
+# 其次可以测试不同的输入，并使用set_tests_properties()检测输出是否符合预期
+add_test(test_1 Test --use-aux-out)
+# 括号内第一个参数为对应的测试名，使用PROPERTIES指定结果，这里是使用正则表达式进行匹配
+set_tests_properties(test_1 PROPERTIES PASS_REGULAR_EXPRESSION "[A-Z]*")
+```
+
+如果测试数量过多，可以使用宏实现
+
+```cmake
+macro(exe_test arg1 arg2 out)
+    add_test(test_${arg1}_${arg2} Test ${arg1} ${arg2})
+    set_tests_properties(test_${arg1}_${arg2} PROPERTIES PASS_REGULAR_EXPRESSION ${out})
+endmacro(exe_test)
+
+exe_test(1 2 "is 3")
+exe_test(5 6 "is 11")
+```
+
+**添加GDB调试功能**
+
+想要使用调试器，只要在编译时指定必要的参数即可
+
+```cmake
+set(CMAKE_BUILD_TYPE "Debug")
+
+# $ENV{CXXFLAGS}是一个环境变量
+set(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -O0 -Wall -g -ggdb")
+set(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -O3 -Wall")
+```
+
+## 5.3 常用命令（Commands）
+
+### 5.3.1 基本脚本控制相关命令
+
+**变量设定**
+
+使用`set()`进行变量的设定
+
+```cmake
+# 定义一个普通变量，这个变量也可以是CMake的内建变量
+set(VAR_NAME var-value)
+
+# 定义一个缓存入口变量，类型可以是BOOL，FILEPATH，PATH，STRING，INTERNAL
+set(VAR_NAME var-value CACHE BOOL)
+
+# 定义一个环境变量，之后环境变量通过$ENV{}引用
+set(ENV{VAR_NAME} var-value)
+```
+
+如果想要撤销一个变量，用`unset()`即可
+
+```cmake
+# 撤销一个普通变量
+unset(VAR_NAME)
+
+# 撤销一个缓存变量
+unset(VAR_NAME CACHE)
+
+# 撤销一个环境变量
+unset(ENV{VAR_NAME})
+```
+
+**列表变量（List）**
+
+
+
+**条件判断**
+
+CMake中的条件判断如下
+
+```cmake
+if(condition)
+    commands()
+elseif(condition)
+    commands()
+else(condition)
+    commands()
+endif(condition)
+```
+
+> 其中`else()`和`endif()`中的条件可以不填写，如果填写就必须填写和`if()`完全相同的条件
+
+`condition`为`ON`，`YES`，`TRUE`，`Y`，`1`或非0数值时表达式为真，为`OFF`，`NO`，`FALSE`，`N`，`0`，`IGNORE`，`NOTFOUND`或空值时为假。`condition`也可以是一个包含这些值的变量。条件表达式可以使用括号，关键字有`EXISTS COMMAND DEFINED`，可以使用`EQUAL LESS LESS_EQUAL GREATER GREATOR_EQUAL STREQUAL STRLESS STRLESS_EQUAL VERSION_EQUAL MATCHES`等关键字做比较运算，还可以使用`NOT AND OR`指定逻辑关系
+
+示例
+
+```cmake
+# 逻辑运算符以及括号的使用
+if(NOT (condition1 AND condition2))
+
+# 检测命令是否存在
+if(COMMAND command-name)
+
+# 检测一条策略是否存在
+if(POLICY policy-id)
+
+# 检测一个目标文件是否已经定义（使用add_executable()或add_library()定义）
+if(TARGET target-name)
+
+# 检测一个变量是否已经定义
+if(DEFINED var)
+
+# 检测一个文件是否存在
+if(EXISTS path/to/file)
+
+# 检测是否是一个目录
+if(IS_DIRECTORY path/to/dir)
+
+# 检测是否是一个符号链接
+if(IS_SYMLINK path/to/slink)
+
+# 检测是否是一个绝对路径
+if(IS_ABSOLUTE path)
+
+# 正则表达式匹配
+if(var MATCHES regex)
+
+# 数值比较
+if(var1 LESS var2)
+
+# 字符串比较
+if(str1 STRGREATER str2)
+
+# 版本比较
+if(ver1 VERSION_LESS ver2)
+```
+
+另外，表达式中使用变量的方法也要注意。如果变量使用`${}`引用，变量会被递归展开。如果直接写变量名就不会递归展开
+
+```cmake
+set(var1 TRUE)
+set(var2 "var1")
+
+# 下面的var2值为TRUE
+if(${var2})
+```
+
+**while循环**
+
+`while()`循环的一般形式如下
+
+```cmake
+while(condition)
+    commands()
+endwhile()
+```
+
+在一个`while()`循环中也可以使用`break()`或`continue()`语句跳出或跳过
+
+**foreach循环**
+
+`foreach()`相当于C++11中的范围for
+
+```cmake
+# items是一个列表，其中的各个元素使用空格或";"分隔
+foreach(TMP_VAR items)
+    commands()
+endforeach()
+
+# 将3到52依次赋值给TMP_VAR执行
+foreach(TMP_VAR RANGE 3 52)
+    commands()
+endforeach()
+
+# 将多个列表中赋值给TMP_VAR执行，列表本质就是一个带空格或使用";"的变量，代表多个值
+foreach(TMP_VAR IN LISTS list1 list2 ITEMS item1 item2)
+    commands()
+endforeach()
+```
+
+**函数**
+
+用户可以通过`function()`定义自己的函数，使用方法如下
+
+```cmake
+function(func_name arg1 arg2 arg3)
+    commands()
+    return() # 函数需要在当前处理过程结束以后显式地调用return()返回
+endfunction()
+
+# 之后就可以调用函数了
+func_name(ARG_1 ARG_2 ARG_3)
+```
+
+> 另外，向函数传入的参数数量可以通过`ARGC`获取，而所有参数也可以依次通过`ARGV0 ARGV1`等引用
+
+**宏**
+
+可以通过`macro()`命令定义一个宏。宏和函数非常相似。区别是CMake会将宏复制到调用的位置执行（类似于C语言中的宏），所以不需要返回
+
+```cmake
+macro(mac_name arg1 arg2 arg3)
+    commands()
+endmacro()
+```
+
+> 宏和函数另外一个区别是变量的使用。在函数中的变量是实际存在的，直接通过`VAR`的形式引用即可；而宏中的变量是在执行时替换得来，变量要通过`${VAR}`的形式引用
+
+**查找**
+
+可以使用`find_file()`查找文件，使用`find_library()`查找一个库文件，使用`find_path()`查找包含一个文件的目录，使用`find_program()`查找一个文件
+
+```cmake
+# 查找并返回指定文件的绝对路径，赋值给FIND_RESULT，使用NAMES指定多个可能的文件名
+find_file(FIND_RESULT NAMES file_name1 file_name2)
+# 可以使用PATHS或HINTS指定除默认外可能的查找路径
+find_file(FIND_RESULT NAMES file_name1 file_name2 PATHS /usr/bin /home/me/bin)
+```
+
+```cmake
+# 查找一个库文件的绝对路径，用法同理
+find_library(FIND_RESULT NAMES lib_name1 lib_name2 PATHS /usr/lib home/me/lib)
+```
+
+```cmake
+# 查找一个可执行文件的绝对路径，用法同理
+find_program(FIND_RESULT NAMES bin_name1 bin_name2 PATHS /usr/bin home/me/bin)
+```
+
+```cmake
+# 查找返回一个文件包含的路径
+find_path(FIND_RESULT NAMES file_name1 file_name2 PATHS /home/me/files /usr/lib)
+```
+
+**显示消息**
+
+可以使用`message()`显示一条信息
+
+```cmake
+# 显示的信息使用""双引号括起来，在此之前可以使用一个关键字指定信息的类型，比如FATAL_ERROR等
+message(FATAL_ERROR "Fatal error occurred")
+```
+
+> 显示的信息有以下几类，不同类型的信息有不同的处理方法
+
+| 信息类型 | 处理方式 |
+| :-: | :-: |
+| `FATAL_ERROR` | 致命错误，CMake停止正在执行的所有任务 |
+| `SEND_ERROR` | 错误触发，CMake继续运行，跳过失败的过程 |
+| `WARNING` | 显示警告信息，CMake继续执行 |
+| `AUTHOR_WARNING` | 显示警告信息，CMake继续执行 |
+| `NOTICE` | 通过标准错误显示的信息 |
+| `STATUS` | **最常用**，显示一条任意信息 |
+| `VERBOSE` | 一些在通常情况下没有特殊指定就不需要显示的信息，一般是一些细节信息 |
+| `DEBUG` | 提供给本软件开发者和维护者看的信息 |
+| `TRACE` | 非常详细的信息 |
+
+**指定选项**
+
+选项一般写在CMakeLists.txt靠前的位置，用于为用户提供可配置的选项，使用`option()`进行指定，用户可以设置这些选项的开关（在使用`ccmake`时也会显示）
+
+```cmake
+option(USE_FAST_ALGORITHM "Use the optimized algorithm" OFF)
+```
+
+**数学运算**
+
+可以使用`math()`进行一些数学运算。在CMake中所有整型变量的长度都是64位
+
+```cmake
+# 第一个参数为EXPR关键字，计算表达式使用""括起来，计算的最终结果存储在表达式前的变量中。最终使用OUTPUT_FORMAT指定输出格式，可以是DECIMAL十进制或HEXADECIMAL十六进制
+math(EXPR calc_result "3 * ( 6 + 0x0A )" OUTPUT_FORMAT DECIMAL)
+```
+
+**字符串操作**
+
+字符串操作使用命令`string()`，有非常多的功能
+
+`string()`中的一些基本命令如下
+
+```cmake
+string(APPEND )
+string(PREPEND )
+string(CONCAT )
+string(JOIN )
+string(TOLOWER )
+string(TOUPPER )
+string(LENGTH )
+string(SUBSTRING )
+string(STRIP )
+string(GENEX_STRIP )
+string(REPEAT )
+```
+
+使用`string()`进行**查找替换**的命令如下
+
+```cmake
+string(FIND )
+string(REPLACE )
+string(REGEX MATCH )
+string(REGEX MATCHALL )
+string(REGEX REPLACE )
+```
+
+字符串**比较**的命令如下
+
+```cmake
+string(COMPARE )
+```
+
+计算字符串**哈希（Hash）**
+
+```cmake
+string(MD5 )
+```
+
+字符串**生成**
+
+```cmake
+string(RANDOM )
+```
+
+**包含文件**
+
+**文件读写**
+
+
+### 5.3.2 工程相关命令
+
+
+## 5.4 常用内建变量（Variables）
+
+
+
+
+## 6 元构建系统之autotools
