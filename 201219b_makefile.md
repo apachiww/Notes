@@ -18,6 +18,8 @@ Make本质就是根据给定规则推导判断文件依赖，之后通过一系�
 
 Make几乎可以算作是通用的文件处理脚本工具，Makefile就是它的脚本。在Linux、BSD等类UNIX环境中各种强大工具的支撑下，它不仅可以用于各种语言编写的程序编译与构建，甚至可以用于图片和音频等文件的处理
 
+学习Make建议**结合实际的项目进行理解**，可以参考各种开源项目，尤其是一些跨平台项目
+
 
 ## 1.2 GNU GCC工具链
 
@@ -36,6 +38,8 @@ GCC编译一个程序的过程分为**预处理、编译、汇编、链接**4大
 
 一些基础概念
 
+GNU Make 官方文档 http://www.gnu.org/software/make/manual/
+
 ## 2.1 两个阶段
 
 Make的主要任务，主要是文件依赖的推导，以及自动调用文件构建命令
@@ -52,7 +56,7 @@ include share.mk
 
 **第二个阶段**make会根据依赖树以及文件时间戳判断哪些文件需要更新，并运行相应的构建方法（recipes）更新文件
 
-对于这两个阶段的理解非常重要，之后有关变量的展开和这两个过程息息相关
+**对于这两个阶段的理解非常重要**，之后有关变量的展开和这两个过程息息相关
 
 
 ## 2.2 Makefile的解析过程
@@ -78,11 +82,16 @@ Makefile的解析流程如下
 
 ## 3 Makefile格式以及编写
 
+Makefile的基本组成单位是**规则**（**rules**），而每一个**规则**都是基于**目标**（**targets**）定义的，**目标**可以是一个文件，也可以是使用Make命令行时指定的操作，如`install`，`clean`等（称为**伪目标**）。每一个**目标**都可以有**依赖**（**prerequisites**），在C工程中常见的有库文件，可重定位文件以及源码等。**目标**也会有对应的**构建方法**（**recipe**），一般是用于构建该**目标**的命令行
+
+
 ## 3.1 Makefile变量
 
 变量的引用通过形如`${var}`或`$(var)`
 
 以下`imm`和`def`指变量的类型（immediate或deferred）
+
+建议先看[3.2规则](201219b_makefile.md#32-规则Rule)
 
 
 ### 3.1.1 变量的赋值
@@ -186,8 +195,6 @@ target-pattern : variable-assignment
 
 ### 3.1.3 自动变量（Automatic Variables）
 
-在此之前先看[3.2规则](201219b_makefile.md#32-规则Rule)
-
 **自动变量只在一条rule后的recipe中有效**，除非使用二次展开
 
 | 变量名 | 解释 |
@@ -218,7 +225,7 @@ targets : prerequisites ; recipe
 
 **recipe行开头需要使用制表符作为前缀来标记该行为recipe**
 
-`targets`代表要生成的**目标文件名**，一般为1个也可以有多个；`prerequisites`代表依赖的文件，一般有多个；`recipe`代表构建方法，一般是shell命令，紧跟在下一行，**以制表符开头（也可通过`.RECIPEPREFIX`指定其他符号）**，也可以在同一行，使用`;`分隔
+`targets`代表要生成的**目标文件名**，可以有1个也可以有多个；`prerequisites`代表依赖的文件，一般有多个；`recipe`代表构建方法，一般是shell命令，紧跟在下一行，**以制表符开头（也可通过`.RECIPEPREFIX`指定其他符号）**，也可以在同一行，使用`;`分隔
 
 变量展开示意如下
 
@@ -233,11 +240,13 @@ imm : imm ; def
 
 ### 3.2.2 依赖（prerequisites）类型
 
-依赖分为两种，一种是如上文所说的**普通依赖（normal prerequisites）**。这种依赖的实质，就是当一个target目标文件有任何依赖（prerequisites）文件被更新，此时有依赖文件的时间戳比目标文件新，所以就代表目标文件需要被重新构建，运行对应recipe
+依赖分为两种，一种是如上文所说的依赖，被称为**普通依赖（normal prerequisites）**。这种依赖的实质，就是当一个target目标文件有任何依赖（prerequisites）文件被更新，此时有依赖文件的时间戳比目标文件新，所以就代表目标文件需要被重新构建，运行对应recipe
 
 还有第二种依赖，被称为**顺序依赖（order-only prerequisites）**
 
-> 个人理解：事实上make中文件依赖的解析可以分为两种过程。一种是**自上向下**的过程，比如我们在运行`make all`时，此时由目标文件向依赖文件解析，如果某些依赖文件不存在，那么就运行对应的recipe创建，**这经常发生在第一次执行make时，是目标文件（此时可能不存在）导致的依赖文件的更改**。之后还有一个**自下向上**的过程，make会检查那些依赖文件的时间戳，如果它们比目标文件新就代表要对目标文件进行更新，**这经常发生在第一次执行make以后，用户更改了一些源文件，是依赖文件（一般已经存在）导致的目标文件的更改**
+> 个人理解：事实上make的解析过程可以分为两种不同的过程来理解（当然Make真正的执行流程不完全是这样）。一种是**自上向下**的过程，比如我们在运行`make all`时，此时由目标文件向依赖文件解析，如果某些依赖文件不存在，那么就运行对应的recipe创建，**这经常发生在第一次执行make时，是目标文件（此时可能不存在）导致的依赖文件的更改**。之后还有一个**自下向上**的过程，make会检查那些依赖文件的时间戳，如果它们比目标文件新就代表要对目标文件进行更新，**这经常发生在第一次执行make以后，用户更改了一些源文件，是依赖文件（一般已经存在）导致的目标文件的更改**
+>
+> 这样可以解释**顺序依赖**的原理
 
 **顺序依赖**可以理解为，当目标文件的依赖文件不存在时，会运行对应recipe创建。而当之后依赖文件被更新后，**顺序依赖不会像普通依赖一样对目标文件进行重新构建**
 
@@ -920,7 +929,7 @@ default test.o hello.o
 
 CMake是一个非常强大的跨平台的构建工具，一般用于生成其他make工具（GNU Make或Ninja等）的脚本，在默认情况下检查当前目录下的`CMakeLists.txt`作为输入，可以生成Buildsystem（一般是其他Make软件的脚本）
 
-https://cmake.org/
+官方网站 https://cmake.org/
 
 
 ## 5.1 CMake的基本用法
@@ -1187,7 +1196,60 @@ unset(ENV{VAR_NAME})
 
 **列表变量（List）**
 
+列表变量本质和普通变量相同，各元素使用空格或`;`隔开，可以使用`list()`命令进行处理
 
+```cmake
+# 获取一个列表当前的长度
+list(LENGTH listname OUT_VAR)
+
+# 获取一个列表变量中的部分变量
+list(GET listname index1 index2 OUT_VAR)
+
+# 获取一个由列表元素以及连接字符串构成的字符串
+list(JOIN listname gluestring OUT_VAR)
+
+# 获取一个子串，从10开始的连续2个
+list(SUBLIST listname 10 2 OUT_VAR)
+
+# 查找一个元素，获取index
+list(FIND listname value OUT_VAR)
+
+# 正则表达式过滤元素。可以使用EXCLUDE进行反选
+list(FILTER listname INCLUDE REGEX reg)
+
+# 插入到位置10
+list(INSERT listname 10 element1 element2)
+# 插入到位置0
+list(PREPEND listname element1 element2)
+
+# 删除末尾一个元素
+list(POP_BACK listname)
+
+# 删除开头一个元素
+list(POP_FRONT listname)
+
+# 移除元素
+list(REMOVE_ITEM listname value1 value2)
+# 移除指定目录元素
+list(REMOVE_AT listname index1 index2)
+# 移除重复元素
+list(REMOVE_DUPLICATES listname)
+
+# 列表颠倒
+list(REVERSE listname)
+
+# 列表排序。通过ORDER指定顺序，可以指定大小写敏感，还可以在COMPARE使用FILE_BASENAME指定按文件名路径排序
+list(SORT listname COMPARE STRING CASE SENSITIVE ORDER ASCENDING)
+
+# 对列表中每一个元素进行处理，在开头添加value
+list(TRANSFORM listname PREPEND value)
+# 改大写
+list(TRANSFORM listname TOUPPER)
+# 删除空格
+list(TRANSFORM listname STRIP)
+# 正则表达式替换
+list(TRANSFORM listname REPLACE reg reg_replace)
+```
 
 **条件判断**
 
@@ -1372,7 +1434,7 @@ message(FATAL_ERROR "Fatal error occurred")
 
 **指定选项**
 
-选项一般写在CMakeLists.txt靠前的位置，用于为用户提供可配置的选项，使用`option()`进行指定，用户可以设置这些选项的开关（在使用`ccmake`时也会显示）
+选项一般写在CMakeLists.txt靠前的位置，用于为用户提供可配置的选项，使用`option()`进行指定，用户可以设置这些选项的开关（在使用`ccmake`时也会在图形界面中显示）
 
 ```cmake
 option(USE_FAST_ALGORITHM "Use the optimized algorithm" OFF)
@@ -1394,53 +1456,137 @@ math(EXPR calc_result "3 * ( 6 + 0x0A )" OUTPUT_FORMAT DECIMAL)
 `string()`中的一些基本命令如下
 
 ```cmake
-string(APPEND )
-string(PREPEND )
-string(CONCAT )
-string(JOIN )
-string(TOLOWER )
-string(TOUPPER )
-string(LENGTH )
-string(SUBSTRING )
-string(STRIP )
-string(GENEX_STRIP )
-string(REPEAT )
+# 添加到字符串末尾
+string(APPEND MY_STRING word1 word2)
+
+# 添加到字符串开头
+string(PREPEND MY_STRING word1 word2)
+
+# 连接并输出到一个字符串变量
+string(CONCAT OUT_STRING word1 word2)
+
+# 将所有输入连接，连接处字符使用glue_word
+string(JOIN glue_word OUT_STRING word1 word2)
+
+# 将一个字符串转为小写
+string(TOLOWER MY_STRING OUT_STRING)
+
+# 将一个字符串转为大写
+string(TOUPPER MY_STRING OUT_STRING)
+
+# 计算一个字符串的长度并输出到一个变量
+string(LENGTH MY_STRING OUT_VAR)
+
+# 截取从str_begin开始的str_length个字符
+string(SUBSTRING MY_STRING str_begin str_length OUT_STRING)
+
+# 删除一个字符串开头和结尾的空格
+string(STRIP MY_STRING OUT_STRING)
+
+# 将一个字符串重复count次
+string(REPEAT MY_STRING count OUT_STRING)
 ```
 
 使用`string()`进行**查找替换**的命令如下
 
 ```cmake
-string(FIND )
-string(REPLACE )
-string(REGEX MATCH )
-string(REGEX MATCHALL )
-string(REGEX REPLACE )
+# 在一个字符串里面查找子字符串首次出现的位置，未找到返回-1，可以在最后添加REVERSE指定查找最后一次出现的位置
+string(FIND string substring OUT_VAR)
+
+# 将所有输入字符串中的match_string替换为replace_string并输出到一个变量
+string(REPLACE match_string replace_string OUT_STRING input1 input2)
+
+# 使用正则表达式reg匹配所有输入字符串并输出（匹配单次）
+string(REGEX MATCH reg OUT_STRING input1 input2)
+
+# 使用正则表达式reg匹配所有输入字符串并输出为列表（匹配所有）
+string(REGEX MATCHALL reg OUT_STRING input1 input2)
+
+# 将所有指定表达式匹配处替换为replace表达式
+string(REGEX REPLACE reg replace OUT_STRING input1 input2)
 ```
 
 字符串**比较**的命令如下
 
 ```cmake
-string(COMPARE )
+# 比较两个字符串并将True或False输出到一个变量
+string(COMPARE LESS_EQUAL MY_STRING1 MY_STRING2 OUT_VAR)
+
+# 比较关键字还有GREATER_EQUAL LESS GREATER EQUAL NOTEQUAL
 ```
 
 计算字符串**哈希（Hash）**
 
 ```cmake
-string(MD5 )
+string(MD5 OUT_VAR input)
+
+# 可用的哈希算法还有SHA1 SHA224 SHA256 SHA384 SHA512 SHA3_224等
 ```
 
 字符串**生成**
 
 ```cmake
-string(RANDOM )
+# 返回一个随机字符串，使用LENGTH指定长度，使用ALPHABET指定字符集，使用RANDOMSEED指定使用的随机种子
+string(RANDOM LENGTH 10 ALPHABET 0123456789ABCDEF RAMDOMSEED seed OUT_STRING)
+
+# 生成日期字符串，可以使用UTC指定使用UTC时间，格式参考shell的date
+string(TIMESTAMP %Y-%b-%m-%d-%H-%M-%S OUT_STRING UTC)
 ```
 
 **包含文件**
 
-**文件读写**
+```cmake
+# 通过include可以包含一个文件。可以在文件名之后加上OPTIONAL说明是一个可有可无的文件，文件不存在时CMake不会报错。
+include(file OPTIONAL)
+```
+
+**文件处理**
+
+```cmake
+# 读取文件，从filename文件读取，从第15字节开始读取20字节，并存入变量
+file(READ filename MY_VAR OFFSET 15 LIMIT 20)
+# 仅读取文件中的字符串，限制读取10个字节，可以使用正则表达式过滤
+file(STRINGS filename MY_VAR LIMIT_INPUT 10 REGEX reg)
+
+# 计算文件哈希
+file(HASH filename MY_VAR)
+
+# 获取文件时间戳
+file(TIMESTAMP filename MY_VAR)
+
+# 写文件
+file(WRITE filename my_content)
+
+# 在文件末尾添加
+file(APPEND filename my_content)
+
+# Touch文件，更新访问时间戳
+file(TOUCH filename)
+file(TOUCH_NOCREATE filename)
+
+# 创建目录
+file(MAKE_DIRECTORY dir1 dir2)
+
+# 删除文件或目录
+file(REMOVE filename)
+file(REMOVE_RECURSE filename)
+
+# 更改文件名
+file(RENAME oldname newname)
+
+# 复制文件
+file(COPY_FILE oldname newname)
+file(COPY filename DESTINATION dir)
+file(INSTALL filename DESTINATION dir)
+
+# 获取文件大小
+file(SIZE filename MY_VAR)
+```
 
 
 ### 5.3.2 工程相关命令
+
+
 
 
 ## 5.4 常用内建变量（Variables）
