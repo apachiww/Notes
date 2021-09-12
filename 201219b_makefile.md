@@ -1164,6 +1164,8 @@ set(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -O3 -Wall")
 
 ## 5.3 常用命令（Commands）
 
+详细命令参考列表
+
 ### 5.3.1 基本脚本控制相关命令
 
 **变量设定**
@@ -1383,7 +1385,7 @@ endmacro()
 
 > 宏和函数另外一个区别是变量的使用。在函数中的变量是实际存在的，直接通过`VAR`的形式引用即可；而宏中的变量是在执行时替换得来，变量要通过`${VAR}`的形式引用
 
-**查找**
+**查找文件**
 
 可以使用`find_file()`查找文件，使用`find_library()`查找一个库文件，使用`find_path()`查找包含一个文件的目录，使用`find_program()`查找一个文件
 
@@ -1586,7 +1588,115 @@ file(SIZE filename MY_VAR)
 
 ### 5.3.2 工程相关命令
 
+**指定最小的CMake版本**
 
+```cmake
+cmake_minimum_required(VERSION 3.10)
+```
+
+**指定工程名**
+
+```cmake
+# 版本号可以省略，之后使用内建变量指定
+project(hello VERSION 1.10)
+```
+
+**二进制文件编译链接操作相关**
+
+```cmake
+add_executable()
+
+add_library()
+
+target_link_libraries()
+
+add_dependencies()
+
+target_precompile_headers()
+```
+
+**宏定义相关**
+
+```cmake
+# 指定一个宏，使用VAR=value的格式指定
+add_compile_definitions(ALGO_TYPE=fftw EXEC_ROUNDS=3)
+
+target_compile_definitions()
+```
+
+**路径相关**
+
+```cmake
+target_include_directories()
+
+aux_source_directory()
+
+add_subdirectory()
+```
+
+**编译、链接选项相关**
+
+```cmake
+# 指定编译时要添加的命令行参数
+add_compile_options(-Wall -O3)
+
+# 指定特定目标文件编译选项
+target_compile_options()
+
+add_link_options()
+```
+
+**编译器属性要求**
+
+```cmake
+target_compile_features()
+```
+
+**属性相关**
+
+在CMake中，对象都可以设置对应的属性
+
+```cmake
+define_property()
+
+get_property()
+
+set_property()
+
+get_source_file_property()
+
+set_source_files_properties()
+
+get_target_property()
+
+set_target_properties()
+
+get_directory_property()
+
+set_directory_properties()
+```
+
+**自定义目标与命令**
+
+```cmake
+add_custom_command()
+
+add_custom_target()
+```
+
+**安装相关**
+
+```cmake
+install()
+```
+
+**测试相关**
+
+```cmake
+add_test()
+
+enable_testing()
+```
 
 
 ## 5.4 常用内建变量（Variables）
