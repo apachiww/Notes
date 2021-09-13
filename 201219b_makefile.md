@@ -931,6 +931,10 @@ CMake是一个非常强大的跨平台的构建工具，一般用于生成其他
 
 官方网站 https://cmake.org/
 
+> 2021.9.13注：说实话CMake官方的教程以及示例写的不太好，这里推荐另外一个教程，可以参考 https://cliutils.gitlab.io/modern-cmake/
+>
+> 参考[文档](src/201219b01/modern-cmake.pdf)
+
 
 ## 5.1 CMake的基本用法
 
@@ -1604,34 +1608,58 @@ project(hello VERSION 1.10)
 **二进制文件编译链接操作相关**
 
 ```cmake
-add_executable()
+# 添加要构建的可执行文件名，可以另外定义RUNTIME_OUTPUT_DIRECTORY指定生成可执行文件的路径
+add_executable(exe_name src1 src2)
 
-add_library()
+# 添加要构建的库文件名，注意最后生成的库文件名为lib_name.lib或liblib_name.a，可以指定生成的库文件类型为STATIC（静态链接库），SHARED（共享动态链接库），MODULE等。
+# 如果将内建变量BUILD_SHARED_LIBS配置为ON，那么会默认构建动态链接库。可以通过ARCHIVE_OUTPUT_DIRECTORY指定库文件输出路径，LIBRARY_OUTPUT_DIRECTORY指定中间.o文件输出路径
+add_library(lib_name STATIC src1 src2)
 
-target_link_libraries()
+# 如果只想创建单个.o库文件，可以使用OBJECT指定
+add_library(lib_name OBJECT src1 src2)
+# 想要引用.o库文件需要使用以下格式，也可以使用下面介绍的target_link_libraries()
+add_executable(exe_name $<TARGET_OBJECTS:libname>)
+# 还可以使用IMPORTED从别处指定现成的库，路径可以通过IMPORTED_LOCATION指定，也可以使用OBJECT指定库文件类型是.o
+add_library(lib_name STATIC IMPORTED)
 
-add_dependencies()
+# 将一个目标文件和其他库文件（可以是库文件的名称，实际文件名或完整路径）链接，构建的target必须是已经使用add_library()或add_executable()构建完成的目标文件
+target_link_libraries(target_name lib_1 lib_2)
+target_link_libraries(target_name PUBLIC lib_1 lib_2)
 
-target_precompile_headers()
+# 指定顶层目标文件的依赖关系
+add_dependencies(target_name target1 target2)
 ```
 
 **宏定义相关**
 
 ```cmake
-# 指定一个宏，使用VAR=value的格式指定
+# 指定全局宏，使用VAR=value的格式指定
 add_compile_definitions(ALGO_TYPE=fftw EXEC_ROUNDS=3)
 
-target_compile_definitions()
+# 指定一个特定目标的宏，可以是PUBLIC，PRIVATE或INTERFACE指定生效范围
+target_compile_definitions(target_name PUBLIC MY_DEF)
+target_compile_definitions(target_name PUBLIC MY_DEF=value)
 ```
+
+> CMake中的`PUBLIC`，`PRIVATE`以及`INTERFACE`关键字在`target_*()`命令中常用。众所周知想要调用一个库文件，需要提供对应的**头文件**。而在一个实际的工程中，库与库之间的头文件往往有多层包含，这就引出了层与层包含之间的关系。
+>
+> 如果使用`PRIVATE`关键字，一个库文件（设libB）的.h头文件引用了另一个库文件（设libA）的头文件，假设在上面还有库（libC）引用这个库（libB）文件，那么在libC中是不能使用libA的函数的，因为在头文件中没有包含，相当于libA是libB的私有库，libC不知道libA的存在
+>
+> 如果使用`INTERFACE`关键字则恰恰相反，libA可以使用libC的功能而libB只能使用libA一部分如结构体。这实质上是通过libB的头文件向libC提供libA的功能，而libB本身不使用libA中的函数。相当于跳过libB
+>
+> 如果使用`PUBLIC`关键字就是最通常的情况，相当于以上两种情况的结合，头文件之间是递归包含，libC和libB都可以使用libA中的函数，而libC还可以使用libB中的函数
 
 **路径相关**
 
 ```cmake
-target_include_directories()
+# 向一个目标文件添加头文件查找的目录（按顺序查找），使用BEFORE在开头添加（查找优先级最高）
+target_include_directories(target_name AFTER PUBLIC include/dir)
 
-aux_source_directory()
+# 查找一个目录下的所有源码文件并存入变量
+aux_source_directory(src/dir OUT_VAR)
 
-add_subdirectory()
+# 指定一个构建过程使用的源码目录以及生成二进制文件的目录。不指定默认都是使用当前目录
+add_subdirectory(src/dir bin/dir)
 ```
 
 **编译、链接选项相关**
@@ -1640,61 +1668,80 @@ add_subdirectory()
 # 指定编译时要添加的命令行参数
 add_compile_options(-Wall -O3)
 
-# 指定特定目标文件编译选项
-target_compile_options()
+# 指定特定目标文件编译选项，可以添加BEFORE关键字指定在开头添加
+target_compile_options(target_name BEFORE PUBLIC -Wall)
 
-add_link_options()
-```
-
-**编译器属性要求**
-
-```cmake
-target_compile_features()
+# 指定链接器的命令行参数
+# 注意该命令不能用于.o文件，因为.o文件不会使用到链接器
+add_link_options(-Wl)
 ```
 
 **属性相关**
 
-在CMake中，对象都可以设置对应的属性
+在CMake中，可以设置工程全局、目录、目标文件、源文件、测试、变量以及缓存变量对应的属性
 
 ```cmake
-define_property()
+# 定义一个属性，其中INHERITED是可选项，表示在引用一个未设置的属性时直接自动继承上一级对象的属性。DOCS用于指定描述，接字符串
+define_property(GLOBAL PROPERTY property_name INHERITED BRIEF_DOCS "Brief doc" FULL_DOCS "Full doc")
 
-get_property()
+# 在一个对象上设置一个属性，可以是GLOBAL，DIRECTORY，TARGET，SOURCE，INSTALL，TEST，CACHE。除GLOBAL外所有对象的属性设定都要指定具体的对象名。APPEND为可选项，指在已有属性之后添加
+set_property(GLOBAL PROPERTY property_name APPEND value1 value2)
+set_property(DIRECTORY dir_name PROPERTY property_name value1 value2)
 
-set_property()
+# 获取一个属性。最后的SET是可选项，结果返回True或False，用于检查一个属性是否已经设置
+# 除SET以外还可以使用DEFINED，用于检查一个属性是否已经定义。如果是BRIEF_DOCS或FULL_DOCS就会返回属性的对应描述
+get_property(MY_VAR TARGET target_name PROPERTY property_name SET)
 
-get_source_file_property()
+# 设定源代码文件的属性
+set_source_files_properties(src_file PROPERTIES property1 value1 property2 value2)
+# 同时设定一些源代码路径的属性
+set_source_files_properties(src_file DIRECTORY src_dir1 PROPERTIES property1 value1 property2 value2)
+# 同时设定包含指定目标文件的目录属性
+set_source_files_properties(src_file TARGET_DIRECTORY target1 PROPERTIES property1 value1 property2 value2)
 
-set_source_files_properties()
+# 获取源文件的属性
+get_source_file_property(MY_VAR filename property_name)
+get_source_file_property(MY_VAR filename DIRECTORY src_dir property_name)
+get_source_file_property(MY_VAR filename TARGET_DIRECTORY target property_name)
 
-get_target_property()
+# 设置目标文件的属性
+set_target_properties(target1 target2 PROPERTIES property1 value1 property2 value2)
 
-set_target_properties()
+# 获取目标文件的属性
+get_target_property(MY_VAR target_name property_name)
 
-get_directory_property()
+# 设置当前目录的属性以及子目录的属性
+set_directory_properties(PROPERTIES property1 value1 property2 value2)
 
-set_directory_properties()
+# 获取当前目录属性
+get_directory_property(MY_VAR property_name)
+# 指定目录
+get_directory_property(MY_VAR DIRECTORY dir_name property_name)
 ```
 
 **自定义目标与命令**
 
 ```cmake
-add_custom_command()
+# 使用自定义命令创建一个文件，不依赖于其他文件
+add_custom_command(OUTPUT output_file COMMAND cmd1 ARGS arg1 arg2 COMMAND cmd2 ARGS arg1 arg2)
+# 可以使用MAIN_DEPENDENCY，DEPENDS指定依赖
+add_custom_command(OUTPUT output_file COMMAND cmd1 ARGS arg1 arg2 MAIN_DEPENDENCY depend DEPENDENCY depend1 depend2)
 
-add_custom_target()
+# 使用以下命令可以创建一个无依赖目标，在每一次引用相应目标时都会执行对应命令行，相当于Makefile中的伪目标。ALL是可选参数，使用ALL可以强制每一次执行构建时都运行指定命令行
+add_custom_target(target_name ALL cmd1 arg1 COMMAND cmd2 arg2)
 ```
 
 **安装相关**
 
-```cmake
-install()
-```
+文件的安装使用`install()`命令，详细用法参考之前提供的参考教程
 
 **测试相关**
 
 ```cmake
-add_test()
+# 添加一个测试，可以使用WORKING_DIRECTORY指定运行测试的工作目录
+add_test(NAME test_name COMMAND run_command)
 
+# 使能测试
 enable_testing()
 ```
 
