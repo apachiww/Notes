@@ -136,7 +136,7 @@
 
 + 2021.08.08添加
 
-    有关常用LCD屏幕驱动IC的笔记，包括SSD1306，ST7565，ST7920，以及类Unix下FrameBuffer的基本原理与概念 [210808a_lcd.md](210808a_lcd.md)
+    有关常用LCD、OLED屏幕驱动IC的笔记，包括SSD1306，ST7565，ST7920等，包括一些其他类型的显示屏如墨水屏、VFD等，以及类Unix下FrameBuffer的基本原理与概念 [210808a_lcd.md](210808a_lcd.md)
 
 + 2021.08.11添加
 
@@ -147,6 +147,10 @@
     算法笔记 [210904a_algo.md](210904a_algo.md)
 
     开关电源原理以及设计方法，包含模电复习 [210904b_power.md](210904b_power.md)
+
++ 2021.10.17添加
+
+    模电复习，新概念模拟电路 [211017a_analog.md](211017a_analog.md)
 
 
 ![](images/000000a026.jpg)
@@ -194,7 +198,8 @@
 | 210808a | LCD驱动芯片     | New           |
 | 210811a | 计算机常用存储设备接口协议 | New           |
 | 210904a | 算法             | New           |
-| 210904b | 开关电源，模电，DC-DC | New          |
+| 210904b | 开关电源，DC-DC | New          |
+| 211017a | 211017a_analog.md | New         |
 
 ![](images/000000a001.png)
 
@@ -223,6 +228,7 @@
 21. 《Haskell函数式程序设计》，Richard Bird著，机械工业出版社
 22. 《C++并发编程实战》，Anthony Williams著，人民邮电出版社
 23. 《精通开关电源（第3版）》，Keith Billings，Taylor Morey著，人民邮电出版社
+24. 《新概念模拟电路》，杨建国著，网络资源
 
 🍥 C CPP Go Rust Python Ruby Haskell JavaScript CSS HTML5
 

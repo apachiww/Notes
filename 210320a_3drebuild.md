@@ -1,6 +1,6 @@
 # 计算机视觉/3D重构
 
-关键词： SLAM SfM
+关键词： SLAM RFM StereoVision PCA-RFM
 
 ## 参考
 
@@ -1276,3 +1276,209 @@ WGS84坐标是目前事实上的国际航天测绘标准坐标系之一。坐标
 ![](images/210320a001.jpg)
 
 > 一般的WGS84可以使用$(\phi,\lambda,h)$形式表示，分别表示经度，纬度以及相对参考椭球面的高程
+
+## 2 图片的重采样以及插值算法
+
+通常所说的图片**下采样**，就是将一张图片缩小，形成图片的缩略图，一般下采样使用的算法就是求几个像素的均值，合并到一个像素点
+
+而**上采样**，就是将一张图片放大，这需要在像素点之间插入新值，而插值算法有很多种，最终的显示效果也不尽相同
+
+> 平时我们放大一张图像，发现图像会变模糊。而如果我们在ENVI中放大一张图像，可以发现显示的还是边缘清晰的正方形像素点。这就是**上采样**插值算法的不同造成的差异
+
+## 3 传感器的有理函数模型（RFM）
+
+由于商业技术保护以及军事机密等原因，现在可以获取到的遥感图像（包括商业卫星数据）很多只会提供RPC参数，而用于严格几何模型构建的数据越来越难获得
+
+另外，由于严格物理几何模型涉及到极其复杂的数据转换以及大量的参数，所以计算速度较慢。而RFM屏蔽了这些过程（相当于将整个成像过程透明化），仅仅提供有限数量的关键RPC参数，这样也可以大大加快各种计算的速度，尤其是涉及到三维重建的方面。速度甚至可以达到实时处理的级别，但是一般精度不高，需要在计算之前进行修正
+
+### 3.1 RFM基本原理
+
+假设一张遥感图像上有一个点的像素坐标$(r,c)$，它对应的地面点实际的三维坐标为$(X,Y,Z)$。那么RFM可以将这两者的关系表达如下
+
+$$
+r_n = \dfrac{p1(X_n,Y_n,Z_n)}{p2(X_n,Y_n,Z_n)}
+
+\quad
+
+c_n = \dfrac{p3(X_n,Y_n,Z_n)}{p4(X_n,Y_n,Z_n)}
+$$
+
+> 在上式中所有的参数$r_n c_n X_n Y_n Z_n$都已经归一化到$(-1,1)$区间，归一化的形式如下，以$r_n$为例
+
+$$
+r_n = \dfrac{r-r_o}{r_s}
+$$
+
+> 其中，不带下标的符号表示实际的坐标，带$_o$下标的表示需要减去的offset，一般就是取最大值和最小值的均值；带$_s$下标的表示需要除以的缩放系数，一般就是取最大值（或最小值）和$r_o$的差值
+
+而对于每一个式子$p(X_n,Y_n,Z_n)$，将其定义如下
+
+$$
+p(X_n,Y_n,Z_n) = \sum_{i=0}^{m1}\sum_{j=0}^{m2}\sum_{k=0}^{m3}a_{ijk}X^iY^jZ^k = a_0 + a_1Z + a_2Y + a_3X + \\
+a_4ZY + a_5ZX + a_6XY + a_7Z^2 + a_8Y^2 + a_9X^2 + \\
+a_{10}ZYX + a_{11}Z^2Y + a_{12}Z^2X + a_{13}Y^2Z + a_{14}Y^2X + a_{15}X^2Z + a_{16}X^2Y + \\
+a_{17}Z^3 + a_{18}Y^3 + a_{19}Z^3
+$$
+
+> 可以看到，一个式子里有20个$a_{ijk}$参数，这些参数被称为RFC参数，属于RPC参数的一部分。可以猜到RPC参数其实就是4个式子中所有的参数，共计**80**个无量纲参数，这些参数目前还没有明确的物理意义解释。其中1阶项可以大致用于表示投影带来的失真，2阶项可以用来表示地球曲率、空气折射、透镜畸变等因素带来的失真，3阶项可以用来表示摄像机震动因素
+>
+> 上式还可以改写成为以下的形式，以$r$为示例
+
+$$
+r = \dfrac{(1\ Z\ Y\ X \cdots Y^3 X^3)\cdot(a_0\ a_1\ a_2 \cdots a_{19})^T}{(1\ Z\ Y\ X \cdots Y^3 X^3)\cdot(1\ b_1\ b_2 \cdots b_{19})^T}
+$$
+
+> 可以发现分母中的常数项变为了1（其实就是在上下同时乘以一个系数就可以实现）。此时称该式是**规范3D多项式（Regular 3D Polynomials）**，此时所有的RPC参数加起来**只有78个**，这也是实际应用中RPC参数的个数
+>
+> **事实上RPC参数具有非常大的冗余性，其中的很多参数都是相关的。这导致了RFM模型固有的过参数化（也即过拟合，over-parameterization或over-fitting）以及病态（ill-posed或ill-conditioned）问题，这个问题需要在之后解决**
+
+另外还有测量误差估算公式，如下还是以$r$为例
+
+$$
+v_r^{\prime} = \mathbf{B}v_r = [1\ Z\ Y\ X \cdots Y^3\ X^3\ -rZ\ -rY\ \cdots -rY^3\ -rX^3] \cdot \mathbf{J} - r
+$$
+
+其中
+
+$$
+\mathbf{B} = (1\ Z\ Y\ X \cdots Y^3\ X^3) \cdot (1\ b_1 \cdots b_{19})^T
+
+\\
+
+\mathbf{J} = (a_0\ a_1 \cdots a_{19}\ b_1 \cdots b_{19})^T
+$$
+
+> 注意上式中$b_n$是从$b_1$开始。$\mathbf{B}$其实就是相当于$r$表达式的分母那里的表达式。所以，误差表达式**右侧**实际上就是将$r$表达式两边乘以一个分母$\mathbf{B}$然后左右相减。外侧减去一个$r$是因为$b_0$为1。而$\mathbf{J}$其实就是我们想要的RPC参数
+>
+> $v_r$其实就是$r$表达式等式左右的差值，就是实际坐标$r$和使用RPC参数加上$XYZ$坐标计算出来的值之差，越小越好
+
+可以使用地面控制点可以计算RPC参数，设取$n$个控制点，可以列出表达式如下。**划重点**
+
+$$
+\mathbf{V}_r = \mathbf{W}_r\mathbf{M}\mathbf{J} - \mathbf{W}_r\mathbf{R}
+$$
+
+其中
+
+$$
+\mathbf{V}_r =
+\begin{bmatrix}
+v_{r1} \\
+v_{r2} \\
+\vdots \\
+v_{rn}
+\end{bmatrix}
+$$
+
+$$
+\mathbf{W}_r = diag(\dfrac{1}{\mathbf{B}_1}, \dfrac{1}{\mathbf{B}_2}, \cdots, \dfrac{1}{\mathbf{B}_n})
+$$
+
+$$
+\mathbf{M} =
+\begin{bmatrix}
+1\ Z_1\ \cdots X_1^3\ -r_1Z_1\ \cdots -r_1X_1^3 \\
+\vdots \\
+1\ Z_n\ \cdots X_n^3\ -r_nZ_n\ \cdots -r_nX_n^3 \\
+\end{bmatrix}
+$$
+
+$$
+\mathbf{R} =
+\begin{bmatrix}
+r_1 \\
+r_2 \\
+\vdots \\
+r_n
+\end{bmatrix}
+$$
+
+> $\mathbf{V}_r$为各点对应的误差，$\mathbf{R}$为各点二维坐标之一，$\mathbf{M}$和各点二维以及三维坐标有关，$\mathbf{W}_r$和三维坐标以及RPC参数的后半部分有关，$\mathbf{J}$就是所有的RPC参数
+>
+> 在取完控制点的情况下，所有的二维以及三维坐标都是常数。要计算的只有$\mathbf{W}_r$中的RPC参数
+
+现在我们假设$\mathbf{V}_r$为0，那么可以列出以下式子
+
+$$
+\mathbf{J} = \mathbf{M}^{-1}\mathbf{R} = (\mathbf{M}^T\mathbf{M})^{-1}\mathbf{M}^T\mathbf{R}
+$$
+
+也可以变形一下得到以下式子
+
+$$
+\mathbf{M}^T\mathbf{W}_r^2\mathbf{M}\mathbf{J} - \mathbf{M}^T\mathbf{W}_r^2\mathbf{R} = 0
+$$
+
+> 以上两个式子在RPC的计算中起到不同的作用，第2个式子更加严谨。一般使用第1个式子先计算出一个粗略的RPC，之后使用第2个式子迭代逼近计算（把上一次的计算结果带入到下一次计算中），直到最后两次计算结果的值之差小于某一个阈值，计算结束，此时的RPC参数可以看作是近乎精确的
+
+我们可以将二维行列坐标结合起来看，可以列出以下式子
+
+$$
+\begin{bmatrix}
+\mathbf{V}_r \\
+\mathbf{V}_c
+\end{bmatrix}
+=
+\begin{bmatrix}
+\mathbf{W}_r & 0 \\
+0 & \mathbf{W}_c
+\end{bmatrix}
+\cdot
+\begin{bmatrix}
+\mathbf{M} & 0 \\
+0 & \mathbf{N}
+\end{bmatrix}
+\cdot
+\begin{bmatrix}
+\mathbf{J} \\
+\mathbf{K}
+\end{bmatrix}
+-
+\begin{bmatrix}
+\mathbf{W}_r & 0 \\
+0 & \mathbf{W}_c
+\end{bmatrix}
+\cdot
+\begin{bmatrix}
+\mathbf{R} \\
+\mathbf{C}
+\end{bmatrix}
+$$
+
+所以最后可以把式子改写为
+
+$$
+\mathbf{V} = \mathbf{WTI} - \mathbf{WG}
+$$
+
+而之前迭代计算的式子可以改写为
+
+$$
+\mathbf{T}^T\mathbf{W}^2\mathbf{T}\mathbf{I} - \mathbf{T}^T\mathbf{W}^2\mathbf{G} = 0
+$$
+
+> 事实上单独使用二维行列坐标计算和合并计算的结果相差不大，可以忽略不计
+
+## 3.2 RFM存在的问题
+
+RFM存在的固有问题之前已经说过，就是参数过多且冗余，很多参数其实都是相关的，非常容易过拟合，以及产生一些病态问题
+
+使用地面控制点计算RPC参数时，如果采用的地面控制点分布不均匀，$\mathbf{B}_i$和$\mathbf{D}_i$可能会有很大的变动，从而引发$\mathbf{T}$的病态（ill-conditioned）问题，对扰动以及噪音变得敏感，$\mathbf{T}^T\mathbf{W}^2\mathbf{T}$会变成奇异矩阵，导致迭代计算无法收敛（converged）
+
+这个问题早在[RFM基本文章](src/210320a01/001.pdf)中已经提到过，解决方法主要可以分为3种基本原理：
+
+$l_2$ norm：主要用于解决病态问题，见[005.pdf（LM法）](src/210320a01/005.pdf)，[006.pdf（LM法）](src/210320a01/006.pdf)
+
+$l_1$ norm：主要用于删除一些不必要的RPC参数，解决过拟合问题，见[007.pdf（L1LS）](src/210320a01/007.pdf)
+
+$l_0$ norm：主要用于删除一些不必要的RPC参数。由于$l0$为NP完全问题，所以一般使用间接的方法，如计算变量选择（computational variable selection method）算法和元启发式（meta-heuristic）算法。前者典型的有[004.pdf（PCA）](src/210320a01/004.pdf)，[002.pdf（APCA）](src/210320a01/002.pdf)，[003.pdf（USS-RFM）](src/210320a01/003.pdf)，[008.pdf（scatter matrix）](src/210320a01/008.pdf)，[009.pdf（nested regression）](src/210320a01/009.pdf)；后者典型的有[010.pdf（基因算法）](src/210320a01/010.pdf)，[011.pdf（PSO与基因算法）](src/210320a01/011.pdf)，[012.pdf（PSO-KFCV）](src/210320a01/012.pdf)等
+
+> 补充（有关$l_2l_1l_0$范数的基本概念）：
+>
+> **范数**（norm）一般用于衡量一个矩阵或向量的大小，表示为$||a||$。我们最常见的范数就是求一个向量$\vec{a}$的长度，表示为$|\vec{a}| = ||\vec{a}||_2 = \sqrt{x_a^2 + y_a^2}$，求的就是$\vec{a}$的$l_2$范数
+>
+> 
+>
+> 参考：https://rorasa.wordpress.com/2012/05/13/l0-norm-l1-norm-l2-norm-l-infinity-norm/
+
+接下来就是有关于PCA的研究，主要的[参考文档](src/210320a01/004.pdf)
