@@ -61,6 +61,7 @@ LaTeX常用示例
 | `\mathbb{N}` | $ \mathbb{N} $ |
 | `\complement` | $ \complement $ |
 | `\partial` | $ \partial $ |
+| `\nabla` | $ \nabla $ |
 | `\log` | $ \log $ |
 | `\sin` | $ \sin $ |
 | `\cos` | $ \cos $ |
@@ -103,9 +104,19 @@ $$ x_1+x_2+\dots+x_k \quad 1,2,\cdots,n \quad \vdots \quad \ddots $$
 \sqrt{x^3+e^x}
 ```
 
+```
+\sqrt[3]{23}
+```
+
 显示如下
 
-$$ \sqrt{x^3+e^x} $$
+$$
+\sqrt{x^3+e^x}
+$$
+
+$$
+\sqrt[3]{23}
+$$
 
 **求和**
 
