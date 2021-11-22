@@ -1,6 +1,6 @@
 # 计算机视觉/3D重构
-
-关键词： SLAM RFM StereoVision PCA-RFM
+ 
+关键词： SLAM RFM PCA-RFM 遥感 三维重建 双目视觉
 
 ## 参考
 
@@ -1272,7 +1272,7 @@ $$
 
 **捆绑调整法**：
 
-由于因式分解法**假定所有点都是可见（$D$不能有无效坐标）**，所以不适用于**存在遮挡**和**对应点关系建立失败**的情况，并且重建点数少
+由于因式分解法**假定所有点都是可见**（ $D$ 不能有无效坐标），所以不适用于**存在遮挡**和**对应点关系建立失败**的情况，并且重建点数少
 
 而代数法应用于多视图的场景容易出现**误差累积**
 
@@ -1435,8 +1435,7 @@ $$
 \begin{bmatrix}
 \mathbf{V}_r \\
 \mathbf{V}_c
-\end{bmatrix}
-=
+\end{bmatrix} =
 \begin{bmatrix}
 \mathbf{W}_r & 0 \\
 0 & \mathbf{W}_c
@@ -1450,8 +1449,7 @@ $$
 \begin{bmatrix}
 \mathbf{J} \\
 \mathbf{K}
-\end{bmatrix}
--
+\end{bmatrix} -
 \begin{bmatrix}
 \mathbf{W}_r & 0 \\
 0 & \mathbf{W}_c
@@ -1603,15 +1601,7 @@ $l_0$ norm：主要用于删除一些不必要的RPC参数。由于 $l_0$ 为NP�
 >
 > 之后可以求解下式，是等价的
 >
-> $$
-> \begin{pmatrix} 
-> \dfrac{F}{\partial x} \\[6pt] \dfrac{F}{\partial y} \\[6pt] \dfrac{F}{\partial \lambda}
-> \end{pmatrix}
-> =
-> \begin{pmatrix} 
-> 0 \\ 0 \\ 0
-> \end{pmatrix}
-> $$
+> $$ \begin{pmatrix} \dfrac{F}{\partial x} \\[6pt] \dfrac{F}{\partial y} \\[6pt] \dfrac{F}{\partial \lambda} \end{pmatrix} = \begin{pmatrix} 0 \\ 0 \\ 0 \end{pmatrix} $$
 >
 > 当然拉格朗日乘子法也适用于更多元的函数
 
@@ -1831,3 +1821,4 @@ $$
 
 其中，矩阵 $A$ 大小为 $m \times n$ ，矩阵 $Q$ 为正交（orthogonal）矩阵，大小为 $m \times m$ ，矩阵 $R$ 是一个上三角矩阵，大小为 $m \times n$
 
+**未完成**
