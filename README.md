@@ -4,17 +4,16 @@
 
 ![](images/000000a027.jpg)
 
-Knowledge is lifelong wealth
-
 ## 快速传送门
 
 | 内容 |
 | :-: |
-| [数字集成电路（半导体）基本原理](200920c_verilog.md#01-半导体：N型和P型) |
-| [RS232接口简介](210524a_8051.md#75-补充：RS232串口通信) |
+| [数字集成电路（半导体）基本原理](200920c_verilog.md#01-半导体N型和P型) |
+| [RS232接口简介](210524a_8051.md#75-补充RS232串口通信) |
 | [固态存储原理解析](201225a_ssd.md) |
 | [GDB命令行（仅参考）](201220a_mcu-ide.md#215-基于sdcdb的调试) |
 | [液晶屏工作原理](210808a_lcd.md#液晶屏制造工艺以及基本工作原理) |
+| [ABI，编译器原理（CSAPP第7章笔记）](210731a_llvm.md#CSAPP第7章链接) |
 
 ## 更新记录
 
@@ -44,7 +43,7 @@ Knowledge is lifelong wealth
 
 + 2020.10.20添加
 
-    STM32学习笔记，附带ARMv7-ISA（Cortex-M） [201020a_stm32.md](201020a_stm32.md)
+    STM32学习笔记，以及有关ARMv7 Cortex-M3，Cortex-M4笔记 [201020a_stm32.md](201020a_stm32.md)
 
 + 2020.12.19添加
 
@@ -253,6 +252,7 @@ Knowledge is lifelong wealth
 23. 《精通开关电源（第3版）》，Keith Billings，Taylor Morey著，人民邮电出版社
 24. 《新概念模拟电路》，杨建国著，网络资源
 25. 《矩阵计算（第4版）》，Gene H. Golub，Charles F. Van Loan著，人民邮电出版社
+26. 《ARM Cortex-M3与Cortex-M4权威指南（第3版）》，Joseph Yiu著，清华大学出版社
 
 🍥 C CPP Go Rust Python Ruby Haskell JavaScript CSS HTML5
 
