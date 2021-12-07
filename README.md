@@ -13,7 +13,8 @@
 | [固态存储原理解析](201225a_ssd.md) |
 | [GDB命令行（仅参考）](201220a_mcu-ide.md#215-基于sdcdb的调试) |
 | [液晶屏工作原理](210808a_lcd.md#液晶屏制造工艺以及基本工作原理) |
-| [ABI，编译器原理（CSAPP第7章笔记）](210731a_llvm.md#CSAPP第7章链接) |
+| [ABI，链接器原理（CSAPP第7章笔记）](210731a_llvm.md#CSAPP第7章链接) |
+| [IEEE754-2008浮点数标准解析](200920c_verilog.md#51-IEEE754浮点数标准) |
 
 ## 更新记录
 
@@ -169,7 +170,7 @@
 
 + 2021.11.19添加
 
-    Raspberry Pi Pico学习笔记 [211119a_rpipico.md](211119a_rpipico.md)
+    Raspberry Pi Pico学习笔记，基本的多处理器调度原理 [211119a_rpipico.md](211119a_rpipico.md)
 
 
 ![](images/000000a026.jpg)
