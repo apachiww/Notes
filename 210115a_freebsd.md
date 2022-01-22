@@ -220,11 +220,11 @@ FreeBSD使用ports和pkg两种方法安装软件包，pkg是已经编译好的�
 ```
 # 使用freebsd.cn，最新latest，否则quarterly
 freebsdcn:{
-　url: "pkg+http://pkg.freebsd.cn/${ABI}/latest", 
-　mirror_type: "srv",
-　signature_type: "fingerprints",
-　fingerprints: "/usr/share/keys/pkg",
-　enabled: yes
+  url: "pkg+http://pkg.freebsd.cn/${ABI}/latest", 
+  mirror_type: "srv",
+  signature_type: "fingerprints",
+  fingerprints: "/usr/share/keys/pkg",
+  enabled: yes
 }
 
 # 禁用原/etc/pkg/FreeBSD.conf
