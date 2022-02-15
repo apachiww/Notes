@@ -211,8 +211,6 @@ FreeBSD使用ports和pkg两种方法安装软件包，pkg是已经编译好的�
 
 + 网易镜像 mirrors.163.com 有pkg和ports，有Release安装镜像，目前Current和Stable镜像无法下载
 
-+ freebsdcn镜像 freebsd.cn 是国内一个爱好者搭建的镜像，有ports，portsnap，pkg，update，但没有安装镜像。速度较快，可以设为默认镜像
-
 修改举例：
 
 修改pkg镜像：添加/usr/local/etc/pkg/repos/mymirror.conf如下（可以直接从/etc/pkg/FreeBSD.conf复制修改）
@@ -222,7 +220,7 @@ FreeBSD使用ports和pkg两种方法安装软件包，pkg是已经编译好的�
 freebsdcn:{
   url: "pkg+http://pkg.freebsd.cn/${ABI}/latest", 
   mirror_type: "srv",
-  signature_type: "fingerprints",
+  signature_type: "none",
   fingerprints: "/usr/share/keys/pkg",
   enabled: yes
 }
@@ -244,13 +242,13 @@ DISABLE_SIZE=yes
 MASTER_SITE_OVERRIDE?=http://ports.freebsd.cn/distfiles/${DIST_SUBDIR}/
 ```
 
-~~修改portsnap源，/etc/portsnap.conf~~
+修改portsnap源，/etc/portsnap.conf。也可以不改使用默认的
 
 ```
 SERVERNAME=portsnap.freebsd.cn
 ```
 
-~~修改后运行`portsnap fetch`获取，**如果之前bsdinstall安装时没有选择Ports，第一次需要再运行**`portsnap extract`（速度可能会很慢）。以后更新只要`portsnap fetch update`即可~~
+修改后运行`portsnap fetch`获取，**如果之前bsdinstall安装时没有选择Ports，第一次需要再运行**`portsnap extract`（速度可能会很慢）。以后更新只要`portsnap fetch update`即可
 
 > 注意，由于FreeBSD从SVN改为Git管理，`portsnap`即将在未来的版本中被废弃，以后将会改为使用`gitup`更新ports
 
@@ -399,18 +397,11 @@ kern.vt.enable_bell=0
 
 主板的minipcie有一张Realtek的RTL8188EE网卡
 
-编辑`/boot/loader.conf`，添加如下内容，在启动时加载Realtek驱动
-
-```shell 
-if_rtwn_pci_load="YES"
-if_rtwn_usb_load="YES"
-```
-
-编辑`/etc/rc.conf`，创建`wlan0`。这里是`rtwn0`，可以通过`sysctl net.wlan.devices`获取名称
+编辑`/etc/rc.conf`，创建`wlan0`。这里是`rtwn0`，可以通过`sysctl net.wlan.devices`获取名称。注意使用SYNCDHCP会拖慢开机
 
 ```
 wlans_rtwn0="wlan0"
-ifconfig_wlan0="WPA SYNCDHCP"
+ifconfig_wlan0="WPA DHCP"
 ```
 
 在`/etc/wpa_supplicant.conf`根据ssid和密码添加配置
@@ -422,7 +413,7 @@ network={
 }
 ```
 
-之后重启`netif`即可
+之后重启`netif`即可看到wlan0了
 
 ```
 service netif restart
@@ -431,13 +422,26 @@ service netif restart
 
 ### 3.5 声音配置，声卡驱动
 
+在/etc/rc.conf添加
+
+```
+snd_hda_load="YES"
+sysctlinfo_load="YES"
+```
+
+调节音量使用终端工具mixertui，使用和alsamixer类似
+
+```
+pkg install mixertui
+```
+
 
 ### 3.6 输入法
 
-安装`fcitx`，添加中文和日语输入支持
+安装`fcitx`，添加中文和日语输入支持。**确保在rc.conf开启了dbus**
 
 ```shell
-pkg install zh-fcitx zh-fcitx-configtool zh-fcitx-libpinyin ja-fcitx-mozc
+pkg install zh-fcitx zh-fcitx-configtool zh-fcitx-libpinyin ja-fcitx-mozc fcitx-m17n
 ```
 
 如果使用的是`sh`，那么编辑`.shrc`如下，添加几行设置环境变量。`csh`使用`setenv`
@@ -455,22 +459,37 @@ export QT4_IM_MODULE=fcitx
 自启动
 
 ```shell
-cp /usr/local/share/applications/fcitx.desktop ~/.config/autostart
+mkdir ~/.config/autostart
+cp /usr/local/share/applications/fcitx.desktop ~/.config/autostart/
 ```
 
 重启进入fcitx设置添加中文日语输入法即可
 
 
-### 3.7 ZFS使用简记
+### 3.7 添加ext文件系统支持
+
+```
+pkg install fusefs-ext2
+```
+
+建议只读方式挂载ext4分区
+
+```
+kldload ext2fs
+mount -t ext2fs -o ro /dev/adaXpX /mnt
+```
 
 
-### 3.8 jails使用简记
+### 3. ZFS使用简记
 
 
-### 3.9 服务管理
+### 3. jails使用简记
 
 
-### 3.10 bhyve使用简记
+### 3. 服务管理
+
+
+### 3. bhyve使用简记
 
 
 ## 最终效果

@@ -38,6 +38,16 @@
 
 ## 8 CMOS时间同步
 
+## 9 补充
+
+## 9.1 开机信息显示
+
+编辑/etc/default/grub，去掉quiet
+
+![](images/210130a001.jpg)
+
+之后重新`grub-mkconfig`
+
 
 # FreeBSD
 
