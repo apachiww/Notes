@@ -4,6 +4,8 @@
 
 可以作为CPLD、FPGA以及ASIC开发的基础知识
 
+包含了[IEEE754浮点标准解读](#51-ieee754浮点数标准)
+
 
 ## 参考书籍
 
@@ -2349,7 +2351,7 @@ join
 
 ## 4.6 二进制转BCD
 
-二进制转BCD是实现人机交互的关键运算。虽然二进制转BCD可以使用除法以及求余得到，但是效率比较低，尤其是在一些不支持硬件乘除的机器上。这里引入一种较为简单的基于移位的方法
+二进制转BCD是实现人机交互的关键运算。虽然二进制转BCD可以使用除法以及求余得到，但是效率比较低，尤其是在一些不支持硬件乘除的机器上。这里引入一种较为简单的基于移位的方法，这种方法同样可以空间换时间，使用一个逻辑电路直接实现
 
 ![二进制转BCD（图片引自网络）](images/200920c129.png)
 
@@ -2403,20 +2405,20 @@ V的本质是用于表示加减法运算在**0111_1111**和**1000_0000**边界�
 
 ## 5.1 IEEE754浮点数标准
 
-[IEEE754-2019官方文档](https://ieeexplore.ieee.org/document/8766229)
-
 [IEEE754-2008官方文档](https://ieeexplore.ieee.org/document/4610935)
 
 IEEE754浮点数标准最初起源于Intel公司为其8087浮点协处理器设计的浮点数格式，由Intel公司聘请的数值分析专家设计，最终成为计算机业界标准
 
-IEEE754主要定义了浮点数的格式以及加，减，乘，除，融合乘加，开根号，以及比较等操作。由于浮点数只是拟合了实数代数系统，它只能表示实数集合的一个非常有限的子集，而在大多数情况下无法表示一个实数的精确值，或得到一个算式的精确计算结果。也是因此加法结合律等适用于一般实数的规则不适用于计算机中的浮点数（虽然这在一定误差允许范围内是成立的）。IEEE754规定的浮点数算法本身是可再现的
+IEEE754主要定义了浮点数的格式，简单的基本操作以及异常的处理方法
+
+由于浮点数只是拟合了实数代数系统，它只能表示实数集合的一个非常有限的子集，而在大多数情况下无法表示一个实数的精确值，或得到一个算式的精确计算结果。也是因此加法结合律等适用于一般实数的规则不适用于计算机中的浮点数（虽然这在一定误差允许范围内是成立的）。IEEE754规定的浮点数算法本身是可再现的
 
 
 ### 5.1.1 浮点数的表示
 
-目前IEEE规定的浮点数中，常用的有**32位单精度**和**64位双精度**。除此之外还有各浮点数格式对应的**扩展精度**以及**128位高双精度**（一般用不到，x86平台大部分编译器最多支持到80位扩展精度，并且扩展精度不是IEEE754强制要求的。一般要求一个平台至少要实现单精度浮点数）
+目前IEEE规定的浮点数中，常用的有**32位单精度**和**64位双精度**。除此之外还有各浮点数格式对应的**扩展精度**，**16位半精度**和**128位高双精度**（一般用不到。8087协处理器最高支持到80位扩展精度）。扩展精度不是IEEE754强制要求的。一般要求一个平台至少要实现单精度浮点数的各项配套支持
 
-> 一个平台支持哪些浮点数格式，往往是由软件（编译器与工具链）决定的，而不是硬件，没有浮点单元的机器照样可以通过软件方式计算浮点数。整数也是同理，32位机乃至8位机实现128位整数的计算是非常容易的。硬件一般不是可用数据格式的限制因素，但是如果一种数据格式的实现意义不大，那么工具链往往不会提供对这种数据格式的支持
+> 一个平台支持哪些浮点数格式，实质上是由软件（编译器与工具链）决定的，而不是硬件，很多没有浮点单元的机器如单片机照样可以使用整数指令计算浮点数。硬件一般不是可用数据格式的限制因素。x86平台支持80位扩展精度只是因为x87支持这种浮点格式
 
 这里首先引入一些定义
 
@@ -2434,7 +2436,7 @@ IEEE754定义了三种基本的二进制浮点数格式（另外有2种十进制
 
 > IEEE754的浮点数由3个部分组成
 >
-> 最高位为S符号位，0表示正数，1表示负数
+> 最高位为S符号位，0表示正数，1表示负数。注意在一个函数中返回结果的符号最多只能和一个操作数不同，即不能出现++得-的情况，有NaN除外
 >
 > 中间的E为指数位，本质是一个无符号整数。在32位单精度浮点数中E占8位，表示一般规格化浮点数时可以取1到254。在64位双精度浮点数中E占11位，可以取1到2046。**E表示的不是实际的指数e，实际的指数e需要添加一个偏移bias**。32位单精度浮点数中bias为127，那么E=e+bias，实际可以表示的指数范围emax=127，emin=-126。64位双精度浮点数的bias为1023，可以表示emax=1023，emin=-1022（**注意这不是补码表示，千万不要混淆**）
 >
@@ -2454,7 +2456,7 @@ IEEE754定义了三种基本的二进制浮点数格式（另外有2种十进制
 >
 > 在E为0时，如果T全为0，S为0，就表示+0；如果S为1，就表示-0
 >
-> 在E为0时，如果T不全为0，就表示非规格化数（此时e=emin）。这种非规格化数实际表示的值为(-1)^S \* 2^(emin-t) \* T（此时可以将T看作一个整数。当然换种思路也可以将尾数看作0开头的小数0.T，**隐含了开头的0**），例如在单精度浮点数中，如果S=0，E=0，T=1，那么表示的数就等于(2^-126) \* (2^-23) \* 1
+> 在E为0时，如果T不全为0，就表示非规格化小数（此时e=emin）。这种非规格化数实际表示的值为(-1)^S \* 2^(emin-t) \* T（此时可以将T看作一个整数。当然换种思路也可以将尾数看作0开头的小数0.T，**隐含了开头的0**），例如在单精度浮点数中，如果S=0，E=0，T=1，那么表示的数就等于(2^-126) \* (2^-23) \* 1
 >
 > 非规格化数表示数值转换公式如下
 
@@ -2464,14 +2466,60 @@ IEEE754给出了用于数据信息交换的格式标准Binary interchange format
 
 ![](images/200920c143.png)
 
+附：Intel文档中对于浮点数据格式的定义
 
-### 5.1.2 舍入（Rounding）
+![](images/200920c144.png)
+
+
+### 5.1.2 无穷
+
+一般情况下普通数字的运算不会抛出异常，包括以下操作
+
+> 加减法其中一个操作数为无穷，如`addition(x,inf)`不会抛出异常
+>
+> 乘法中有一个或两个操作数都为无穷，`multiplication(x,inf)`，且x不为0
+>
+> 除法中一个操作数为无穷，如`division(x,inf)`或`division(inf,x)`
+>
+> 均方根正无穷`squareRoot(+inf)`
+>
+> 求解余数`remainder(x,inf)`([见下](#516-同类通用运算操作homogeneous-general-computational-operations))，结果永远为x
+>
+> 不同精度infinity的互相转换
+
+以下操作会抛出异常，部分详细内容参考[异常及其处理](#5111-异常及其处理)
+
+> 如果一个操作中inf是无效数字，抛出invalid operation异常
+>
+> 两个有限数通过上、下溢（overflow，underflow）得到了inf
+>
+> 除数为0时得到inf，division by zero
+>
+> 计算`remainder(subnormal,inf)`时（使用了非规格化数），会抛出underflow
+
+
+### 5.1.3 NaN
+
+NaN分为sNaN（Signaling）和qNaN（Quiet）。sNaN可以用于表示未初始化的浮点数。qNaN可以用于表示无效的数字或结果
+
+IEEE754规定，**qNaN的尾数域T最高位应当为1，sNaN的尾数域T最高位应当为0（同时剩余位不能全为0）**。具体的编码含义应当由浮点实现者规定（除T最高位以外其余位称为payload。如果一个函数有一个或多个操作数为NaN，需要返回NaN，那么就需要尽量维持payload不变）
+
+> 所有抛出无效操作异常的操作（invalid operation）应当返回一个qNaN作为结果
+>
+> 需要返回浮点结果的函数，如果必要那么应该返回qNaN
+>
+> sNaN一般只会作为操作数。当General或Signaling类型的函数中有sNaN作为操作数，那么就会抛出无效操作异常（部分格式转换操作除外）
+>
+> 当General或Quiet类型的函数的操作数中没有sNaN，那么就不应当抛出异常（融合乘加除外）
+
+
+### 5.1.4 舍入（Rounding）
 
 在本小节开始之前首先需要引入概念attribute，可以说attribute就是一个上下文当中用于控制计算行为的参数，比如舍入等行为
 
 舍入是浮点运算中的重要操作，因为绝大多数实数运算结果都是有无限位小数的。在浮点运算中的舍入行为会影响到最终的运算结果，从而影响到精确度，也会影响多次运算的累积误差
 
-> IEEE754有一个原则性要求就是浮点算法的运算结果需要尽量接近实际的数学运算结果。一次运算得到的中间结果一般是无限小数，而无限小数无法使用浮点数格式表示。所以就要引入对于舍入的规定
+> IEEE754有一个原则性要求就是浮点算法的运算结果需要尽量接近实际的数学运算结果，要减少累积误差。一次运算得到的中间结果一般是无限小数，而无限小数无法使用浮点数格式表示。所以就要引入对于舍入的规定
 
 在浮点数中主要的舍入操作有以下两类
 
@@ -2491,10 +2539,10 @@ IEEE754给出了用于数据信息交换的格式标准Binary interchange format
 >
 > roundTowardZero：永远向0方向round。得到结果的绝对值永远不大于该数绝对值
 
-IEEE754规定在二进制浮点数的实现中，需要包含roundTiesToEven，roundTowardPositive，roundTowardNegative以及roundTowardZero。其中需要将roundTiesToEven作为**默认**的二进制浮点数舍入策略
+IEEE754规定在二进制浮点数的实现中，需要包含roundTiesToEven，roundTowardPositive，roundTowardNegative以及roundTowardZero。其中需要将roundTiesToEven作为**默认**的二进制浮点数舍入策略。**另外如果一个函数如加法以及融合乘加得到结果正好为0，除roundTowardNegative（-0）外所有结果都应该为+0。均方根-0结果应当为-0**
 
 
-### 5.1.3 操作（Operations）简介
+### 5.1.5 操作（Operations）简介
 
 IEEE754将所有浮点数的操作分为4大类
 
@@ -2513,7 +2561,7 @@ IEEE754将所有浮点数的操作分为4大类
 > formatOf operations：运算结果的格式和操作数的格式不相同
 
 
-### 5.1.4 同类通用运算操作（Homogeneous General-computational operations）
+### 5.1.6 同类通用运算操作（Homogeneous General-computational operations）
 
 **浮点小数转浮点整数**
 
@@ -2521,11 +2569,11 @@ IEEE754将所有浮点数的操作分为4大类
 
 | 函数名 | 解释 |
 | :-: | :-: |
-| `roundToIntegralTiesToEven()` | 将浮点数round到最近的浮点整数。如果差值相等（.5）则round到偶数（尾数LSB为0） |
-| `roundToIntegralTiesToAway()` | 将浮点数round到最近的浮点整数。如果差值相等（.5）则向绝对值大的方向round（和0相反方向） |
-| `roundToIntegralTowardZero()` | 将浮点数向0方向round |
-| `roundToIntegralTowardPositive()` | 将浮点数向正无穷方向round |
-| `roundToIntegralTowardNegative()` | 将浮点数向负无穷方向round |
+| `roundToIntegralTiesToEven(x)` | 将浮点数round到最近的浮点整数。如果差值相等（.5）则round到偶数（尾数LSB为0） |
+| `roundToIntegralTiesToAway(x)` | 将浮点数round到最近的浮点整数。如果差值相等（.5）则向绝对值大的方向round（和0相反方向） |
+| `roundToIntegralTowardZero(x)` | 将浮点数向0方向round |
+| `roundToIntegralTowardPositive(x)` | 将浮点数向正无穷方向round |
+| `roundToIntegralTowardNegative(x)` | 将浮点数向负无穷方向round |
 
 > 这些函数不依赖于attribute，round方法直接体现在函数名中
 >
@@ -2535,7 +2583,7 @@ IEEE754将所有浮点数的操作分为4大类
 
 | 函数名 | 解释 |
 | :-: | :-: |
-| `roundToIntegralExact()` | 依据attribute上下文对浮点数进行round，可以是ToEven等各种方法 |
+| `roundToIntegralExact(x)` | 依据attribute上下文对浮点数进行round，可以是ToEven等各种方法 |
 
 > 该函数依赖于Rounding-direction attributes
 >
@@ -2547,9 +2595,218 @@ IEEE754将所有浮点数的操作分为4大类
 
 | 函数名 | 解释 |
 | :-: | :-: |
-| `nextUp()` | 比输入浮点数大的相邻浮点数 |
-| `nextDown()` | 比输入浮点数小的相邻浮点数 |
+| `nextUp(x)` | 比输入浮点数大的相邻浮点数 |
+| `nextDown(x)` | 比输入浮点数小的相邻浮点数 |
 
 > 这两个函数用于求解一个浮点数表示集合中最接近的浮点数
 >
-> 对于`nextUp()`来说，如果输入是正负0，输出就是**绝对值最小的规格化正数**；如果输入是**绝对值最小的规格化负数**，那么输出是-0；如果输入是正无穷，那么输出是正无穷；如果输入是负无穷，那么输出是**绝对值最大的规格化负数**；
+> 对于`nextUp()`来说，如果输入是正负0，输出就是**绝对值最小的规格化正数**；如果输入是**绝对值最小的规格化负数**，那么输出是-0；如果输入是正无穷，那么输出是正无穷；如果输入是负无穷，那么输出是**绝对值最大的规格化负数**。`nextDown()`则相反
+>
+> 只有输入是sNaN时函数才会抛出异常
+
+**Remainder余数**
+
+| 函数名 | 解释 |
+| :-: | :-: |
+| `remainder(x,y)` | 求解r=x-y*n，其中n为整数，x和y为浮点数，n取最接近x\/y的整数值，如果\|n-x\/y\|=0.5那么n取偶数。翻译一下其实就是凑一个整数n，使得y\*n和x最接近。如果取得\| y\*n - x \| = \| x - y\*(n+1) \|，即取n和(n+1)时距离相同，那么n优先取偶数 |
+
+> 这个函数可以应用于`sind() cosd()`等函数中。可以这样看，由于`sind(x) = sin(x*pi/180)`，而其中的pi是个无理数，无法使用浮点数精确表达。这样的计算会带入系统误差，不仅会导致例如sind(360)计算结果不为0，在x值非常大时也会导致累积误差的增大。然而`sind()`是周期函数，使用`x = remainder(x,360)`函数处理x，可以使得x永远落在[-180,180]，并且在x=360*n时计算结果为0。如果想要处理其他点处的特殊值，那么还可以计算`remainder(x,180)`等
+
+**Max和Min函数**
+
+| 函数名 | 解释 |
+| :-: | :-: |
+| `minNum(x,y)` | 返回较小的数。如果输入一个是qNaN，一个是普通数字，那么返回其中规格化的数。其他情况可能返回规格化的x或y，视具体软件实现而定。如果x和y其中之一是sNaN那么应该抛出无效异常 |
+| `maxNum(x,y)` | 返回较大的数 |
+| `minNumMag(x,y)` | 返回绝对值较小的数。其他情况返回`minNum(x,y)` |
+| `maxNumMag(x,y)` | 返回绝对值较大的数。其他情况返回`maxNum(x,y)` |
+
+
+### 5.1.7 formatOf通用运算操作（formatOf General-computational operations）
+
+所谓formatOf运算操作，就是操作数和运算结果数据格式可以不同。这些操作包含了最基本的算术运算操作。IEEE754规定一个浮点实现中这些函数需要支持所有数据格式的操作
+
+**算术运算**
+
+| 函数名 | 解释 |
+| :-: | :-: |
+| `addition(x,y)` | 加法 |
+| `subtraction(x,y)` | 减法 |
+| `multiplication(x,y)` | 乘法 |
+| `division(x,y)` | 除法 |
+| `squareRoot(x)` | 计算均方根。输入0以及正数时，一般返回的数符号为正（S=0），输入-0那么返回-0 |
+| `fusedMultiplyAdd(x,y,z)` | 计算融合乘加x\*y+z。整个运算过程只会round一次，并且异常只能由加法抛出 |
+| `convertFromInt(x)` | 整数转浮点。转换出来的浮点数值是准确的。如果无法使用浮点表示，那么应当进行舍入，同时抛出inexact或floating-point overflow异常。如果输入是带符号0那么返回结果符号不变。如果输入无符号0那么返回+0 |
+| `convertToIntegerTiesToEven(x)` | 浮点转整型，取最近的整数。结合之前的浮点整数转换，在将浮点数转换为整数时如果是.5，那么取偶数。如果输入是NaN或者无穷，或超出整数表示范围，**会抛出invalid operation异常** |
+| `convertToIntegerTowardZero(x)` | 浮点转整型。向0取整 |
+| `convertToIntegerTowardPositive(x)` | 浮点转整型。向正无穷方向取整 |
+| `convertToIntegerTowardNegative(x)` | 浮点转整型。向负无穷方向取整 |
+| `convertToIntegerTiesToAway(x)` | 浮点转整型。遇到.5向无穷方向取整 |
+| `convertToIntegerExactTiesToEven(x)` | 浮点转整型，遇到.5取偶数。不同的是如果转换得到的整数在数值上不等于原先的浮点数还会**抛出inexact异常**，以下函数同理 |
+| `convertToIntegerExactTowardZero(x)` | 浮点转整型。向0取整 |
+| `convertToIntegerExactTowardPositive(x)` | 浮点转整型。向正无穷方向取整 |
+| `convertToIntegerExactTowardNegative(x)` | 浮点转整型。向负无穷方向取整 |
+| `convertToIntegerExactTiesToAway(x)` | 浮点转整型。遇到.5向无穷方向取整 |
+
+**字符串转换**
+
+IEEE754规定一个浮点数实现需要支持所有二进制浮点数到十进制字符串的转换，同时需要保证转换不能损失精度。即一个浮点数转换为十进制字符串以后还可以完整还原，包括正负0，无穷，qNaN，这些可以使用特殊字符串表示，如inf，NaN，sNaN等，同时需要保留符号。转换过程如需round一般采用roundTiesToEven。
+
+> qNaN只能转换成为字符串NaN，而sNaN可以转换成为字符串NaN（需要抛出invalid operation异常）或sNaN
+>
+> 反过来字符串NaN只能转换成为qNaN，而字符串sNaN可以转换成为qNaN（需要抛出invalid operation异常）或sNaN
+
+> 在将非无穷数字符串转换为二进制浮点数时，如果超出浮点指数表示范围，需要抛出overflow或underflow异常。如果该浮点字符串无法使用浮点数精确表示而需要round，那么需要根据情况抛出inexact等异常
+
+| 函数名 | 解释 |
+| :-: | :-: |
+| `convertFormat(x)` | 用于不同精度浮点数的转换。如果是单精度转双精度，那么结果应当是精确的。如果是双精度转单精度，那么会损失精度 |
+| `convertFromDecimalCharacter(x)` | 十进制字符串（Human readable）转二进制浮点数 |
+| `convertToDecimalCharacter(x)` | 二进制浮点数转十进制字符串 |
+
+**十六进制字符串转换**
+
+| 函数名 | 解释 |
+| :-: | :-: |
+| `convertFromHexCharacter(x)` | 十六进制字符串转二进制浮点 |
+| `convertToHexCharacter(x)` | 二进制浮点转十六进制字符串 |
+
+
+### 5.1.8 Quiet-computational operations
+
+| 函数名 | 解释 |
+| :-: | :-: |
+| `copy(x)` | 复制一个浮点数，符号不变 |
+| `negate(x)` | 复制一个浮点数，符号取反 |
+| `abs(x)` | 复制一个浮点数，符号置0 |
+| `copySign(x,y)` | 复制一个浮点数x，将符号置y |
+
+
+### 5.1.9 Signaling-computational operations
+
+**比较操作**
+
+比较操作有3种不同的互斥关系，分别是LT（Less than小于），GT（Greater than大于），EQ（Equal等于）以及UN（Unordered有NaN作为操作数）
+
+> 两个操作数中如果至少有一个为NaN那么比较结果就是Unordered。-0和+0相等。正无穷和正无穷相等，正无穷大于负无穷
+
+| 函数名 | 返回真 | 解释 |
+| :-: | :-: | :-: |
+| `compareQuietEqual(x,y)` | EQ | 遇到qNaN操作数不抛出invalid operation异常 |
+| `compareQuietNotEqual(x,y)` | LT GT UN |  |
+| `compareSignalingEqual(x,y)` | EQ | 遇到qNaN操作数抛出invalid operation异常 |
+| `compareSignalingGreater(x,y)` | GT |  |
+| `compareSignalingGreaterEqual(x,y)` | GT EQ |  |
+| `compareSignalingLess(x,y)` | LT |  |
+| `compareSignalingLessEqual(x,y)` | LT EQ |  |
+| `compareSignalingNotEqual(x,y)` | LT GT UN |  |
+| `compareSignalingNotGreater(x,y)` | LT EQ UN |  |
+| `compareSignalingLessUnordered(x,y)` | LT UN |  |
+| `compareSignalingNotLess(x,y)` | GT EQ UN |  |
+| `compareSignalingGreaterUnordered(x,y)` | GT UN |  |
+| `compareQuietGreater(x,y)` | GT |  |
+| `compareQuietGreaterEqual(x,y)` | GT EQ |  |
+| `compareQuietLess(x,y)` | LT |  |
+| `compareQuietLessEqual(x,y)` | LT EQ |  |
+| `compareQuietUnordered(x,y)` | UN |  |
+| `compareQuietNotGreater(x,y)` | LT EQ UN |  |
+| `compareQuietLessUnordered(x,y)` | LT UN |  |
+| `compareQuietNotLess(x,y)` | EQ GT UN |  |
+| `compareQuietGreaterUnordered(x,y)` | GT UN |  |
+| `compareQuietOrdered(x,y)` | LT GT EQ |  |
+
+
+### 5.1.10 非运算操作（Non-computational operations）
+
+**通用操作**
+
+| 函数名 | 解释 |
+| :-: | :-: |
+| `class(x)` | 判断一个浮点数的类型。可以是signalingNaN，quietNaN，negativeInfinity，negativeNormal，negativeSubnormal，negativeZero，positiveZero，positiveSubnormal，positiveNormal，positiveInfinity |
+| `isSignMinus(x)` | 判断符号是否为负。可以用于NaN和0 |
+| `isNormal(x)` | 数字是无穷，NaN，正负0，非规格化以外的数时返回真 |
+| `isFinite(x)` | 数字是无穷，NaN以外的数时返回真 |
+| `isZero(x)` | 略 |
+| `isSubnormal(x)` |  |
+| `isInfinite(x)` |  |
+| `isNaN(x)` |  |
+| `isSignaling(x)` | 如果是sNaN返回真 |
+| `isCanonical(x)` | 判断是否是规格化浮点数 |
+| `radix(x)` |  |
+| `totalOrder(x,y)` | 全序关系。如果x不大于y那么返回真，否则返回假。如果x为-0而y为+0那么返回真。(-NaN,y)，，(x,+NaN)，(-qNaN,+qNaN)，(-sNaN,+sNaN)，(+sNaN,+qNaN)以及(-qNaN,-sNaN)返回真 |
+| `totalOrderMag(x,y)` | 将xy符号置0以后比较`totalOrder(x,y)` |
+
+**Flag操作**
+
+Flag用于指示一些当前的运算状态
+
+| 函数名 | 解释 |
+| :-: | :-: |
+| `lowerFlags(exceptionGroup)` | 根据抛出的异常清除状态位 |
+| `raiseFlags(exceptionGroup)` | 状态位置位 |
+| `testFlags(exceptionGroup)` | 测试是否需要置位任一状态位 |
+| `testSavedFlags(flags,exceptionGroup)` | 测试是否需要置位指定状态位 |
+| `restoreFlags(flags,exceptionGroup)` | 恢复状态位 |
+| `saveAllFlags()` | 返回当前的状态位 |
+
+
+### 5.1.11 异常及其处理
+
+基本的异常分为以下5种
+
+**无效操作（Invalid operation）**
+
+应当返回一个qNaN
+
+> General或Signaling函数的操作数中出现sNaN。部分数据格式转换函数除外
+>
+> inf和0相乘，例如`multiplication(0,inf)`
+>
+> 融合乘加中inf和0相乘。加数c为qNaN除外，视具体实现而定
+>
+> 同号inf相减或异号inf相加，如`addition(+inf,-inf)`
+>
+> 00或无穷相除，如`division(0,0) division(inf,inf)`
+>
+> `remainder(x,0)`或`remainder(inf,y)`，其中xy都不为NaN
+>
+> `squareRoot(x)`，其中x为负数
+>
+> 数据类型转换时无法使用目标格式表示
+
+无返回浮点结果
+
+> 浮点转整数时无法使用目标整数格式表示
+>
+> Signaling类型比较函数，遇到NaN结果为unordered
+
+**除数为0（Division by zero）**
+
+> 除法中除数为0，被除数为非零有限数，返回inf，符号为两个操作数符号的异或（--得+，++得+，+-得-）
+
+**上溢出（Overflow）**
+
+一般出现在round操作中，默认应当抛出inexact异常
+
+> roundTiesToEven和roundTiesToAway时，上溢超出最大浮点变为inf
+>
+> roundTowardZero，上溢返回最大可表示的浮点数
+>
+> roundTowardNegative正上溢返回最大可表示的浮点数，负上溢返回-inf，roundTowardPositive相反同理
+
+**下溢出（Underflow）**
+
+下溢出一般需要规定一个最小的界限bmin，如果round后或round前的数小于正负bmin那么就应当抛出异常，同时返回一个结果，可以是0，bmin或subnormal。抛出inexact异常
+
+**不准确（Inexact）**
+
+任何不准确（无论是round还是下溢）都应当抛出inexact异常
+
+
+### 5.1.12 IEEE754推荐实现的函数
+
+![](images/200920c145.png)
+
+![](images/200920c146.png)
+
+![](images/200920c147.png)
