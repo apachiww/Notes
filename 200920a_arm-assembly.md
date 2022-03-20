@@ -1,5 +1,7 @@
 # ARM体系结构以及汇编，Application Level and System Level(ARMv7 Cortex-A)
 
+ARMv7-M体系结构笔记[传送门](201020a_stm32.md)
+
 ## 1 参考
 
 [azeria-labs 官网](https://azeria-labs.com)
@@ -9,43 +11,12 @@
 [ARMv7 ISA 官方文档](https://developer.arm.com/documentation/ddi0406/cd/?search=5eec7399e24a5e02d07b2754) 直接下载[链接](https://documentation-service.arm.com/static/5f1074ce0daa596235e834b5?token=)
 
 
-
-## 2 环境
-
-OS： Debian 10 (buster) armv7l on Linux Deploy
-
-Kernel version： 3.4.0
-
-CPU： Qualcomm MSM8974PRO-AC (SnapDragon 801)
-
-
-## 3 GDB使用方法
-
-### 3.1 基本使用方法
-
-```shell
-gdb <可执行文件名>
-```
-
-
-## 4 寄存器介绍
+## 2 寄存器介绍
 
 使用ARMv7指令集的处理器都是32位处理器，部分带大地址扩展
 
-### 4.1 数据类型
 
-**Byte**：字节，8bit，在指令助记符后加b(unsigned byte)或sb(signed byte)
-
-**Halfword**：半字，16bit，h或sh
-
-**Word**：字，32bit，不加后缀
-
-**大小端**
-
-ARMv7可以通过CPSR设置**Little Endian**或**Big Endian**
-
-
-### 4.2 通用寄存器
+## 2.1 通用寄存器
 
 | 名称 | 类型 | 注释 |  
 | :-: | :-: | :-: |
@@ -67,7 +38,7 @@ ARMv7可以通过CPSR设置**Little Endian**或**Big Endian**
 | R15(PC) | 程序计数器 | =Program Counter |
 
 
-### 4.3 CPSR寄存器
+## 2.2 CPSR寄存器
 
 | bit | 31 | 30 | 29 | 28 | 27 | [26:25] | 24 | [23:20] | [19:16] | [15:10] | 9 | 8 | 7 | 6 | 5 | [4:0] |
 | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: |
@@ -91,17 +62,11 @@ M[4:0]运行状态定义
 注：在有虚拟化扩展的ARMv7 CPU中有PL0到PL2三级优先级，其他的只有PL0和PL1两级。常见的ARM CPU中，Cortex-a7 Cortex-a15 Cortex-a17带虚拟化扩展，而Cortex-a9 Cortex-a8等较老的IP不带虚拟化扩展，**本学习记录只针对没有虚拟化扩展的CPU，对于虚拟化不会过多的去涉及（一般用不上）**
 
 
-### 4.4 各模式下的寄存器
+## 2.3 各模式下的寄存器
 
 ![寄存器表（截自ARM官方文档）](images/200920a001.png)
 
 注：上图中，空白部分不是代表没有该寄存器，而是代表和User模式下用的是同一个寄存器
-
-
-### 4.5 VFP/SIMD寄存器
-
-
-### 4.6 协处理器
 
 
 ## 5 内存系统架构（VMSAv7 A-Profile）
@@ -151,12 +116,7 @@ ARMv7-A有两种指令集，一种是普通32位长度ARM指令，一种是16位
 > 3. 有些需要使用多条16bit的Thumb指令实现的功能可以使用一条32bit指令更高效的实现
 
 
-
-
 ### 7.1 数据处理
-
-| 助记符 | 基本格式 | 示例 | 作用简记 | 备注 |
-| :-: | :-: | :-: | :-: | :-: |
 
 ### 7.2 分支（跳转）指令
 
@@ -173,8 +133,3 @@ ARMv7-A有两种指令集，一种是普通32位长度ARM指令，一种是16位
 ### 7.8 SIMD（NEON）/VFP指令
 
 ## 8 一些常用算法以及操作示例
-
-
-## 9 常用ABI规范
-
-包括了常用的ABI，主要是GNU和BSD在ARM的ABI规范
