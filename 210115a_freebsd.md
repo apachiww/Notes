@@ -1,6 +1,6 @@
 # FreeBSD作为桌面系统使用的安装过程以及注意事项
 
-上一次更新日期：2021-05-04
+上一次更新日期：2022-04-09
 
 ## 简介
 
@@ -20,12 +20,17 @@
 
 ## 平台配置
 
-> CPU：Intel Celeron J3160(4) @ 1.6GHz \
-  GPU：Intel HD Graphics 400 (Gen8) \
-  内存：2 x 2GB DDR3 \
-  硬盘：KIOXIA 240G SATA SSD & Seagate 500G 5400rpm HDD \
-  启动模式：UEFI x64 \
-  磁盘分区格式：GPT
+> CPU：Intel Celeron J3160(4) @ 1.6GHz
+>
+> GPU：Intel HD Graphics 400 (Gen8)
+>
+> 内存：2 x 2GB DDR3
+>
+> 硬盘：KIOXIA 240G SATA SSD & Seagate 500G 5400rpm HDD
+>
+> 启动模式：UEFI x64
+>
+> 磁盘分区格式：GPT
 
 # 13.0-RELEASE
 
@@ -38,13 +43,13 @@
 
 ## 2 基本安装
 
-从Intel的H7x/B7x（差不多也就是Ivy Bridge的3代酷睿时代，2012年左右）开始绝大部分Intelx86平台都支持UEFI启动，这里就只记录UEFI启动模式的安装方法。Legacy模式基本不用太复杂的操作就不赘述了
+从Intel的H7x/B7x（差不多也就是3代酷睿时代，2012年左右）开始绝大部分Intelx86平台都支持UEFI启动，这里就只记录UEFI启动模式的安装方法。Legacy模式基本不用太复杂的操作就不赘述了
 
 安装前建议将RTC时钟设置成UTC时间。开机进启动项选择U盘启动，到Bootloader界面，按B启动多用户模式
 
 基本安装非常简单，大部分步骤照着bsdinstall的提示走就行了
 
-UEFI安装的主要难点在于磁盘分区和启动引导的解决，另外给出一些设置杂项的个人偏好，其他大部分默认就行
+UEFI安装的主要难点在于磁盘分区和启动引导的解决，大部分配置默认就行
 
 
 ### 2.1 磁盘分区
@@ -422,7 +427,7 @@ service netif restart
 
 ### 3.5 声音配置，声卡驱动
 
-在/etc/rc.conf添加
+主板集成声卡ALC662以及Intel的HDMI输出声卡。在/boot/loader.conf添加
 
 ```
 snd_hda_load="YES"

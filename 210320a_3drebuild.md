@@ -1820,5 +1820,3 @@ A = QR
 $$
 
 其中，矩阵 $A$ 大小为 $m \times n$ ，矩阵 $Q$ 为正交（orthogonal）矩阵，大小为 $m \times m$ ，矩阵 $R$ 是一个上三角矩阵，大小为 $m \times n$
-
-**未完成**
