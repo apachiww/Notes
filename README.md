@@ -15,6 +15,7 @@
 | [IEEE754浮点数](200920c_verilog.md#51-IEEE754浮点数标准) |
 | [单片机中实现有限状态机的N种方法](210524a_8051.md#76-补充软件有限状态机) |
 | [FreeBSD物理机安装踩坑](210115a_freebsd.md) |
+| [Tribblix、Slackware物理机安装](220420a_tribblix.md) |
 
 ## 笔记列表
 
@@ -64,6 +65,7 @@
 | [211017a](211017a_analog.md) | 模电，无线电 |
 | [211119a](211119a_rpipico.md) | 树莓派Pico学习笔记 |
 | [211211a](211211a_codestyle-and-licence.md) | 代码编码规范，开源协议 |
+| [220420a](220420a_tribblix.md) | Tribblix、Slackware安装并作为桌面系统使用 |
 
 ![](images/000000a001.png)
 
@@ -111,7 +113,7 @@
 
 🍋 ARM AVR 8051 FPGA
 
-🍍 Linux FreeBSD FreeRTOS RT-Thread
+🍍 ArchLinux Slackware FreeBSD Tribblix FreeRTOS RT-Thread
 
 🌽 DSP
 
@@ -120,7 +122,7 @@
 ---
 
 
-# GSK
+## GSK
 
 
 🍁📰📷📱💤
