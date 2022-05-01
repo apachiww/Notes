@@ -1,23 +1,23 @@
 # 日常笔记，备忘
 
-进行一个坑的填
-
 ![](images/000000a027.jpg)
 
-## 快速传送门
+# 快速传送门
 
 | 内容 |
 | :-: |
 | [ARMv7-M指令集](201020a_stm32.md#16-isa详解指令集) |
 | [RS232](210524a_8051.md#75-补充RS232串口通信) |
 | [固态存储原理](201225a_ssd.md) |
-| [ABI，链接器原理（CSAPP第7章笔记）](210731a_llvm.md#CSAPP第7章链接) |
 | [IEEE754浮点数](200920c_verilog.md#51-IEEE754浮点数标准) |
+| [ELF文件格式，链接器原理（CSAPP第7章笔记）](220429a_compiler.md) |
 | [单片机中实现有限状态机的N种方法](210524a_8051.md#76-补充软件有限状态机) |
 | [FreeBSD物理机安装踩坑](210115a_freebsd.md) |
 | [Tribblix、Slackware物理机安装](220420a_tribblix.md) |
 
-## 笔记列表
+# 笔记列表
+
+进行一个坑的填
 
 | No. | Content |
 | :-: | :-: |
@@ -66,10 +66,11 @@
 | [211119a](211119a_rpipico.md) | 树莓派Pico学习笔记 |
 | [211211a](211211a_codestyle-and-licence.md) | 代码编码规范，开源协议 |
 | [220420a](220420a_tribblix.md) | Tribblix、Slackware安装并作为桌面系统使用 |
+| [220429a](220429a_compiler.md) | 编译，链接器原理 |
 
 ![](images/000000a001.png)
 
-## 参考书收藏列表
+# 参考书收藏列表
 
 1. 《数字逻辑基础与Verilog设计（第2版）》，Stephen Brown，Zvonko Vrannesic著，机械工业出版社
 2. 《Linux命令行与Shell脚本编程大全（第3版）》，Richard Blum，Christine Bresnahan著，人民邮电出版社
@@ -98,13 +99,15 @@
 25. 《矩阵计算（第4版）》，Gene H. Golub，Charles F. Van Loan著，人民邮电出版社
 26. 《深度学习》，Ian Goodfellow，Yoshua Bengio，Aaron Courville著，网络资源
 
+# Recipe
+
 🍥 C CPP Java Go Rust Python Ruby Haskell JavaScript CSS HTML5
 
 🍡 Verilog
 
 🍜 Shell Awk
 
-🍐 Makefile CMake
+🍐 Makefile
 
 🥥 Matlab
 
@@ -112,18 +115,13 @@
 
 🍉 Qt Rails
 
-🍋 ARM AVR 8051 FPGA
+🍋 ARM AVR RISCV 8051 FPGA
 
 🍍 ArchLinux Slackware FreeBSD Tribblix FreeRTOS RT-Thread
 
-🌽 DSP
-
-🥑 Algorithms
-
 ---
 
-
-## GSK
+# GSK
 
 
 🍁📰📷📱💤
