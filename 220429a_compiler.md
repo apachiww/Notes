@@ -325,12 +325,12 @@ FreeBSD中定义如下
 | `SHT_PROGBITS` | `1` | 该Section存放程序定义的内容 |
 | `SHT_SYMTAB` | `2` | 较完整的符号表，一般用于**静态链接** |
 | `SHT_STRTAB` | `3` | 字符串表 |
-| `SHT_RELA` | `4` | **带附加信息**的重定位信息（`Elf32_Rela`结构体）。一个文件可以有多个重定位信息区块 |
+| `SHT_RELA` | `4` | 带加数（Addend）的重定位信息列表（`Elf32_Rela`结构体）。一个文件可以有多个重定位信息区块 |
 | `SHT_HASH` | `5` | 符号哈希表（用于动态链接时必须包含） |
 | `SHT_DYNAMIC` | `6` | 用于动态链接的信息 |
 | `SHT_NOTE` | `7` | 记录与描述类信息 |
 | `SHT_NOBITS` | `8` | 和`SHT_PROGBITS`类似，但是在文件中不会占有任何空间。同时`sh_offset`是有效的 |
-| `SHT_REL` | `9` | **不带附加信息**的重定位信息（`Elf32_Rel`结构体） |
+| `SHT_REL` | `9` | 不带加数的重定位信息列表（`Elf32_Rel`结构体） |
 | `SHT_SHLIB` | `10` | 未定义的保留类型。基本不会遇到 |
 | `SHT_DYNSYM` | `11` | 较精简的符号表，一般用于**动态链接** |
 | `SHT_LOPROC` | `0x70000000` | 编码保留区下界。处理器相关 |
@@ -658,6 +658,47 @@ FreeBSD中对于ARM的重定位类型定义如下
 
 
 ## 1.5 Segments
+
+Segment用于程序的执行过程，存在于可执行文件和动态链接目标文件中
+
+内存中的一个可执行程序映像包含了程序运行所需的机器代码，数据，堆栈等。在有高级操作系统支持的平台，程序运行需要经历程序加载和动态链接的过程，程序在RAM中执行。而在大部分单片机中，程序直接在Flash中运行，而变量、堆栈等可变数据在RAM分配
+
+### 1.5.1 Program头
+
+和`Section header table`一样，Program也对应一个`Program header table`，其中每一个入口定义如下
+
+```c
+/*
+ * Program header.
+ */
+
+typedef struct {
+	Elf32_Word	p_type;		/* Entry type. */
+	Elf32_Off	p_offset;	/* File offset of contents. */
+	Elf32_Addr	p_vaddr;	/* Virtual address in memory image. */
+	Elf32_Addr	p_paddr;	/* Physical address (not used). */
+	Elf32_Word	p_filesz;	/* Size of contents in file. */
+	Elf32_Word	p_memsz;	/* Size of contents in memory. */
+	Elf32_Word	p_flags;	/* Access permission flags. */
+	Elf32_Word	p_align;	/* Alignment in memory and file. */
+} Elf32_Phdr;
+```
+
+`p_type`表示Segment的类型
+
+`p_offset`表示Segment在文件中的偏移
+
+`p_vaddr`表示Segment在内存中的虚拟地址
+
+`p_paddr`表示Segment在内存中的物理地址（在有操作系统的环境中支持地址映射一般不会使用到）
+
+`p_filesz`表示Segment在文件中的大小
+
+`p_memsz`表示Segment在内存中的大小
+
+`p_flags`表示该Segment的特性以及访问权限
+
+`p_align`表示Segment的对齐参数。`0`和`1`时表示不对齐
 
 
 ## 1.6 实例分析

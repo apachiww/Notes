@@ -1,5 +1,7 @@
 # 日常笔记，备忘
 
+进行一个坑的填。记录学习与玩耍生活。
+
 ![](images/000000a027.jpg)
 
 # 快速传送门
@@ -7,26 +9,24 @@
 | 内容 |
 | :-: |
 | [ARMv7-M指令集](201020a_stm32.md#16-isa详解指令集) |
-| [ELF文件格式解析](220429a_compiler.md#1-cs422笔记elf文件结构) |
+| [ELF文件格式解析，程序链接与运行原理](220429a_compiler.md#1-cs422笔记elf文件结构) |
 | [IEEE754浮点数](200920c_verilog.md#51-IEEE754浮点数标准) |
 | [RS232](210524a_8051.md#75-补充RS232串口通信) |
 | [固态存储原理](201225a_ssd.md) |
 | [单片机中实现状态机的N种方法](210524a_8051.md#76-补充软件有限状态机) |
 | [FreeBSD物理机安装踩坑与玩耍](210115a_freebsd.md) |
-| [Tribblix、Slackware物理机安装](220420a_tribblix.md) |
+| [Tribblix、Slackware物理机安装踩坑](220420a_tribblix.md) |
 
 # 列表
-
-进行一个坑的填
 
 | No. | Content |
 | :-: | :-: |
 | [200908a](200908a_sdram.md) | 计算机存储：SDRAM |
 | [200908b](200908b_qemu-arm.md) | LFS并使用QEMU运行Linux（ARMv7）|
-| [200920a](200920a_arm-assembly.md) | ARM汇编以及内存架构（ARMv7 Cortex-A）|
+| [200920a](200920a_arm-assembly.md) | ARMv7-A ARMv8-A体系结构，内存架构 |
 | [200920b](200920b_dsp.md) | 信号与系统，DSP数字信号处理 |
-| [200920c](200920c_verilog.md) | 数字逻辑以及Verilog |
-| [201002a](201002a_linear-algebra.md) | 线性代数，矩阵计算 |
+| [200920c](200920c_verilog.md) | 数字逻辑以及Verilog，FPGA开发 |
+| [201002a](201002a_linear-algebra.md) | 线性代数，矩阵计算（包含工程应用重要算法） |
 | [201002b](201002b_calculus.md) | 高数 |
 | [201002c](201002c_complex.md) | 复变函数 |
 | [201020a](201020a_stm32.md) | ARMv7-M体系结构以及STM32单片机开发 |
@@ -34,14 +34,14 @@
 | [201219b](201219b_makefile.md) | Makefile的用法，基于cmake和GNU make |
 | [201220a](201220a_mcu-ide.md) | 类Unix下的通用MCU开发环境 |
 | [201220b](201220b_crack.md) | 密码爆破 |
-| [201220c](201220c_metasploit.md) | 使用Metasploit的渗透测试，社工基础 |
+| [201220c](201220c_metasploit.md) | Metasploit的渗透测试 |
 | [201225a](201225a_ssd.md) | 固态硬盘工作原理与优化方法 |
 | [201229a](201229a_ror.md) | Ruby学习笔记以及Ruby On Rails Web开发 |
 | [201230a](201230a_cryptography.md) | 加密算法，密码学 |
 | [210108a](210108a_autocad.md) | AutoCAD基本操作 |
-| [210110a](210110a_computer-arch.md) | 计算机体系结构以及处理器的设计，阅读笔记 |
+| [210110a](210110a_computer-arch.md) | 计算机体系结构以及处理器的设计，流水线原理 |
 | [210111a](210111a_qt.md) | Qt应用开发 |
-| [210115a](210115a_freebsd.md) | FreeBSD安装并作为桌面系统使用 |
+| [210115a](210115a_freebsd.md) | FreeBSD日常使用，FreeBSD驱动开发 |
 | [210130a](210130a_install-notice.md) | 各种类Unix的管理维护以及安全优化 |
 | [210216a](210216a_rust.md) | Rust学习笔记 |
 | [210316a](210316a_computer-graphics.md) | 计算机图形学算法和Vulkan，OpenGL（GLSL） |
@@ -53,10 +53,10 @@
 | [210515b](210515b_python.md) | Python笔记 |
 | [210515c](210515c_nginx.md) | Nginx/Apache Web服务原理以及部署 |
 | [210524a](210524a_8051.md) | 8051单片机开发 |
-| [210625a](210625a_uefi.md) | UEFI开发入门 |
+| [210625a](210625a_uefi.md) | UEFI开发 |
 | [210702a](210702a_avr.md) | AVR单片机开发（基于Arduino） |
-| [210729a](210729a_ai.md) | AI入门 |
-| [210731a](210731a_llvm.md) | 编译器原理，LLVM开发 |
+| [210729a](210729a_ai.md) | 机器学习，深度学习 |
+| [210731a](210731a_llvm.md) | 编译器原理，LLVM |
 | [210731b](210731b_usb.md) | USB协议，应用以及驱动开发 |
 | [210808a](210808a_lcd.md) | LCD驱动芯片 |
 | [210811a](210811a_sata.md) | 计算机常用存储设备接口协议 |
@@ -65,8 +65,8 @@
 | [211017a](211017a_analog.md) | 模电，无线电 |
 | [211119a](211119a_rpipico.md) | 树莓派Pico学习笔记 |
 | [211211a](211211a_codestyle-and-licence.md) | 代码编码规范，开源协议 |
-| [220420a](220420a_tribblix.md) | Tribblix、Slackware安装并作为桌面系统使用 |
-| [220429a](220429a_compiler.md) | 编译，链接器原理 |
+| [220420a](220420a_tribblix.md) | Tribblix、Slackware安装与日常使用 |
+| [220429a](220429a_compiler.md) | 链接器原理 |
 | [220502a](220502a_psychoanalysis.md) | 精神分析学 |
 
 ![](images/000000a001.png)
@@ -98,6 +98,7 @@
 23. 《精通开关电源（第3版）》，Keith Billings，Taylor Morey著，人民邮电出版社
 24. 《新概念模拟电路》，杨建国著，网络资源
 25. 《矩阵计算（第4版）》，Gene H. Golub，Charles F. Van Loan著，人民邮电出版社
+26. 《精神分析引论》，Sigmond Freud著，北京联合出版公司
 
 # Recipe
 

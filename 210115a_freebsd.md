@@ -26,7 +26,7 @@
 >
 > 内存：2 x 2GB DDR3
 >
-> 硬盘：KIOXIA 240G SATA SSD & Seagate 500G 5400rpm HDD
+> 硬盘：ZHITAI 256G SATA SSD & Seagate 500G 2.5" 5400rpm HDD
 >
 > 启动模式：UEFI x64
 >
@@ -37,20 +37,20 @@
 
 [FreeBSD 13.0 RELEASE官网镜像下载](https://download.freebsd.org/ftp/releases/amd64/amd64/ISO-IMAGES/13.0/)
 
-使用U盘启动安装，下载memstick安装镜像，使用`xz -dk`解压后，再使用`dd`命令将.img镜像刻录到u盘
+使用U盘启动安装，下载memstick安装镜像，使用`xz -dk`解压后，再使用`dd`命令将`.img`镜像刻录到u盘
 
 
 ## 2 基本安装
 
-由于FreeBSD硬件驱动比较落后，建议使用较老的硬件。Intel3代到9代酷睿的集显平台是比较理想的选择
+建议使用较老的硬件。Intel3代到9代酷睿核显平台是比较理想的选择
 
 从Intel的H7x/B7x（差不多也就是3代酷睿时代，2012年左右）开始绝大部分Intelx86平台都支持UEFI启动，这里就只记录UEFI启动模式的安装方法。Legacy模式基本不用太复杂的操作就不赘述了
 
 安装前建议将CMOS时钟设置成UTC时间。开机进启动项选择U盘启动，到Bootloader界面，按B启动多用户模式
 
-基本安装非常简单，大部分步骤照着bsdinstall的提示走就行了
+基本安装操作非常简单，大部分步骤照着bsdinstall的提示走就行了
 
-UEFI模式安装的主要难点在于磁盘分区和启动引导的解决，但是UEFI对于双系统乃至多系统用户来说会方便很多
+UEFI模式安装的主要难点在于磁盘分区和启动引导的解决，但是UEFI启动对于双系统乃至多系统用户来说会方便很多
 
 
 ## 2.1 磁盘分区
@@ -79,7 +79,7 @@ newfs_msdos -F 32 -c 1 /dev/ada0p1
 newfs -U -L FreeBSD /dev/ada0p2
 ```
 
-如果是SSD，可以使用`tunefs`打开UFS2的TRIM功能，经常使用的情况下可以定期TRIM延长SSD寿命
+如果是SSD，可以使用`tunefs`打开UFS2的TRIM功能
 
 ```shell
 tunefs -t enable /dev/ada0p2
@@ -158,7 +158,7 @@ umount /mnt
 
 大部分用户一般都会在已经安装了其他操作系统的电脑上安装FreeBSD作为尝试
 
-这块240G的硬盘原来已经安装了ArchLinux，这里用最笨的方法，用GRUB来chainload FreeBSD的bootloader（原理和UEFI模式手动配置Windows双启动基本相同。试过`os-prober`检测不到FreeBSD）
+硬盘原来已经安装了ArchLinux，这里用最笨但是好用的方法，用GRUB来chainload FreeBSD的bootloader（原理和UEFI模式手动配置Windows双启动基本相同。试过`os-prober`检测不到FreeBSD）
 
 重启进ArchLinux配置`/etc/grub.d/40_custom`添加启动入口如下，将XXXX-XXXX替换为ESP分区的UUID（可以通过`blkid`命令获取），**而hints参数对于不同机器配置可能会不一样**，其他hints的获取具体可以参考[ArchWiki](https://wiki.archlinux.org/index.php/GRUB#Windows_installed_in_UEFI/GPT_mode)
 
