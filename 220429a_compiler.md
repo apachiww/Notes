@@ -10,11 +10,11 @@
 
 ## 0 序言
 
-平时我们使用IDE开发一个桌面程序，或者开发一个简单的控制台程序，基本不会意识到程序构建过程中链接的存在，也不会去关心二进制程序底层是如何运作的。例如使用C++配合Qt开发程序，在IDE窗口点击构建按钮，我们创建的大量源码文件以及头文件貌似自然而然就结合在一起成为了一个可执行文件，执行我们想要的功能
+平时我们使用IDE开发一个桌面程序，或者开发一个简单的控制台程序，基本不会意识到程序构建过程中链接的存在，也不会去关心二进制程序底层是如何运作的。例如使用Qt开发程序，在IDE窗口点击构建按钮，我们创建的大量源码文件以及头文件貌似自然而然就成为了可执行文件，执行我们想要的功能
 
 可执行文件远不止机器代码这么简单，它还需要包含很多只读、初始化数据以及各种描述信息。ELF这种类似的统一格式的出现使得程序文件的构建更加规范化，同时具备更强的通用性
 
-链接也无处不在，大型工程的构建离不开链接（同样也离不开构建系统例如`Make`）。链接器方便了程序构建的模块化，开发者可以将不同功能的代码分开，降低代码耦合度，减轻管理维护负担，同时闭源代码的发布也成为可能。此外，在操作系统的支持下，共享库的动态链接机制也使得程序映像变得更小
+链接也无处不在，大型工程的构建离不开链接（同样也离不开构建系统例如`Make`）。在大型工程中，将所有代码都放在一个源文件中是非常不明智的。链接器方便了程序构建的模块化，开发者可以将不同功能的代码分开，降低代码耦合度，减轻管理维护负担，同时闭源代码的发布也成为可能，也可以加快程序构建的速度。此外，在操作系统的支持下，共享库的动态链接机制也使得程序映像变得更小
 
 
 ## 1 CS422笔记：ELF文件结构
@@ -25,7 +25,7 @@ ELF文件格式由UNIX System Laboratories提出，作为ABI标准的一部分�
 
 ELF文件主要分为3种：**可重定位文件**（relocatable），**可执行文件**（executable）和**共享目标文件**（shared object）
 
-ELF文件设计的目标主要有2个，一个是被工具链中的链接器`ld`读取并和其他文件链接，另一个是被操作系统的加载程序加载到内存中并被执行
+ELF文件设计的用途主要有2个，一是被工具链中的链接器`ld`读取并和其他文件链接，另外也可以被操作系统的加载程序加载到内存中执行
 
 此外，ELF文件适用于不同字长的硬件平台。以下基于32位架构讲解
 
@@ -46,7 +46,7 @@ ELF文件结构如下（区块的顺序会有所不同，不一定是下面展�
 
 FreeBSD中ELF32基本数据类型定义如下
 
-```c
+```cpp
 /*
  * ELF definitions common to all 32-bit architectures.
  */
@@ -76,7 +76,7 @@ typedef Elf32_Sword	Elf32_Ssize;
 
 FreeBSD中ELF头定义如下。取自`elf32.h`
 
-```c
+```cpp
 /*
  * ELF header.
  */
@@ -103,7 +103,7 @@ typedef struct {
 
 其中，`EI_NIDENT`定义为16（位于`sys/elf_common.h`）
 
-```c
+```cpp
 #define	EI_NIDENT	16	/* Size of e_ident array. */
 ```
 
@@ -123,7 +123,7 @@ ELF32文件使用长度16字节的`e_ident`表示一些架构无关的信息，�
 
 FreeBSD中定义如下，添加了几个变量
 
-```c
+```cpp
 #define	EI_MAG0		0	/* Magic number, byte 0. */
 #define	EI_MAG1		1	/* Magic number, byte 1. */
 #define	EI_MAG2		2	/* Magic number, byte 2. */
@@ -154,7 +154,7 @@ FreeBSD中定义如下，添加了几个变量
 
 FreeBSD中定义如下
 
-```c
+```cpp
 /* Values for e_type. */
 #define	ET_NONE		0	/* Unknown type. */
 #define	ET_REL		1	/* Relocatable. */
@@ -182,7 +182,7 @@ FreeBSD中定义如下
 
 常见的CPU定义如下
 
-```c
+```cpp
 /* Values for e_machine. */
 #define	EM_NONE		0	/* Unknown machine. */
 #define	EM_SPARC	2	/* Sun SPARC. */
@@ -217,9 +217,9 @@ FreeBSD中定义如下
 
 `e_phentsize`和`e_shentsize`分别表示两种表中每一个Entry的大小（和`num`相乘就是表的大小）
 
-`e_shstrndex`表示`Section header table`中指向`section name string table`的入口项，该表用于存储所有的`Section`名称。如果没有该表那么该变量赋值为`SHN_UNDEF`（为`0`）
+`e_shstrndex`指向`Section header table`的一个特殊入口，它的值为`section name string table`的入口项下标，该字符串表用于存储所有的`Section`名称。如果没有该表那么该变量赋值为`SHN_UNDEF`（为`0`）
 
-```c
+```cpp
 #define	SHN_UNDEF	     0		/* Undefined, missing, irrelevant. */
 ```
 
@@ -228,12 +228,39 @@ FreeBSD中定义如下
 
 `e_flags`存储特定CPU架构的相关信息，只在部分RISC平台如ARM，MIPS，PowerPC，RISC-V，SPARC下有定义，i386以及AMD64下该变量为`0`
 
-部分RISC-V代码如下
+部分ARM以及RISC-V所属代码如下
 
-```c
+```cpp
 /**
  * e_flags
  */
+#define	EF_ARM_RELEXEC	0x1
+#define	EF_ARM_HASENTRY	0x2
+#define	EF_ARM_SYMSARESORTED	0x4
+#define	EF_ARM_DYNSYMSUSESEGIDX	0x8
+#define	EF_ARM_MAPSYMSFIRST	0x10
+#define	EF_ARM_LE8		0x00400000
+#define	EF_ARM_BE8		0x00800000
+#define	EF_ARM_EABIMASK		0xFF000000
+#define	EF_ARM_EABI_UNKNOWN	0x00000000
+#define	EF_ARM_EABI_VER1	0x01000000
+#define	EF_ARM_EABI_VER2	0x02000000
+#define	EF_ARM_EABI_VER3	0x03000000
+#define	EF_ARM_EABI_VER4	0x04000000
+#define	EF_ARM_EABI_VER5	0x05000000
+#define	EF_ARM_INTERWORK	0x00000004
+#define	EF_ARM_APCS_26		0x00000008
+#define	EF_ARM_APCS_FLOAT	0x00000010
+#define	EF_ARM_PIC		0x00000020
+#define	EF_ARM_ALIGN8		0x00000040
+#define	EF_ARM_NEW_ABI		0x00000080
+#define	EF_ARM_OLD_ABI		0x00000100
+#define	EF_ARM_ABI_FLOAT_SOFT	0x00000200
+#define	EF_ARM_SOFT_FLOAT	EF_ARM_ABI_FLOAT_SOFT /* Pre-V5 ABI name */
+#define	EF_ARM_ABI_FLOAT_HARD	0x00000400
+#define	EF_ARM_VFP_FLOAT	EF_ARM_ABI_FLOAT_HARD /* Pre-V5 ABI name */
+#define	EF_ARM_MAVERICK_FLOAT	0x00000800
+
 #define	EF_RISCV_RVC		0x00000001
 #define	EF_RISCV_FLOAT_ABI_MASK	0x00000006
 #define	EF_RISCV_FLOAT_ABI_SOFT	0x00000000
@@ -247,14 +274,14 @@ FreeBSD中定义如下
 
 ## 1.4 Sections
 
-Section是目标文件的基本组成部分。每一个Section在`Section header table`中只有1个header描述它，并且不是所有header都会对应1个Section。一个Section在文件中永远是连续的，且各自之间不能重叠。一个文件中可以有多个同名Section。目标文件中可能有一些空间没有被利用，这些空间称之为`inactive space`
+Section是目标文件的基本组成部分。每一个Section在`Section header table`中只有1个header描述它，并且不是所有header都会对应1个Section。一个Section在文件中永远是连续的，且各自之间不能重叠。一个文件中可以有多个同名Section。目标文件中可能有一些空间没有被利用，这些空间称之为`inactive space`（程序开发者可以在这些`inactive space`中隐藏一些彩蛋）
 
 
 ### 1.4.1 Section头
 
 `Section header table`中每一个入口（每一个项）都是一个结构体，存储了一个Section的名称（在`section name string table`中的下标），类型，在内存中的地址，在文件中的偏移、大小等等必要信息，定义如下
 
-```c
+```cpp
 /*
  * Section header.
  */
@@ -288,16 +315,14 @@ typedef struct {
 
 FreeBSD中定义如下
 
-```c
+```cpp
 /* Special section indexes. */
 #define	SHN_UNDEF	     0		/* Undefined, missing, irrelevant. */
 #define	SHN_LORESERVE	0xff00		/* First of reserved range. */
 #define	SHN_LOPROC	0xff00		/* First processor-specific. */
 #define	SHN_HIPROC	0xff1f		/* Last processor-specific. */
 #define	SHN_LOOS	0xff20		/* First operating system-specific. */
-#define	SHN_FBSD_CACHED	SHN_LOOS	/* Transient, for sys/kern/link_elf_obj
-					   linker only: Cached global in local
-					   symtab. */
+#define	SHN_FBSD_CACHED	SHN_LOOS	/* Transient, for sys/kern/link_elf_obj linker only: Cached global in local symtab. */
 #define	SHN_HIOS	0xff3f		/* Last operating system-specific. */
 #define	SHN_ABS		0xfff1		/* Absolute values. */
 #define	SHN_COMMON	0xfff2		/* Common data. */
@@ -305,7 +330,7 @@ FreeBSD中定义如下
 #define	SHN_HIRESERVE	0xffff		/* Last of reserved range. */
 ```
 
-`sh_name`为该Section的名称，其值为`String table`的下标。`String table`位置由一个特殊的header指定，这个header在`Section header table`中的下标由ELF头的`e_shstrndex`指定。字符串表示例如下
+`sh_name`为该Section的名称，值为Section名称字符串在`String table`中的起始下标。`String table`位置由一个特殊的header指定，这个header在`Section header table`中的下标由ELF头的`e_shstrndex`指定。字符串表示例如下
 
 ![](images/220429a002.PNG)
 
@@ -340,7 +365,7 @@ FreeBSD中定义如下
 
 FreeBSD中还有其他类型，部分定义如下
 
-```c
+```cpp
 /* sh_type */
 #define	SHT_NULL		0	/* inactive */
 #define	SHT_PROGBITS		1	/* program defined information */
@@ -365,10 +390,8 @@ FreeBSD中还有其他类型，部分定义如下
 #define	SHT_AMD64_UNWIND	SHT_X86_64_UNWIND 
 
 #define	SHT_ARM_EXIDX		0x70000001	/* Exception index table. */
-#define	SHT_ARM_PREEMPTMAP	0x70000002	/* BPABI DLL dynamic linking 
-						   pre-emption map. */
-#define	SHT_ARM_ATTRIBUTES	0x70000003	/* Object file compatibility 
-						   attributes. */
+#define	SHT_ARM_PREEMPTMAP	0x70000002	/* BPABI DLL dynamic linking pre-emption map. */
+#define	SHT_ARM_ATTRIBUTES	0x70000003	/* Object file compatibility attributes. */
 #define	SHT_ARM_DEBUGOVERLAY	0x70000004	/* See DBGOVL for details. */
 #define	SHT_ARM_OVERLAYSECTION	0x70000005	/* See DBGOVL for details. */
 #define	SHT_HIPROC		0x7fffffff	/* specific section header types */
@@ -376,18 +399,18 @@ FreeBSD中还有其他类型，部分定义如下
 #define	SHT_HIUSER		0xffffffff	/* specific indexes */
 ```
 
-`sh_flags`描述该Section的属性，如可写，可执行，内存分配等，如下。前3种属性可以通过位或运算合并到一起
+`sh_flags`描述该Section的属性，如可写，可执行，内存分配等，如下。**这些属性可以通过位或运算合并到一起**
 
 | 名称 | 值 | 含义 |
 | :-: | :-: | :-: |
-| `SHF_WRITE` | `1` | 该Section在程序执行时可写 |
-| `SHF_ALLOC` | `2` | 该Section在程序执行时占有实际空间 |
+| `SHF_WRITE` | `1` | 该Section包含了在程序实际执行时可写的内容 |
+| `SHF_ALLOC` | `2` | 该Section包含了在程序实际执行时会占有实际空间的内容 |
 | `SHF_EXECINSTR` | `4` | 该Section包含可执行的机器代码 |
-| `SHF_MASKPROC` | `0xF0000000` | 处理器专用保留编码 |
+| `SHF_MASKPROC` | `0xF0000000` | 处理器专用保留编码掩码 |
 
 FreeBSD中定义如下
 
-```c
+```cpp
 /* Flags for sh_flags. */
 #define	SHF_WRITE		0x1	/* Section contains writable data. */
 #define	SHF_ALLOC		0x2	/* Section occupies memory. */
@@ -404,48 +427,48 @@ FreeBSD中定义如下
 #define	SHF_MASKPROC	0xf0000000	/* Processor-specific semantics. */
 ```
 
-`sh_addr`，`sh_offset`以及`sh_size`分别表示该Section在内存映像中的地址，在文件中的偏移以及大小
+`sh_addr`，`sh_offset`以及`sh_size`分别表示该Section在执行时在内存映像中的起始地址，在文件中的偏移以及大小
 
-`sh_addralign`和`sh_entsize`分别表示该Section的内存对齐，以及该Section中每一个项的大小
+`sh_addralign`和`sh_entsize`分别表示该Section的内存对齐要求，以及该Section中每一个项的大小（只有在Section中每一个项大小相同时才会使用到）。`sh_addralign`为`0`或`1`时表示没有对齐要求，在有对齐要求的Section中`sh_addr`需要和`sh_addralign`设定相符
 
-`sh_link`和`sh_info`在不同的Section类型中有不同的作用。总体上来说，`sh_link`用于存储相关Section的下标，`sh_info`用于其他额外信息。如下
+`sh_link`和`sh_info`在不同的Section类型中有不同的作用。一般来说，`sh_link`用于存储相关Section的下标，`sh_info`用于其他额外信息。如下
 
 | `sh_type` | `sh_link` | `sh_info` |
 | :-: | :-: | :-: |
-| `SHT_DYNAMIC` | 该动态链接信息表对应的字符串表Section下标 | `0` |
-| `SHT_HASH` | 该哈希表对应的符号表Section下标 | `0` |
-| `SHT_REL` `SHT_RELA` | 重定位信息对应的符号表Section下标 | 重定位信息对应的Section下标 |
-| `SHT_SYMTAB` `SHT_DYNSYM` | 符号表对应字符串表Section下标 | 符号表中下一个本地符号下标（当前最后一个加1） |
+| `SHT_DYNAMIC` | 该动态链接信息表对应的字符串表的Section下标 | `0` |
+| `SHT_HASH` | 该哈希表对应的符号表的Section下标 | `0` |
+| `SHT_REL` `SHT_RELA` | 重定位信息相关的符号表的Section下标 | 重定位信息所作用的Section下标 |
+| `SHT_SYMTAB` `SHT_DYNSYM` | 符号表相关的字符串表的Section下标 | 符号表中下一个本地符号下标（当前最后一个加1） |
 | 其他 | `SHN_UNDEF` | `0` |
 
 
 ### 1.4.2 特殊Section
 
-特殊Section名称以点`.`开头。如下，**划重点**
+所有名称以点`.`开头的都是特殊Section。如下，**划重点**
 
 | 名称 | Section类型 | 属性 | 描述 |
 | :-: | :-: | :-: | :-: |
-| `.bss` | `SHT_NOBITS` | `ALLOC WRITE` | 该Section存储未初始化或初始化为0的数据，在文件中不占有实际空间。执行时加载到内存会自动分配空间并全部初始化为`0` |
+| `.bss` | `SHT_NOBITS` | `ALLOC WRITE` | （Better Save Space）该Section存储未初始化或初始化为0的数据，在文件中不占有实际空间。执行时加载到内存会自动分配空间并全部初始化为`0` |
 | `.comment` | `SHT_PROGBITS` | `none` | 版本控制信息 |
 | `.data` `.data1` | `SHT_PROGBITS` | `ALLOC WRITE` | 该Section存储已经初始化的数据，在文件中占有实际空间。执行时会按照初始值加载到内存 |
-| `.debug` | `SHT_PROGBITS` | `none` | 调试相关信息，ELF未具体定义 |
-| `.dynamic` | `SHT_DYNAMIC` |  | 动态链接信息 |
-| `.dynstr` | `SHT_STRTAB` | `ALLOC` | 动态链接字符串表 |
+| `.debug` | `SHT_PROGBITS` | `none` | 符号调试相关信息，ELF未具体定义 |
+| `.dynamic` | `SHT_DYNAMIC` |  | 动态链接信息，会在内存中占有实际空间，因此一定有`SHF_ALLOC` |
+| `.dynstr` | `SHT_STRTAB` | `ALLOC` | 动态链接字符串表，一般存储符号名称 |
 | `.dynsym` | `SHT_DYNSYM` | `ALLOC` | 动态链接符号表 |
 | `.fini` | `SHT_PROGBITS` | `ALLOC EXECINSTR` | 程序正常退出时执行的指令 |
-| `.got` | `SHT_PROGBITS` |  | 全局偏移表，程序执行时会用到 |
+| `.got` | `SHT_PROGBITS` |  | 全局偏移表，程序在执行时会用到 |
 | `.hash` | `SHT_HASH` | `ALLOC` | 符号哈希表 |
 | `.init` | `SHT_PROGBITS` | `ALLOC EXECINSTR` | 程序在进入到`main`函数之前执行的初始化指令 |
-| `.interp` | `SHT_PROGBITS` |  | 程序解释器的路径 |
+| `.interp` | `SHT_PROGBITS` |  | 程序解释器的路径。如果该文件中有一个运行时会被加载到内存的Segment包含了这个Section，那么这片区域会被设置为`SHF_ALLOC` |
 | `.line` | `SHT_PROGBITS` | `none` | 调试使用的源码行信息，存储源码和机器代码的对应关系 |
-| `.note` | `SHT_NOTE` | `none` | 记录与描述类信息 |
+| `.note` | `SHT_NOTE` | `none` | 记录、描述类信息 |
 | `.plt` | `SHT_PROGBITS` |  | 包含`Procedure linkage table`，程序执行时会用到 |
-| `.rel` | `SHT_REL` |  | 无加数的重定位信息。在`.rel`后面加上相应Section的名称，例如使用`.rel.text`表示这是`.text`的重定位信息 |
-| `.rela` | `SHT_RELA` |  | 带加数的重定位信息。同上 |
-| `.rodata` `.rodata1` | `SHT_PROGBITS` | `ALLOC` | 程序执行时的只读数据，不可写。可能是程序中使用到的字符串以及`switch`跳转表等（一些CPU硬件支持`switch`指令） |
+| `.rel`+name | `SHT_REL` |  | 无加数的重定位信息。在`.rel`后面加上相应Section的名称，例如使用`.rel.text`表示这是`.text`的重定位信息。这片区域如果运行时会加载到内存则会被设置为`SHF_ALLOC` |
+| `.rela`+name | `SHT_RELA` |  | 带加数的重定位信息。同上 |
+| `.rodata` `.rodata1` | `SHT_PROGBITS` | `ALLOC` | 程序执行时的只读数据，不可写。可能是程序中使用到的字符串以及`switch`跳转表等（一些CPU硬件支持`switch`指令，需要使用到这些跳转表） |
 | `.shstrtab` | `SHT_STRTAB` | `none` | Section名称字符串表 |
-| `.strtab` | `SHT_STRTAB` |  | 符号对应字符串表 |
-| `.symtab` | `SHT_SYMTAB` |  | 符号表 |
+| `.strtab` | `SHT_STRTAB` |  | 通常为符号对应字符串表。这片区域如果运行时会加载到内存则会被设置为`SHF_ALLOC` |
+| `.symtab` | `SHT_SYMTAB` |  | 符号表。这片区域如果运行时会加载到内存则会被设置为`SHF_ALLOC` |
 | `.text` | `SHT_PROGBITS` | `ALLOC EXECINSTR` | 机器指令 |
 
 此外，处理器架构专有的Section名称需要在前面加上该架构名称简写，例如`.ARM.attributes`
@@ -455,7 +478,7 @@ FreeBSD中定义如下
 
 符号表中的每一个入口是一个结构体，定义如下。和Section表一样，符号表的`index[0]`同样是保留的，其所有变量值都为`0`
 
-```c
+```cpp
 /*
  * Symbol table entries.
  */
@@ -470,15 +493,29 @@ typedef struct {
 } Elf32_Sym;
 ```
 
-`st_name`表示该符号的名称（在字符串表中的下标，和`sh_name`一样）
+`st_name`表示该符号的名称（在一个字符串表中的下标，和`sh_name`一样）。设为0表示该符号没有名称
 
-`st_value`表示符号的值。在重定位文件中一般是一个地址，表示符号的实际数据内容在Section中的偏移。在可执行文件和共享目标文件中一般是一个程序执行时的虚拟地址
+`st_other`永远为`0`
+
+`st_value`表示符号的值。在重定位文件中一般是一个地址，表示符号的实际数据内容在对应Section中的偏移。在可执行文件和共享目标文件中一般是程序执行时该符号对应的虚拟地址。也可能就是该符号实际的值
+
+`st_shndx`表示该符号对应的Section的下标，和`st_value`共同决定符号的位置。重定位时`st_value`值也会变。`st_shndx`取特殊值时有以下含义，取这3个特殊值时该符号分别对应`UNDEF`，`ABS`以及`COMMON`这3个伪节（这3个伪节只在可重定位文件中存在，且不会在`Section header table`中出现）
+
+| 特殊值 | 含义 |
+| :-: | :-: |
+| `SHN_UNDEF` | 表示符号是未定义的。一般是在该文件中已经声明但是没有定义（C语言中使用`extern`声明），需要在链接时到其他文件中寻找 |
+| `SHN_ABS` | 表示符号不会受重定位影响 |
+| `SHN_COMMON` | 表示该符号属于`COMMON`伪节，代表一个未分配空间的未初始化数据，此时`st_value`表示内存对齐参数（单位字节），`st_size`表示需要分配的大小 |
+
+> 由以上可以发现`COMMON`的作用貌似和`.bss`非常相近。两者主要的区别是，`COMMON`存放未初始化的**全局**变量。`.bss`存放未初始化或初始化为`0`的**静态**变量（使用`static`关键字修饰），和初始化为`0`的**全局**变量
+>
+> 可以这样记忆，只要初始化为`0`就只能放到`.bss`，只有全局变量未初始化时才会放到`COMMON`。这两种情况下在目标文件中都不会占用空间
 
 `st_size`表示符号的大小（单位字节，如果没有大小或不确定大小则设为`0`）
 
 `st_info`表示符号的种类以及属性，只有低1字节有效，通过以下方式访问
 
-```c
+```cpp
 /* Macros for accessing the fields of st_info. */
 #define ELF32_ST_BIND(info)		((info) >> 4)
 #define ELF32_ST_TYPE(info)		((info) & 0xf)
@@ -495,7 +532,7 @@ typedef struct {
 | :-: | :-: | :-: |
 | `STB_LOCAL` | `0` | **本地符号**，只对当前目标文件可见，其他文件不可引用且可以定义同名符号。在C语言中一般是使用`static`声明的函数或变量（这是C语言中的一种封装机制）。在C++中一般一个类就是一个文件，就是使用`private`声明的成员。本地符号会覆盖全局符号和弱符号 |
 | `STB_GLOBAL` | `1` | **全局符号**，对所有目标文件可见。在C语言中是文件中未加修饰的普通符号，这些符号可以在其他文件中使用`extern`关键字声明后引用。在C++中就是使用`public`声明的成员 |
-| `STB_WEAK` | `2` | **弱符号**属于特殊的全局符号，一般用于会发生全局符号冲突的情况。弱符号优先级较低，未初始化的全局变量默认是弱符号。与之对应的强符号，一般是函数和已经初始化的全局变量。可以使用`__attribute__((weak))`声明弱函数和弱变量，如果在链接（包括动态链接）时没有在其他文件中找到该符号，那么就使用该弱符号代替。因为同名强符号可以覆盖弱符号 |
+| `STB_WEAK` | `2` | **弱符号**属于特殊的全局符号，一般用于会发生全局符号冲突的情况。弱符号优先级较低，未初始化的全局变量默认是弱符号。与之相对的强符号，一般是函数和已经初始化的全局变量。可以使用`__attribute__((weak))`声明弱函数和弱变量，如果在链接（包括动态链接）时没有在其他文件中找到该符号，那么就使用该弱符号代替。而同名同类型强符号可以覆盖弱符号 |
 | `STB_LOPROC` | `13` | 编码保留区下界。处理器相关 |
 | `STB_HIPROC` | `15` | 编码保留区上界 |
 
@@ -507,13 +544,13 @@ typedef struct {
 | `STT_OBJECT` | `1` | 数据符号，可以是变量，数组等 |
 | `STT_FUNC` | `2` | 函数符号，可以是函数或其他类型的可执行代码。运行时从其他文件引用共享目标文件中的函数符号，操作系统会自动在`PLT`中创建一个入口 |
 | `STT_SECTION` | `3` | Section符号，一般用于重定位，且低4位一般为`STB_LOCAL` |
-| `STT_FILE` | `4` | 源文件符号，该符号的符号名给出当前目标文件对应的源文件名。该符号低4位为`STB_LOCAL`，且位于`index[SHN_ABS]` |
+| `STT_FILE` | `4` | 源文件符号，该符号的符号名给出当前目标文件对应的源文件名。该符号低4位为`STB_LOCAL`，且位于`index[SHN_ABS]`，不受重定位影响 |
 | `STT_LOPROC` | `13` | 编码保留区下界。处理器相关 |
 | `STT_HIPROC` | `15` | 编码保留区上界 |
 
 FreeBSD中符号类型定义如下
 
-```c
+```cpp
 /* Symbol Binding - ELFNN_ST_BIND - st_info */
 #define	STB_LOCAL	0	/* Local symbol */
 #define	STB_GLOBAL	1	/* Global symbol */
@@ -541,32 +578,20 @@ FreeBSD中符号类型定义如下
 #define	STT_HIPROC	15	/* End of processor reserved range. */
 ```
 
-`st_other`永远为`0`
-
-`st_shndx`表示该符号相关的Section的下标，和`st_value`共同决定符号的位置。重定位时`st_value`值也会变。`st_shndx`取特殊值时有以下含义，取这3个特殊值时分别对应`UNDEF`，`ABS`以及`COMMON`这3个伪节（这3个伪节只在可重定位文件中存在，且不会在`Section header table`中出现）
-
-| 特殊值 | 含义 |
-| :-: | :-: |
-| `SHN_UNDEF` | 表示符号是未定义的。一般是在该文件中已经声明但是没有定义（C语言中使用`extern`声明），需要在链接时到其他文件中寻找 |
-| `SHN_ABS` | 表示符号不会被重定位 |
-| `SHN_COMMON` | 表示该符号属于`COMMON`伪节，代表一个未分配空间的未初始化数据，此时`st_value`表示内存对齐参数（单位字节），`st_size`表示需要分配的大小 |
-
-> 由以上可以发现`COMMON`的作用貌似和`.bss`非常相近。两者主要的区别是，`COMMON`存放未初始化的**全局**变量。`.bss`存放未初始化或初始化为`0`的**静态**变量（使用`static`关键字修饰），和初始化为`0`的**全局**变量
->
-> 可以这样记忆，只要初始化为`0`就只能放到`.bss`，只有全局变量未初始化时才会放到`COMMON`。这两种情况下在目标文件中都不会占用空间
-
 
 ### 1.4.4 重定位信息
 
 所谓重定位，就是在链接器将多个文件链接到一起时，将不同文件中同一个符号的引用和定义联系起来，**本质是对于Section数据内容的修改**。例如在机器代码Section中，如果调用了一个函数，那么就需要修改对应子程序调用指令中的地址。
 
-文件链接的步骤，首先链接器需要确定将两个文件结合拼接到一起的方法，之后需要修改符号的`st_value`，最后进行重定位操作，修改Section的内容（例如出现变量引用，函数调用，程序跳转的地方）
+> 一般在文件链接以后，有些程序代码需要拼接到一起，而一个代码块中指令的顺序一般是不会变的，重定位针对机器代码中涉及到跳转、内存数据存取等操作的指令进行更改。以ARM Cortex-M为例，函数调用有**立即数相对地址**跳转`BL label`和**寄存器绝对地址**跳转`BLX R1`两种，有些指令在重定位以后需要更改指令中的`label`相对地址或`R1`绝对地址（绝对跳转`BLX R1`之前往往还有其他`R1`相关的操作，例如把一个地址从Flash加载到`R1`），这就是重定位的作用之一
 
-重定位信息位于`.rel`以及`.rela`（例如`.rel.text`，`.rel.data`等，重定位对应的Section直接在名称中体现）
+文件链接的步骤中，首先链接器需要确定将两个文件结合拼接到一起的方法，之后需要修改符号的`st_value`，最后进行重定位操作，修改Section的内容（例如出现变量引用，函数调用，程序跳转的地方）
 
-表中每一个入口都是一个结构体，FreeBSD中定义如下
+重定位信息位于`.rel`以及`.rela`（例如`.rel.text`，`.rel.data`等，重定位对应的Section会直接在名称中体现。同时`.rel`以及`.rela`的`sh_link`和`sh_info`分别表示**相关符号表**以及**重定位信息对应的Section**）
 
-```c
+重定位信息表中每一个入口都是一个结构体，FreeBSD中定义如下
+
+```cpp
 /*
  * Relocation entries.
  */
@@ -585,11 +610,11 @@ typedef struct {
 } Elf32_Rela;
 ```
 
-`r_offset`在重定位文件中表示重定位操作在该Section中的偏移。在可执行文件以及共享链接目标文件中表示重定位操作的虚拟地址
+`r_offset`在重定位文件中表示重定位操作在该Section中的偏移。在可执行文件以及共享链接目标文件中表示重定位操作的虚拟地址。这里它代表的都是受重定位影响需要更改的数据单元的第1个字节的位置
 
-`r_info`这个变量也是一个复合变量，用于指示重定位对应的符号下标（例如子程序调用指令所调用的函数的符号，占`r_info`的高3字节），以及重定位的类型（占`r_info`的低1字节）。符号下标可以是`STN_UNDEF`。重定位类型因为不同处理器指令格式不一样所以是不同的。访问方式和`st_info`相似，如下
+`r_info`这个变量也是一个复合变量，用于指示重定位对应的符号下标（例如子程序调用指令所调用的函数的符号，占`r_info`的高3字节），以及重定位的类型（占`r_info`的低1字节。重定位类型规定了链接器对数据单元进行哪种重定位操作）。符号下标可以是`STN_UNDEF`。重定位类型因为不同处理器指令格式不一样所以是不同的。访问方式和`st_info`相似，如下
 
-```c
+```cpp
 /* Macros for accessing the fields of r_info. */
 #define ELF32_R_SYM(info)	((info) >> 8)
 #define ELF32_R_TYPE(info)	((unsigned char)(info))
@@ -607,9 +632,9 @@ i386中重定位类型定义示例如下。其他还有很多
 | `R_386_NONE` | `0` | 不进行重定位 |
 | `R_386_32` | `1` | 一般是将`r_addend`和对应符号在Section中的偏移`st_value`相加 |
 
-FreeBSD中对于ARM的重定位类型定义如下
+FreeBSD中对于ARM的`ELF32_R_TYPE`的定义如下
 
-```c
+```cpp
 /*
  * Relocation types.
  *
@@ -663,11 +688,13 @@ Segment用于程序的执行过程，存在于可执行文件和动态链接目�
 
 内存中的一个可执行程序映像包含了程序运行所需的机器代码，数据，堆栈等。在有高级操作系统支持的平台，程序运行需要经历程序加载和动态链接的过程，程序在RAM中执行。而在大部分单片机中，程序直接在Flash中运行，而变量、堆栈等可变数据在RAM分配
 
+本小节也会包含Section相关但在前文未介绍的内容
+
 ### 1.5.1 Program头
 
 和`Section header table`一样，Program也对应一个`Program header table`，其中每一个入口定义如下
 
-```c
+```cpp
 /*
  * Program header.
  */

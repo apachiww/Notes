@@ -1,6 +1,6 @@
 # 日常笔记，备忘
 
-进行一个坑的填。记录学习与玩耍生活。
+记录学习与玩耍生活。
 
 ![](images/000000a027.jpg)
 
@@ -12,8 +12,10 @@
 | [ELF文件格式解析，程序链接与运行原理](220429a_compiler.md#1-cs422笔记elf文件结构) |
 | [IEEE754浮点数](200920c_verilog.md#51-IEEE754浮点数标准) |
 | [RS232](210524a_8051.md#75-补充RS232串口通信) |
+| [Shell脚本基础](201219a_shell.md#2-shell脚本基础) |
+| [Awk字符串处理](201219a_shell.md#31-awk) |
 | [固态存储原理](201225a_ssd.md) |
-| [单片机中实现状态机的N种方法](210524a_8051.md#76-补充软件有限状态机) |
+| [各种单片机中实现状态机的N种方法](210524a_8051.md#76-补充软件有限状态机) |
 | [FreeBSD物理机安装踩坑与玩耍](210115a_freebsd.md) |
 | [Tribblix、Slackware物理机安装踩坑](220420a_tribblix.md) |
 
@@ -35,7 +37,7 @@
 | [201220a](201220a_mcu-ide.md) | 类Unix下的通用MCU开发环境 |
 | [201220b](201220b_crack.md) | 密码爆破 |
 | [201220c](201220c_metasploit.md) | Metasploit的渗透测试 |
-| [201225a](201225a_ssd.md) | 固态硬盘工作原理与优化方法 |
+| [201225a](201225a_ssd.md) | 计算机存储：固态硬盘工作原理与优化方法 |
 | [201229a](201229a_ror.md) | Ruby学习笔记以及Ruby On Rails Web开发 |
 | [201230a](201230a_cryptography.md) | 加密算法，密码学 |
 | [210108a](210108a_autocad.md) | AutoCAD基本操作 |
@@ -98,7 +100,7 @@
 23. 《精通开关电源（第3版）》，Keith Billings，Taylor Morey著，人民邮电出版社
 24. 《新概念模拟电路》，杨建国著，网络资源
 25. 《矩阵计算（第4版）》，Gene H. Golub，Charles F. Van Loan著，人民邮电出版社
-26. 《精神分析引论》，Sigmond Freud著，北京联合出版公司
+26. 《精神分析引论》，Sigmond Freud著
 
 # Recipe
 
