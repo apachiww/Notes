@@ -10,6 +10,7 @@
 | :-: |
 | [ARMv7-M指令集](201020a_stm32.md#16-isa详解指令集) |
 | [ELF文件格式解析，程序链接与运行原理](220429a_compiler.md#1-cs422笔记elf文件结构) |
+| [Intel hex文件格式](220429a_compiler.md#31-intel-hex文件格式) |
 | [IEEE754浮点数](200920c_verilog.md#51-IEEE754浮点数标准) |
 | [RS232](210524a_8051.md#75-补充RS232串口通信) |
 | [Shell脚本基础](201219a_shell.md#2-shell脚本基础) |

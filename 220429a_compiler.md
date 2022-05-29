@@ -690,13 +690,13 @@ FreeBSD中对于ARM的`ELF32_R_TYPE`的定义如下
 
 Segment用于程序的执行过程，存在于可执行文件和动态链接目标文件中
 
-内存中的一个可执行程序映像包含了程序运行所需的机器代码，数据，堆栈等。在有高级操作系统支持的平台，程序运行需要经历程序加载和动态链接的过程，程序在RAM中执行。而在大部分单片机中，程序直接在Flash中运行，而变量、堆栈等可变数据在RAM分配
+内存中的一个可执行程序映像包含了程序运行所需的机器代码，数据，堆栈等。在有高级操作系统支持的平台，程序运行需要经历程序加载和动态链接的过程，程序在RAM中执行。而在大部分单片机中，CPU直接从Flash读取程序和静态数据，而变量、堆栈等可变数据在RAM分配
 
 这里也会包含其他重定位相关但在前文未介绍的重要内容
 
 ### 1.5.1 Program头
 
-和`Section header table`一样，Program也对应一个`Program header table`，其中每一个入口定义如下
+和`Section header table`一样，Program也对应一个`Program header table`（个人认为其实也可以叫`Segment header table`），其中每一个Segment入口定义为如下结构体
 
 ```cpp
 /*
@@ -715,13 +715,13 @@ typedef struct {
 } Elf32_Phdr;
 ```
 
-`p_type`表示Segment的类型
+`p_type`表示Segment类型
 
 `p_offset`表示Segment在文件中的偏移
 
 `p_vaddr`表示Segment在内存中的虚拟地址
 
-`p_paddr`表示Segment在内存中的物理地址（在有操作系统的环境中支持地址映射一般不会使用到）
+`p_paddr`表示Segment在内存中的物理地址（在有操作系统的环境中支持地址映射，所以一般不会使用到）
 
 `p_filesz`表示Segment在文件中的大小
 
@@ -731,10 +731,119 @@ typedef struct {
 
 `p_align`表示Segment的对齐参数。`0`和`1`时表示不对齐
 
+`p_type`可用设置如下
 
-## 1.6 实例分析
+| 名称 | 值 | 含义 |
+| :-: | :-: | :-: |
+| `PT_NULL` | `0` | 该Segment不起作用 |
+| `PT_LOAD` | `1` | 该Segment包含了可被加载到内存的内容。此时`p_filesz`和`p_memsz`分别表示该Segment**在文件中的大小**以及**加载到内存后的大小**。`p_memsz`一般比`p_filesz`大，文件中的Segment在加载到内存以后紧接着就是多出的空间，这些空间全部初始化为`0`。**可加载的Segment在头表中一定按顺序排列**（按照`p_vaddr`排序） |
+| `PT_DYNAMIC` | `2` | 包含了动态链接信息 |
+| `PT_INTERP` | `3` | 包含了程序解释器的路径，该字符串以`NULL(0x00)`结束。这种Segment只会在可执行文件或共享目标文件中出现，且在头表中出现在所有可加载Segment（`PT_LOAD`）之前。该Segment最多出现1次 |
+| `PT_NOTE` | `4` | 包含了额外信息的位置和大小 |
+| `PT_SHLIB` | `5` | 该类型保留不使用 |
+| `PT_PHDR` | `6` | 包含了`Program header table`在文件以及内存映像中的位置与大小，在头表中出现在所有可加载Segment（`PT_LOAD`）之前。该Segment最多出现1次。 |
+| `PT_LOPROC` | `0x70000000` |  |
+| `PT_HIPROC` | `0x7FFFFFFF` |  |
+
+FreeBSD参考代码如下
+
+```cpp
+/* Values for p_type. */
+#define	PT_NULL		0	/* Unused entry. */
+#define	PT_LOAD		1	/* Loadable segment. */
+#define	PT_DYNAMIC	2	/* Dynamic linking information segment. */
+#define	PT_INTERP	3	/* Pathname of interpreter. */
+#define	PT_NOTE		4	/* Auxiliary information. */
+#define	PT_SHLIB	5	/* Reserved (not use0xf0000000d). */
+#define	PT_PHDR		6	/* Location of program header itself. */
+#define	PT_TLS		7	/* Thread local storage segment */
+#define	PT_LOOS		0x60000000	/* First OS-specific. */
+#define	PT_SUNW_UNWIND	0x6464e550	/* amd64 UNWIND program header */
+#define	PT_GNU_EH_FRAME	0x6474e550
+#define	PT_GNU_STACK	0x6474e551
+#define	PT_GNU_RELRO	0x6474e552
+#define	PT_DUMP_DELTA	0x6fb5d000	/* va->pa map for kernel dumps (currently arm). */
+#define	PT_LOSUNW	0x6ffffffa
+#define	PT_SUNWBSS	0x6ffffffa	/* Sun Specific segment */
+#define	PT_SUNWSTACK	0x6ffffffb	/* describes the stack segment */
+#define	PT_SUNWDTRACE	0x6ffffffc	/* private */
+#define	PT_SUNWCAP	0x6ffffffd	/* hard/soft capabilities segment */
+#define	PT_HISUNW	0x6fffffff
+#define	PT_HIOS		0x6fffffff	/* Last OS-specific. */
+#define	PT_LOPROC	0x70000000	/* First processor-specific type. */
+#define	PT_ARM_ARCHEXT	0x70000000	/* ARM arch compat information. */
+#define	PT_ARM_EXIDX	0x70000001	/* ARM exception unwind tables. */
+#define	PT_MIPS_REGINFO		0x70000000	/* MIPS register usage info */
+#define	PT_MIPS_RTPROC		0x70000001	/* MIPS runtime procedure tbl */
+#define	PT_MIPS_OPTIONS		0x70000002	/* MIPS e_flags value*/
+#define	PT_MIPS_ABIFLAGS	0x70000003	/* MIPS fp mode */
+#define	PT_HIPROC	0x7fffffff	/* Last processor-specific type. */
+
+#define	PT_OPENBSD_RANDOMIZE	0x65A3DBE6	/* OpenBSD random data segment */
+#define	PT_OPENBSD_WXNEEDED	0x65A3DBE7	/* OpenBSD EXEC/WRITE pages needed */
+#define	PT_OPENBSD_BOOTDATA	0x65A41BE6	/* OpenBSD section for boot args */
+```
+
+`p_flags`可用设置如下，这些权限参数可以通过或运算合并到一起
+
+| 名称 | 值 | 含义 |
+| :-: | :-: | :-: |
+| `PF_X` | `0x1` | 该Segment可执行 |
+| `PF_W` | `0x2` | 可写 |
+| `PF_R` | `0x4` | 可读 |
+| `PF_MASKOS` | `0x0ff00000` |  |
+| `PF_MASKPROC` | `0xf0000000` |  |
+
+FreeBSD参考代码如下
+
+```cpp
+/* Values for p_flags. */
+#define	PF_X		0x1		/* Executable. */
+#define	PF_W		0x2		/* Writable. */
+#define	PF_R		0x4		/* Readable. */
+#define	PF_MASKOS	0x0ff00000	/* Operating system-specific. */
+#define	PF_MASKPROC	0xf0000000	/* Processor-specific. */
+```
+
+
+### 1.5.2 Note Section/Segment
+
+Note一般用来存放各种专用的附加信息，例如兼容性等等。在ELF32中Note格式都为任意长度的单字（4字节）数据，其中每一个字的存放都遵照机器的大小端。Note需要内存对齐，示例如下：
+
+![](images/220429a004.png)
+
+在Note中，每一个项都以`namesz`，`descsz`以及`type`开头，分别表示Note中一个项的名称长度（字节），描述信息长度（字节），以及类型。其中名称以及描述信息需要4字节对齐，所以最后会有占位符。ELF并未定义所有这些数据的具体含义
+
+
+### 1.5.3 程序加载
+
+
+
+
+### 1.5.4 动态链接
+
+
+
+## 1.6 实例分析：ARMv7-M
+
+人肉逆向分析
 
 以`arm-none-eabi-gcc`工具链为例，使用`arm-none-eabi-readelf`，`arm-none-eabi-objdump`以及16进制编辑器对目标文件进行分析
+
+> 在`arm-none-eabi-gcc 11.3`中需要添加参数使用`arm-none-eabi-gcc --specs=nosys.specs`编译
+
+```shell
+# Archlinux
+sudo pacman -S arm-none-eabi-gcc arm-none-eabi-gdb arm-none-eabi-newlib hex hexedit
+```
+
+
+## 1.7 实例分析：x86_64
+
+```shell
+# Archlinux
+sudo pacman -S gcc gdb
+```
 
 
 ## 2 CSAPP第7章：链接
@@ -754,3 +863,7 @@ typedef struct {
 > 最后如果是使用静态链接，就需要使用到链接器`ld`。`ld`会将多个`.o`可重定位目标文件链接成为一个可执行文件。通过shell执行该文件时会调用操作系统的加载器，将可执行文件加载到内存中并运行
 >
 > 运行时动态链接使用`.so`共享目标文件格式，由操作系统加载到内存并链接
+
+## 3 补充
+
+## 3.1 Intel hex文件格式
