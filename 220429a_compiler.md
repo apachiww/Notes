@@ -4,7 +4,9 @@
 
 《深入理解计算机系统》，Randal E. Bryant，David R. O'Hallaron
 
-[耶鲁大学CS422讲义](src/210731a01/ELF_Format.pdf)
+[ELF_Format.pdf](src/210731a01/ELF_Format.pdf)
+
+[Oracle 819-0690](https://docs.oracle.com/cd/E23824_01/html/819-0690/docinfo.html#scrolltoc)（可以下载pdf）
 
 [FreeBSD ELF相关代码](https://cgit.freebsd.org/src/tree/sys?h=stable/13)。平台共用代码位于`sys/elf32`，`sys/elf64`。x86位于`x86/include/elf.h`，ARM位于`arm/include/elf.h`以及`arm64/include/elf.h`
 
@@ -12,14 +14,16 @@
 
 平时我们使用IDE开发一个桌面程序，或者开发一个简单的控制台程序，基本不会意识到程序构建过程中链接的存在，也不会去关心二进制程序底层是如何运作的。例如使用Qt开发程序，在IDE窗口点击构建按钮，我们创建的大量源码文件以及头文件貌似自然而然就成为了可执行文件，执行我们想要的功能
 
-可执行文件远不止机器代码这么简单，它还需要包含很多只读、初始化数据以及各种描述信息。ELF这种类似的统一格式的出现使得程序文件的构建更加规范化，同时具备更强的通用性
+目标文件，包括可执行文件，可重定位目标文件，以及共享目标文件，远不止机器代码这么简单，它还需要包含很多只读、初始化数据以及各种描述信息。ELF这种统一格式的出现使得程序文件的构建更加规范化，同时具备更强的通用性
 
 链接也无处不在，大型工程的构建离不开链接（同样也离不开构建系统例如`Make`）。在大型工程中，将所有代码都放在一个源文件中是非常不明智的。链接器方便了程序构建的模块化，开发者可以将不同功能的代码分开，降低代码耦合度，减轻管理维护负担，同时闭源代码的发布也成为可能，也可以加快程序构建的速度。此外，在操作系统的支持下，共享库的动态链接机制也使得程序映像变得更小
 
+事实上对于ELF文件格式以及链接器的深入理解是非常必要的，这是目前几乎所有软件赖以生存的基础。ELF作为当前最流行的目标文件格式，小到单片机，大到服务器中都可以见到它。虽然绝大部分系统使用着不同的目标文件格式，或是ELF的不同版本，但底层原理都是相通的
 
-## 1 CS422笔记：ELF文件结构
 
-ELF文件格式由UNIX System Laboratories提出，作为ABI标准的一部分，后缀`.elf`，用以替代`a.out`等较老的二进制文件格式。Linux，FreeBSD等现代的类UNIX系统都广泛采用了这种文件格式，但是具体实现会略有不同
+## 1 ELF文件结构
+
+ELF文件格式由UNIX System Laboratories提出，作为ABI标准的一部分，后缀`.elf`，用以替代`a.out`等较老的二进制文件格式。Linux，FreeBSD等现代的类UNIX系统都广泛采用了这种文件格式，但是具体实现会略有不同，所以不通用
 
 ## 1.1 ELF文件的种类
 
@@ -27,7 +31,7 @@ ELF文件主要分为3种：**可重定位文件**（relocatable），**可执�
 
 ELF文件设计的用途主要有2个，一是被工具链中的链接器`ld`读取并和其他文件链接，另外也可以被操作系统的加载程序加载到内存中执行
 
-此外，ELF文件适用于不同字长的硬件平台。以下基于32位架构讲解
+此外，ELF适用于不同字长的硬件平台。以下基于32位架构讲解
 
 
 ## 1.2 ELF文件结构概览
@@ -69,7 +73,7 @@ typedef Elf32_Sword	Elf32_Ssize;
 >
 > 在ELF32文件中数据一般是4字节对齐的，可以发现`Elf32_Half`总是连续偶数个出现
 
-> **逆向时一定要注意机器的大小端**。在小端机器中，ELF文件中所有的数据都按小端存放，在使用16进制编辑器查看时多字节变量要倒过来看
+> **逆向时一定要注意机器的大小端**。在小端机器中，ELF文件中所有的数据都按小端存放，在使用16进制编辑器查看时多字节数据要倒过来看
 
 
 ## 1.3 ELF文件头
@@ -109,14 +113,14 @@ typedef struct {
 
 ### 1.3.1 ELF Identification
 
-ELF32文件使用长度16字节的`e_ident`表示一些架构无关的信息，为Identification，其中前7字节定义如下。之后需要加上占位符`EI_PAD`
+ELF32文件使用长度16字节的`e_ident`表示一些通用信息，为Identification，其中前7字节定义如下。之后需要加上占位符`EI_PAD`
 
 | 下标 | 名称 | 作用 |
 | :-: | :-: | :-: |
 | `e_ident[0]` | `EI_MAG0` | 魔法数`0x7F` |
-| `e_ident[1]` | `EI_MAG1` | 魔法数`0x45`（`E`） |
-| `e_ident[2]` | `EI_MAG2` | 魔法数`0x4C`（`L`） |
-| `e_ident[3]` | `EI_MAG3` | 魔法数`0x46`（`F`） |
+| `e_ident[1]` | `EI_MAG1` | 魔法数`0x45`（字符`E`） |
+| `e_ident[2]` | `EI_MAG2` | 魔法数`0x4C`（字符`L`） |
+| `e_ident[3]` | `EI_MAG3` | 魔法数`0x46`（字符`F`） |
 | `e_ident[4]` | `EI_CLASS` | 表示机器字长，`0`表示`ELFCLASSNONE`无效，`1`表示`ELFCLASS32`为32位目标文件，`2`表示`ELFCLASS64`为64位目标文件 |
 | `e_ident[5]` | `EI_DATA` | 表大小端，`0`表示`ELFDATANONE`无效，`1`表示`ELFDATA2LSB`小端（Little-Endian），`2`表示`ELFDATA2MSB`大端（Big-Endian） |
 | `e_ident[6]` | `EI_VERSION` | 文件版本，值和`e_version`相同，只能为`1`（`EV_CURRENT`） |
@@ -170,7 +174,7 @@ FreeBSD中定义如下
 
 ### 1.3.3 机器类型
 
-`e_machine`指定机器指令集类型
+`e_machine`指定机器指令集
 
 | 名称 | 值 | 含义 |
 | :-: | :-: | :-: |
@@ -690,9 +694,9 @@ FreeBSD中对于ARM的`ELF32_R_TYPE`的定义如下
 
 Segment用于程序的执行过程，存在于可执行文件和动态链接目标文件中
 
-内存中的一个可执行程序映像包含了程序运行所需的机器代码，数据，堆栈等。在有高级操作系统支持的平台，程序运行需要经历程序加载和动态链接的过程，程序在RAM中执行。而在大部分单片机中，CPU直接从Flash读取程序和静态数据，而变量、堆栈等可变数据在RAM分配
+程序运行需要机器代码，数据，堆栈等。在有高级操作系统支持的平台，程序运行需要经历程序加载和动态链接的过程，程序在RAM中执行。而在大部分单片机中，CPU直接从Flash读取程序和静态数据，而变量、堆栈等可变数据在RAM分配
 
-这里也会包含其他重定位相关但在前文未介绍的重要内容
+Segment和Section两者事实上只是相同数据内容的两种不同视角
 
 ### 1.5.1 Program头
 
@@ -731,14 +735,14 @@ typedef struct {
 
 `p_align`表示Segment的对齐参数。`0`和`1`时表示不对齐
 
-`p_type`可用设置如下
+其中，`p_type`可用设定值如下
 
 | 名称 | 值 | 含义 |
 | :-: | :-: | :-: |
 | `PT_NULL` | `0` | 该Segment不起作用 |
 | `PT_LOAD` | `1` | 该Segment包含了可被加载到内存的内容。此时`p_filesz`和`p_memsz`分别表示该Segment**在文件中的大小**以及**加载到内存后的大小**。`p_memsz`一般比`p_filesz`大，文件中的Segment在加载到内存以后紧接着就是多出的空间，这些空间全部初始化为`0`。**可加载的Segment在头表中一定按顺序排列**（按照`p_vaddr`排序） |
 | `PT_DYNAMIC` | `2` | 包含了动态链接信息 |
-| `PT_INTERP` | `3` | 包含了程序解释器的路径，该字符串以`NULL(0x00)`结束。这种Segment只会在可执行文件或共享目标文件中出现，且在头表中出现在所有可加载Segment（`PT_LOAD`）之前。该Segment最多出现1次 |
+| `PT_INTERP` | `3` | 包含了程序解释器的路径，该字符串以`NULL(0x00)`结束。这种Segment只会在可执行文件或共享目标文件中出现，且在头表中出现在所有可加载Segment入口（`PT_LOAD`）之前。该Segment最多出现1次 |
 | `PT_NOTE` | `4` | 包含了额外信息的位置和大小 |
 | `PT_SHLIB` | `5` | 该类型保留不使用 |
 | `PT_PHDR` | `6` | 包含了`Program header table`在文件以及内存映像中的位置与大小，在头表中出现在所有可加载Segment（`PT_LOAD`）之前。该Segment最多出现1次。 |
@@ -817,14 +821,218 @@ Note一般用来存放各种专用的附加信息，例如兼容性等等。在E
 
 ### 1.5.3 程序加载
 
+在较为高级的计算机系统中，程序代码存储在磁盘中（包括eMMC等）。磁盘本质和内存不同，它属于外设，和USB，串口，SPI一样，只能通过一些寄存器进行数据读写操作（Linux中的swap虚拟内存也是建立在这之上的）。在执行一个程序时，首先需要由DMA将文件传输到内存，之后才能执行后续的处理操作
 
+一般有MMU的平台都支持虚拟地址和物理地址的映射，且内存块分页管理（页大小一般可变且为2的n次幂）。在实际应用中，为提高效率，**程序的加载是惰性的**，程序在开始执行时往往不会将其所有的内容全部加载到内存，有些缺失的页只有当实际使用到时才会加载
+
+以下假设内存页面大小4KB（`0x1000`）。文件中为节省空间所以一般不对齐，`p_offset`是实际的文件偏移，但`p_vaddr`可能不是加载到内存以后的真实虚拟地址。
+
+![](images/220429a007.PNG)
+
+![](images/220429a005.PNG)
+
+![](images/220429a006.PNG)
+
+> 观察上图，虽然Segment在文件中没有对齐，但是加载到内存以后一定是对齐的。可以发现在`Text`中，`p_offset`和`p_vaddr`对`0x1000`取模同余，两者都以`0x100`结尾。`Data`中也是同样的。ELF中规定`p_offset`和`p_vaddr`需要取模同余
+>
+> `Text`中`p_filesz`和`p_memsz`相等都为`0x2BE00`。在加载到内存以后，分配的页起始虚拟地址`0x8048000`，而`p_vaddr`规定起始地址为`0x8048100`，所以在页面开头需要加上长度`0x100`的占位符，而在末尾也需要加上占位符以对齐`0x8074000`
+>
+> `Data`中`p_memsz`为`0x5E24`，相较`p_filesz`的`0x4E00`要更大一些，说明`Data`中有部分未初始化数据，这些数据在加载到内存时需要初始化为`0`。起始地址为`0x8074F00`，所以对齐到`0x8074000`需要在开头加上长度`0xF00`的占位符，末尾到`0x807B000`也需要加上占位符，而长度为`0x1024`的未初始化数据会初始化为`0`
+>
+> 占位符不一定为`0`。需要看具体编译器中的规定
+
+> 上文介绍的是可执行文件中的情况。而共享目标文件需要在程序运行时动态加载到内存中并链接，所以文件中的`p_vaddr`一般是相对地址，在实际运行时会加上一个基地址偏移
 
 
 ### 1.5.4 动态链接
 
+**程序解释器**
+
+程序解释器可以是一个可执行程序或是一个共享目标文件
+
+如果一个程序的执行需要一个解释器，那么解释器可以有两种方式从系统交接控制权。第一种是**系统直接将文件的描述符告诉解释器，由解释器进行程序的加载与运行**。第二种是**系统加载可执行文件创建可执行映像，之后将必要信息告诉解释器并交接控制权**
+
+在系统负责可执行文件加载的情况下，如果解释器是一个可执行文件，那么它在被系统加载时地址会和原先的可执行映像冲突，这个冲突需要系统解决。如果解释器是一个共享目标文件，那么它使用相对地址，和可执行文件中的地址无关，系统无需解决地址冲突
+
+**动态链接器**
+
+在操作系统中，由于所有应用程序都会使用到基本系统服务，而这些系统服务一般就是一些共享库，所以事实上几乎所有的应用的执行都会有动态链接的过程
+
+动态链接器是一种特殊的程序解释器。在可执行程序中如果需要使用到动态链接，就需要定义一个`PT_INTERP`，这个Segment存储了系统中动态链接器的路径。
+
+> 动态链接过程需要系统和动态链接器合作，完成以下任务
+>
+> 1. 将可执行文件的Segment加载到程序映像
+>
+> 2. 将共享目标文件的Segment加载到程序映像
+>
+> 3. 对可执行文件以及共享目标文件进行重定位操作
+>
+> 4. 系统关闭授予动态链接器的可执行文件描述符
+>
+> 5. 系统将控制权转交给应用程序
+
+在一个可执行程序需要使用到动态链接时，静态链接器会将必要信息存入文件中以便动态链接器使用，这些数据一般标记为`PT_LOAD`
+
+在共享目标文件中，一般会有几个额外的Section，一个是`.dynamic`，类型`SHT_DYNAMIC`，包含了动态链接的一些必要信息。一个是`.hash`，类型`SHT_HASH`，为符号哈希表。还有`.got`和`.plt`，类型`SHT_PROGBITS`，分别存储`Global offset table`和`Procedure linkage table`两张表。这些信息将会在动态链接中起到关键作用，之后将会对这些数据进行详细的分析
+
+> 在很多类UNIX系统中会有一个`LD_BIND_NOW`的变量。如果这个变量**存在且设定为非空字符串**，那么操作系统的加载器会在运行程序之前解析完所有的重定位。如果该变量**不存在或为空**，那么程序运行时符号的解析以及重定位操作就是惰性的，只有当使用到该符号时才会进行加载和重定位
+
+**Dynamic Section**
+
+`Dynamic Section`名称为`.dynamic`，类型为`PT_DYNAMIC`，包含了一个数组，其中每一个入口为如下结构体
+
+```cpp
+/*
+ * Dynamic structure.  The ".dynamic" section contains an array of them.
+ */
+
+typedef struct {
+	Elf32_Sword	d_tag;		/* Entry type. */
+	union {
+		Elf32_Word	d_val;	/* Integer value. */
+		Elf32_Addr	d_ptr;	/* Address value. */
+	} d_un;
+} Elf32_Dyn;
+```
+
+`d_tag`决定了`d_un`的含义
+
+`d_val`和`d_ptr`组成共用体，分别表示重定位的信息或文件中的虚拟地址。由于动态重定位以后**实际的内存虚拟地址可能是由文件中的虚拟地址加上基地址计算得来**，所以`d_ptr`中的地址也和文件中相符，动态链接器需要自动计算实际的内存虚拟地址
+
+| `d_tag`取值 | 名称 | `d_un` | 可执行文件 | 共享目标文件 | 解释 |
+| :-: | :-: | :-: | :-: | :-: | :-: |
+| `0` | `DT_NULL` | 不起作用 | 必须有 | 必须有 | 放在最后，表示`PT_DYNAMIC`终结 |
+| `1` | `DT_NEEDED` | `d_val` | 可选 | 可选 | 表示依赖的库文件名（编译时调用静态链接器获得的完整路径），可能有多个，其值指向`DT_STRTAB`中库文件名字符串的起始下标（每个字符串以`NULL`结尾） |
+| `2` | `DT_PLTRELSZ` | `d_val` | 可选 | 可选 | 表示`Procedure linkage table`相关的重定位入口的总大小（单位字节） |
+| `3` | `DT_PLTGOT` | `d_ptr` | 可选 | 可选 | 存储一个`Procedure linkage table`或`Global offset table`相关的地址 |
+| `4` | `DT_HASH` | `d_ptr` | 必须有 | 必须有 | 表示符号哈希表`Hash table`的地址 |
+| `5` | `DT_STRTAB` | `d_ptr` | 必须有 | 必须有 | 表示字符串表的地址，字符串中可能包含库文件名，符号名等 |
+| `6` | `DT_SYMTAB` | `d_ptr` | 必须有 | 必须有 | 符号表地址 |
+| `7` | `DT_RELA` | `d_ptr` | 必须有 | 可选 | 重定位信息表地址。一个目标文件可能有多个`.rel`，在创建可执行文件或共享目标文件时**链接器会将这些信息表合并为一个表**。由此动态链接器链接时获取的也是一张表 |
+| `8` | `DT_RELASZ` | `d_val` | 必须有 | 可选 | 表示`DT_RELA`信息表的大小（单位字节） |
+| `9` | `DT_RELAENT` | `d_val` | 必须有 | 可选 | 表示`DT_RELA`中一个入口项的大小（单位字节） |
+| `10` | `DT_STRSZ` | `d_val` | 必须有 | 必须有 | 表示`DT_STRTAB`字符串表的大小 |
+| `11` | `DT_SYMENT` | `d_val` | 必须有 | 必须有 | 表示`DT_SYMTAB`符号表的大小 |
+| `12` | `DT_INIT` | `d_ptr` | 可选 | 可选 | 表示初始化程序的地址 |
+| `13` | `DT_FINI` | `d_ptr` | 可选 | 可选 | 表示终止程序的地址 |
+| `14` | `DT_SONAME` | `d_val` | 不起作用 | 可选 | 表示共享目标名在字符串表中的地址 |
+| `15` | `DT_RPATH` | `d_val` | 可选 | 不起作用 | 表示共享库的搜寻路径在字符串表中的地址 |
+| `16` | `DT_SYMBOLIC` | 不起作用 | 不起作用 | 可选 | 该`d_tag`出现时表示此时动态链接的运行方式有所不同，链接器从共享目标文件开始搜寻符号而不是可执行文件 |
+| `17` | `DT_REL` | `d_ptr` | 必须有 | 可选 | 和`DT_RELA`只会使用其中一个。略 |
+| `18` | `DT_RELSZ` | `d_val` | 必须有 | 可选 | 略 |
+| `19` | `DT_RELENT` | `d_val` | 必须有 | 可选 | 略 |
+| `20` | `DT_PLTREL` | `d_val` | 可选 | 可选 | 可以取`7`或`17`，表示重定位信息类型为`DT_RELA`还是`DT_REL` |
+| `21` | `DT_DEBUG` | `d_ptr` | 可选 | 不起作用 | 调试专用 |
+| `22` | `DT_TEXTREL` | 不起作用 | 可选 | 可选 | 如果该`d_tag`存在，表示重定位可能需要对不可写的区域进行更改 |
+| `23` | `DT_JMPREL` | `d_ptr` | 可选 | 可选 | 表示和`PLT`唯一对应的重定位入口地址，在使用惰性加载时会跳过这些重定位入口 |
+| `0x70000000` | `DT_LOPROC` | 未规定 | 未规定 | 未规定 |  |
+| `0x7FFFFFFF` | `DT_HIPROC` | 未规定 | 未规定 | 未规定 |  |
+
+FreeBSD中部分定义如下
+
+```cpp
+/* Values for d_tag. */
+#define	DT_NULL		0	/* Terminating entry. */
+#define	DT_NEEDED	1	/* String table offset of a needed shared library. */
+#define	DT_PLTRELSZ	2	/* Total size in bytes of PLT relocations. */
+#define	DT_PLTGOT	3	/* Processor-dependent address. */
+#define	DT_HASH		4	/* Address of symbol hash table. */
+#define	DT_STRTAB	5	/* Address of string table. */
+#define	DT_SYMTAB	6	/* Address of symbol table. */
+#define	DT_RELA		7	/* Address of ElfNN_Rela relocations. */
+#define	DT_RELASZ	8	/* Total size of ElfNN_Rela relocations. */
+#define	DT_RELAENT	9	/* Size of each ElfNN_Rela relocation entry. */
+#define	DT_STRSZ	10	/* Size of string table. */
+#define	DT_SYMENT	11	/* Size of each symbol table entry. */
+#define	DT_INIT		12	/* Address of initialization function. */
+#define	DT_FINI		13	/* Address of finalization function. */
+#define	DT_SONAME	14	/* String table offset of shared object name. */
+#define	DT_RPATH	15	/* String table offset of library path. [sup] */
+#define	DT_SYMBOLIC	16	/* Indicates "symbolic" linking. [sup] */
+#define	DT_REL		17	/* Address of ElfNN_Rel relocations. */
+#define	DT_RELSZ	18	/* Total size of ElfNN_Rel relocations. */
+#define	DT_RELENT	19	/* Size of each ElfNN_Rel relocation. */
+#define	DT_PLTREL	20	/* Type of relocation used for PLT. */
+#define	DT_DEBUG	21	/* Reserved (not used). */
+#define	DT_TEXTREL	22	/* Indicates there may be relocations in non-writable segments. [sup] */
+#define	DT_JMPREL	23	/* Address of PLT relocations. */
+#define	DT_BIND_NOW	24	/* [sup] */
+#define	DT_INIT_ARRAY	25	/* Address of the array of pointers to initialization functions */
+#define	DT_FINI_ARRAY	26	/* Address of the array of pointers to termination functions */
+#define	DT_INIT_ARRAYSZ	27	/* Size in bytes of the array of initialization functions. */
+#define	DT_FINI_ARRAYSZ	28	/* Size in bytes of the array of termination functions. */
+#define	DT_RUNPATH	29	/* String table offset of a null-terminated library search path string. */
+#define	DT_FLAGS	30	/* Object specific flag values. */
+#define	DT_ENCODING	32	/* Values greater than or equal to DT_ENCODING and less than DT_LOOS follow the rules for the interpretation of the d_un union as follows: even == 'd_ptr', odd == 'd_val' or none */
+#define	DT_PREINIT_ARRAY 32	/* Address of the array of pointers to pre-initialization functions. */
+#define	DT_PREINIT_ARRAYSZ 33	/* Size in bytes of the array of pre-initialization functions. */
+#define	DT_MAXPOSTAGS	34	/* number of positive tags */
+#define	DT_RELRSZ	35	/* Total size of ElfNN_Relr relocations. */
+#define	DT_RELR		36	/* Address of ElfNN_Relr relocations. */
+#define	DT_RELRENT	37	/* Size of each ElfNN_Relr relocation. */
+```
+
+**共享目标依赖**
+
+在使用到共享目标文件的程序中需要解决动态链接的文件依赖问题
+
+一个文件的所有**共享目标依赖**都位于`DT_NEEDED`，动态链接器需要递归地加载所有需要的共享目标才能链接成一个完整的内存映像。在链接的过程中，动态链接器首先检查可执行文件中的符号，之后依次递归地检查`DT_NEEDED`中目标文件包含的符号。这个过程只要保证共享目标文件可读即可。如果在依赖列表中同一个目标文件出现了多次，链接器也只会进行一次链接
+
+`DT_SONAME`是为解决依赖文件名不统一的问题而产生的。如果依赖的共享目标文件中`DT_SONAME`不存在，那么在使用`gcc`进行编译后得到的可执行文件中其文件依赖`DT_NEEDED`使用的就是传入的共享目标文件的路径，如下示例（示例来自Oracle，不代表gcc的用法）
+
+```shell
+cc -o ../tmp/libfoo.so -G foo.o
+cc -o prog main.o ../tmp/libfoo.so
+elfdump -d prog | grep NEEDED
+cc -o prog main.o /usr/tmp/libfoo.so
+elfdump -d prog | grep NEEDED
+```
+
+> 两次`elfdump`输出的`DT_NEEDED`依赖文件名分别为`../tmp/libfoo.so`和`/usr/tmp/libfoo.so`。如果程序还要放到其他机器上运行，可能会找不到`libfoo.so`
+
+在依赖文件中加入`DT_SONAME`为其指定一个不带路径（不带`/`）的依赖名，该文件名将会作为默认的依赖文件名被记录到可执行文件的`DT_NEEDED`中。如设置为`libfoo.so.1`，那么最终得到的`DT_NEEDED`中就会使用该名称，上述示例都会输出`libfoo.so.1`
+
+如果动态链接器检查到可执行文件中的一个`DT_NEEDED`为不带路径的文件名，动态链接器会按照以下顺序寻找共享目标文件
+
+> 1. 首先查找`DT_RPATH`中指定的路径。`DT_RPATH`格式示例`/home/tmp/lib:/home/test/lib:/home/apc/lib:`，路径之间使用`:`隔开，动态链接器会依次查找以上3个路径以及当前目录`./`
+>
+> 2. 之后查找当前环境变量`LD_LIBRARY_PATH`中包含的路径。格式示例`/home/tmp/lib:/home/test/lib:`或`/home/tmp/lib;/home/test/lib:`或`/home/tmp/lib:/home/test/lib:;`（这种格式在静态链接器中用法有所不同）
+>
+> 3. 最后查找`/usr/lib`
+
+**Global offset table**
+
+全局偏移表`GOT`用于可执行文件和共享目标文件之间，用于将文件中的内存访问转换为链接后实际的绝对地址
+
+程序中如果需要使用一个符号的绝对虚拟地址，那么这个符号就会在全局偏移表中出现，且这个符号可能分别会在可执行文件以及共享目标文件中出现多次。不同处理器由于寻址方式不同，所以全局偏移表格式也不同
+
+由于共享目标文件中的代码是位置无关的，它可以被加载到任何虚拟地址，所以不能使用绝对寻址，需要全局偏移表来间接获取绝对地址。在为共享目标文件分配好内存页以后，动态链接器会读取共享目标文件的`DT_REL`重定位信息并进行重定位操作。在i386中有一种重定位入口类型为`R_386_GLOB_DAT`，这种重定位就是全局偏移表相关的重定位。此时动态链接器会检查相关符号，计算出绝对地址并进行相应的处理
+
+全局偏移表的入口`0`被保留用于存储`PT_DYNAMIC`的起始地址，方便动态链接器的运行
+
+`GOT`表可以通过`_GLOBAL_OFFSET_TABLE_`访问
+
+**Procedure linkage table**
+
+过程调用表`PLT`用于将文件中的函数调用地址转换成为链接后函数实际的绝对地址。不同处理器中的`PLT`格式不同。可执行文件以及共享目标文件中都有`PLT`
+
+**哈希表Hash table**
+
+有关Hash table的作用可以看看[这篇文章](https://blogs.oracle.com/solaris/post/gnu-hash-elf-sections)
+
+哈希表格式如下
+
+![](images/220429a008.PNG)
+
+32位ELF中哈希表中每一项都是4字节，其中`chain[]`大小和符号的数量相同。哈希函数依赖于哈希表，输入一个符号名称，输出对应符号在符号表中的下标
+
+**初始化以及终止程序**
+
+程序中使用到的每一个共享目标都可以有自己的初始化以及终止代码，分别放在`DT_INIT`（`.init`）和`DT_FINI`（`.fini`）。这些程序分别会在程序执行前以及执行后运行
 
 
-## 1.6 实例分析：ARMv7-M
+## 1.6 实例分析：ARMv7-M 裸机程序
 
 人肉逆向分析
 
@@ -838,7 +1046,7 @@ sudo pacman -S arm-none-eabi-gcc arm-none-eabi-gdb arm-none-eabi-newlib hex hexe
 ```
 
 
-## 1.7 实例分析：x86_64
+## 1.7 实例分析：x86_64 Linux应用程序
 
 ```shell
 # Archlinux
