@@ -460,13 +460,13 @@ FreeBSD中定义如下
 | `.dynstr` | `SHT_STRTAB` | `ALLOC` | 动态链接字符串表，一般存储符号名称 |
 | `.dynsym` | `SHT_DYNSYM` | `ALLOC` | 动态链接符号表 |
 | `.fini` | `SHT_PROGBITS` | `ALLOC EXECINSTR` | 程序正常退出时执行的指令 |
-| `.got` | `SHT_PROGBITS` |  | 全局偏移表，程序在执行时会用到 |
+| `.got` | `SHT_PROGBITS` |  | 全局偏移表`Global Offset Table`，程序在执行时会用到 |
 | `.hash` | `SHT_HASH` | `ALLOC` | 符号哈希表 |
 | `.init` | `SHT_PROGBITS` | `ALLOC EXECINSTR` | 程序在进入到`main`函数之前执行的初始化指令 |
 | `.interp` | `SHT_PROGBITS` |  | 程序解释器的路径。如果该文件中有一个运行时会被加载到内存的Segment包含了这个Section，那么这片区域会被设置为`SHF_ALLOC` |
 | `.line` | `SHT_PROGBITS` | `none` | 调试使用的源码行信息，存储源码和机器代码的对应关系 |
 | `.note` | `SHT_NOTE` | `none` | 记录、描述类信息 |
-| `.plt` | `SHT_PROGBITS` |  | 包含`Procedure linkage table`，程序执行时会用到 |
+| `.plt` | `SHT_PROGBITS` |  | 包含`Procedure Linkage Table`，程序执行时会用到 |
 | `.rel`+name | `SHT_REL` |  | 无加数的重定位信息。在`.rel`后面加上相应Section的名称，例如使用`.rel.text`表示这是`.text`的重定位信息。这片区域如果运行时会加载到内存则会被设置为`SHF_ALLOC` |
 | `.rela`+name | `SHT_RELA` |  | 带加数的重定位信息。同上 |
 | `.rodata` `.rodata1` | `SHT_PROGBITS` | `ALLOC` | 程序执行时的只读数据，不可写。可能是程序中使用到的字符串以及`switch`跳转表等（一些CPU硬件支持`switch`指令，需要使用到这些跳转表） |
@@ -721,6 +721,9 @@ Segment用于程序的执行过程，存在于可执行文件和动态链接目�
 
 Segment和Section两者事实上只是相同数据内容的两种不同视角
 
+一般可执行文件会包含`.init .text .rodata .data .bss .symtab .debug .line .strtab`中的内容
+
+
 ### 1.5.1 Program头
 
 和`Section header table`一样，Program也对应一个`Program header table`（个人认为其实也可以叫`Segment header table`），其中每一个Segment入口定义为如下结构体
@@ -844,11 +847,17 @@ Note一般用来存放各种专用的附加信息，例如兼容性等等。在E
 
 ### 1.5.3 程序加载
 
-在较为高级的计算机系统中，程序代码存储在磁盘中（包括eMMC等）。磁盘本质和内存不同，它属于外设，和USB，串口，SPI一样，只能通过一些寄存器进行数据读写操作（Linux中的swap虚拟内存也是建立在这之上的）。在执行一个程序时，首先需要由DMA将文件传输到内存，之后才能执行后续的处理操作
+在较为高级的计算机系统中，程序代码存储在磁盘中（包括eMMC等）。磁盘本质和内存不同，它属于外设，和USB，串口，SPI一样，只能通过一些寄存器进行数据读写操作（Linux中的swap虚拟内存也是建立在这之上的）。CPU只能从内存中取指，所以需要由DMA先将数据传输到内存，之后程序才能执行
 
-一般有MMU的平台都支持虚拟地址和物理地址的映射，且内存块分页管理（页大小一般可变且为2的n次幂）。在实际应用中，为提高效率，**程序的加载是惰性的**，程序在开始执行时往往不会将其所有的内容全部加载到内存，有些缺失的页只有当实际使用到时才会加载
+一般有MMU的平台都支持虚拟地址和物理地址的映射，且内存块分页管理（页大小一般可变且为2的n次幂）。在实际应用中，为提高效率，**程序的加载是惰性的**，程序在开始执行时往往不会将其所有的内容全部加载到内存，有些缺失的页只有当实际使用到时才会加载（引发缺页异常后相应页才会加载到内存）
 
-以下假设内存页面大小4KB（`0x1000`）。文件中为节省空间所以一般不对齐，`p_offset`是实际的文件偏移，但`p_vaddr`可能不是加载到内存以后的真实虚拟地址。
+在Linux中，程序可以通过调用`execve()`函数来调用加载器，通过shell执行一个程序时，shell首先会创建一个子进程，该子进程会通过`execve()`调用加载器，之后加载器会对该子进程进行初始化。最终加载器跳转到`_start`并执行`main()`
+
+在x86_64中，加载后内存中的可执行程序映像可以示意如下。其中只读区域`.rodata .text .init`从虚拟地址`0x400000`开始，而运行时的栈区从最大可用用户地址开始向下生长
+
+![](images/220429a009.PNG)
+
+以下举例，假设内存页面大小4KB（`0x1000`）。文件中为节省空间所以一般不对齐，`p_offset`是实际的文件偏移，但`p_vaddr`可能不是加载到内存以后的真实虚拟地址。
 
 ![](images/220429a007.PNG)
 
@@ -897,7 +906,7 @@ Note一般用来存放各种专用的附加信息，例如兼容性等等。在E
 
 在一个可执行程序需要使用到动态链接时，静态链接器会将必要信息存入文件中以便动态链接器使用，这些数据一般标记为`PT_LOAD`
 
-在共享目标文件中，一般会有几个额外的Section，一个是`.dynamic`，类型`SHT_DYNAMIC`，包含了动态链接的一些必要信息。一个是`.hash`，类型`SHT_HASH`，为符号哈希表。还有`.got`和`.plt`，类型`SHT_PROGBITS`，分别存储`Global offset table`和`Procedure linkage table`两张表。这些信息将会在动态链接中起到关键作用，之后将会对这些数据进行详细的分析
+在共享目标文件中，一般会有几个额外的Section，一个是`.dynamic`，类型`SHT_DYNAMIC`，包含了动态链接的一些必要信息。一个是`.hash`，类型`SHT_HASH`，为符号哈希表。还有`.got`和`.plt`，类型`SHT_PROGBITS`，分别存储`Global offset table`和`Procedure linkage table`两张表。这些信息将会在动态链接中起到关键作用
 
 > 在很多类UNIX系统中会有一个`LD_BIND_NOW`的变量。如果这个变量**存在且设定为非空字符串**，那么操作系统的加载器会在运行程序之前解析完所有的重定位。如果该变量**不存在或为空**，那么程序运行时符号的解析以及重定位操作就是惰性的，只有当使用到该符号时才会进行加载和重定位
 
@@ -1057,8 +1066,6 @@ elfdump -d prog | grep NEEDED
 
 ## 1.6 实例分析：ARMv7-M 裸机程序
 
-人肉逆向分析
-
 以`arm-none-eabi-gcc`工具链为例，使用`arm-none-eabi-readelf`，`arm-none-eabi-objdump`以及16进制编辑器对目标文件进行分析
 
 > 在`arm-none-eabi-gcc 11.3`中需要添加参数使用`arm-none-eabi-gcc --specs=nosys.specs`编译
@@ -1143,10 +1150,7 @@ gcc -static ./libfruit.a main.o
 
 第二个步骤就是要依赖于重定位信息`.rel`来对`.text`以及数据Section中的符号进行重定位，例如指令中使用到的全局数据地址
 
-
-### 2.3.1 重定位条目
-
-一般需要进行重定位处理的就是`.text`和`.data`。例如`.text`中重定位操作一般需要修改指令中出现的地址（例如ARM中`MOVW R0, #0x120F` `LDR R1, [R0]`其中`R0`中的立即数就需要重定位操作）
+一般需要进行重定位处理的Section有`.text`和`.data`。例如`.text`中重定位操作一般需要修改指令中出现的地址（例如ARM中`MOVW R0, #0x120F` `LDR R1, [R0]`其中`R0`中的立即数就需要重定位操作）
 
 不同的Section使用不同的重定位信息Section，例如`.data`使用`.rel.data`，`.text`使用`.rel.text`。每一条重定位信息都存储了重定位操作的位置以及重定位操作的类型
 
@@ -1158,15 +1162,194 @@ gcc -static ./libfruit.a main.o
 
 `R_X86_64_32`：32位立即地址绝对寻址
 
+![](images/220429a010.PNG)
+
+> 观察第6行。文件`main.o`中`callq`指令想要调用全局符号`sum`，即位于`sum.o`中的`sum()`函数。该重定位条目可以表示如下
+
+```cpp
+r.r_offset = 0xf; // 该重定位条目修改的内容起始地址0xf
+r.r_info = ELF64_R_INFO(sum_addr, R_X86_64_PC32); // 类型R_X86_64_PC32
+r.r_addend = -4; // x86_64加数常量
+```
+
+> 现在已知`ADDR(.text)=0x4004d0`，`ADDR(sum)=0x4004e8`，那么`callq`指令需要进行重定位操作的数据块就位于`0x4004d0+0xf=0x4004df`处，该区域当前为`0x00000000`。重定位以后该数据块需要更改为`0x4004e8-0x4004df-0x04=0x00000005`。由于机器是小端，所以为`05 00 00 00`
+>
+> `R_X86_64_32`绝对寻址的重定位操作更加简单，这里不再赘述
 
 
+## 2.4 可执行目标文件加载
 
-### 2.3.2 重定位符号引用
+见[1.5.3章](#153-程序加载)
 
 
+## 2.5 动态链接
 
-## 2.4
+动态链接库的使用示例如下
 
+```shell
+# 创建一个动态链接库libfruit.so
+gcc -shared -fpic -o libfruit.so apple.c peach.c grape.c
+
+# 将libfruit.so应用到main.c中，程序运行时会自动调用
+gcc -o fresh main.c ./libfruit.so
+```
+
+> 上述示例中，加载器会首先加载并执行`fresh`，之后它会发现`fresh`中存在一个`.interp`，表示操作系统动态链接器的路径（Linux下一般为`ld-linux.so`，也是一个共享目标文件）。此时需要首先加载并执行`ld-linux.so`，之后该动态链接器会加载并重定位`libc.so`和`libfruit.so`，最后才对`fresh`中所有符号的引用进行重定位处理
+
+在使用到动态链接目标文件的情况下，实际上所有的程序都使用了一个`.so`文件在内存中的相同副本。这就涉及到一个问题：不同程序中一般会使用到多个共享库，所以在不同的程序实例中这些共享库的加载位置是不相同的。同模块中的引用尚且可以使用相对寻址规避位置问题，然而`.so`中使用到的诸如`extern`声明的函数和全局变量就难以解决了
+
+位置无关代码称为`PIC (Position-Independent Code)`。PIC涉及到GOT表和PLT表
+
+
+### 2.5.1 GOT表
+
+`GOT`表全称`Global Offset Table`，在目标文件中（包括`.so`共享目标文件）用于引用全局变量（这些变量一般位于其他模块）。`GOT`位于`.data`段开头，如下图所示
+
+![](images/220429a011.PNG)
+
+> 在一个目标文件被加载到内存时，它的`.data`和`.text`之间的距离是固定的，所以`.text`中的代码可以通过相对寻址方式访问`.data`。相对寻址就是实现`PIC`的基础。而**所有全局变量在**`GOT`**中都有一个相应的入口**，如上图中的全局变量`addcnt`，其绝对地址记录在`GOT`入口`GOT[3]`中，而`GOT[3]`可以通过相对寻址或PC相对寻址访问
+>
+> x86_64中，每一个`GOT`入口大小8字节，会对应有一个动态重定位项，动态链接器会在运行时根据这些重定位项进行重定位操作
+
+
+### 2.5.2 PLT表
+
+在`PIC`函数调用中`PLT`需要和`GOT`一起发挥作用。`PLT`位于`.text`中，每一个入口大小16字节
+
+GNU中使用了延迟绑定（`Lazy Binding`）的技巧来提高动态重定位的效率
+
+![](images/220429a012.PNG)
+
+> 上图中，`PLT[0]`和`PLT[1]`分别为动态链接器`dynamic linker`和启动函数`__libc_start_main`的调用，是两个特殊入口，从`PLT[2]`开始的入口为用户相关
+>
+> 第一次调用`addvec()`外部函数时直接跳转到`PLT[2]`起始位置，此时`GOT[4]`**还未被重定位**，指向下一条指令而非`addvec()`的实际绝对地址，此时将函数`addvec()`的`ID=0x1`压栈并跳转到`PLT[0]`起始处
+>
+> 此时将重定位信息起始地址`GOT[1]`压栈，接下来调用的`ld-linux.so`会根据栈内的`ID=0x1`以及`GOT[1]`确定函数`addvec()`的位置并对`GOT[4]`进行修改，执行重定位操作，并将控制权转交给`addvec()`
+>
+> 之后再次调用`addvec()`时，由于`GOT[4]`已经进行了重定位，其中存储的是`addvec()`的实际绝对地址，所以无须再次重定位，每次跳转到`PLT[2]`会直接跳转到`addvec()`，而`PLT[2]`中剩余的指令不会执行
+
+
+## 2.6 库打桩
+
+库打桩全称`Library Interpositioning`，可以将共享库的代码调用替换为自己的代码，可以方便追踪程序中的函数调用等
+
+### 2.6.1 编译时打桩
+
+编译时打桩的原理非常简单，其实就是使用了C预处理器进行函数的替换，只要在想要进行打桩的程序中包含一个头文件替换原有函数即可
+
+```cpp
+// main.c
+#include <stdio.h>
+#include <malloc.h>
+
+int main() {
+	int *p = malloc(32);
+	free(p);
+	return 0; 
+}
+```
+
+```cpp
+// malloc.h
+#define malloc(size) mymalloc(size)
+
+void *mymalloc(size_t size);
+```
+
+```cpp
+// mymalloc.c
+#ifdef INTERP_COMPILETIME
+#include <stdio.h>
+#include <malloc.h>
+
+void *mymalloc(size_t size)
+{
+	//自定义内容
+}
+
+#endif
+```
+
+使用以下命令编译
+
+```shell
+gcc -DINTERP_COMPILETIME -c mymalloc.c
+gcc -I. -o main main.c mymalloc.o
+```
+
+
+### 2.6.2 链接时打桩
+
+```cpp
+// myfree.c
+#ifdef INTERP_LINKTIME
+#include <stdio.h>
+
+void __real_free(void *ptr);
+
+void __wrap_free(void *ptr)
+{
+	__real_free(ptr); // 实际调用的是libc的free()函数
+	// 可以添加一些自定义的语句
+}
+#endif
+```
+
+使用以下命令编译
+
+```shell
+gcc -DINTERP_LINKTIME -c myfree.c
+gcc -c main.c
+gcc -Wl,--wrap,free -o main main.o myfree.o
+```
+
+> 使用以上命令，其他模块中所有对函数`free()`的引用都会转向`__wrap_free()`，此时对`__real_free()`的引用才是真正引用了`libc`中的`free()`函数
+
+
+### 2.6.3 运行时打桩
+
+```cpp
+// myfree.c
+#ifdef INTERP_RUNTIME
+#define _GNU_SOURCE
+#include <stdio.h>
+#include <stdlib.h>
+#include <dlfcn.h>
+
+void free(void *ptr)
+{
+	void (*freep)(void *) = NULL; // 函数指针
+	char *error;
+
+	if (!ptr)
+		return;
+	
+	freep = dlsym(RTLD_NEXT, "free"); // 获取libc中free()函数的地址
+	if ((error = dlerror()) != NULL) {
+		fputs(error, stderr);
+		exit(1);
+	}
+	freep(ptr); // 实际调用了free()
+	// 可以添加一些自定义的语句
+}
+#endif
+```
+
+使用以下命令编译
+
+```shell
+gcc -DRUNTIME -shared -fpic -o myfree.so myfree.c -ldl
+gcc -o main main.c
+```
+
+使用以下命令运行`main`
+
+```shell
+# 先设置LD_PRELOAD环境变量
+LD_PRELOAD="./myfree.so"
+# 运行
+./main
+```
 
 
 ## 3 补充
