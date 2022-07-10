@@ -1,45 +1,10 @@
-# 基于VSCode以及开源工具链的通用MCU开发环境，适用于Windows，Linux，FreeBSD
+# MCU开发环境DIY
 
-**本环境要求最好有Linux基础，~~主要面向经常使用Linux或FreeBSD的Windows用户~~**
-
-支持的MCU：8051（Atmel，STC），ARM（ST，TI，Atmel）
-
-未来添加对于AVR（Atmel）的支持，适用于Arduino Uno
-
-上次编辑于：2021.06.16
+支持的MCU：8051，STM8，AVR，ARM
 
 
 ## 1 环境搭建
 
-### 1.1 基本环境配置
-
-### 1.1.1 编辑器安装
-
-安装VSCode（步骤略，一般Linux下VSCode的开源许可证版本为OSS）
-
-
-### 1.1.2 Windows下的MSYS2安装
-
-如果是Windows，安装[MSYS2](https://www.msys2.org/)
-
-> MSYS2是一个Windows下的类Unix环境，类似并**包含了mingw和llvm-clang软件集，集成`pacman`包管理器**，可以方便下载安装各种开源软件比如Git，Make，GCC，LLVM，CMake，像使用ArchLinux一样使用Windows
->
-> MSYS2下可以直接在Shell下操作串口，一般在`/dev/ttySx`
-
-**首先配置Windows环境变量**，这样可以直接使用`bash`，也可以`Win+R`调出`msys2`或`mingw64`
-
-设MSYS2安装在`D:\msys64`，那么
-
-> 1. 在`Path`变量末尾添加`D:\msys64\usr\bin`（为了能运行基本的软件如`bash`，`make`等）
-> 2. 添加`D:\msys64\mingw64\bin`和`D:\msys64\mingw32\bin`（为了使用mingw下的软件，比如mingw版的arm工具链）
-> 3. 添加`D:\msys64\clang64\bin`和`D:\msys64\clang32\bin`
-> 4. 添加`D:\msys64`（`Win+R`调出`msys2`和`mingw64`）
-
-**使用方法1（直接运行bash，推荐）**：如果配置正常，`Win+R`运行，输入`bash`启动，此时`bash`继承了Windows的`Path`环境变量，现在既可以使用MSYS2下已经安装的软件，也可以使用Windows的命令
-
-**使用方法2（常规方法，在msys2或mingw64或clang64下运行bash）**：`Win+R`运行，可以直接启动`msys2`并提供一个`bash`操作界面，但是注意`msys2`中的`$PATH`不是继承于Windows下`Path`环境变量，所以要用到其他命令时需要配置`$PATH`
-
-其他更多有关MSYS2常规的配置（比如改镜像源，pacman更新）此处省略
 
 
 ### 1.2 工具链部署
@@ -76,8 +41,6 @@ pkg install cmake gmake make
 SDCC是一个适用于8051，PIC，STM8等经典MCU的工具集
 
 一般的Linux发行版也可以通过官方仓库安装，但是可能版本较老
-
-~~SDCC虽然难以实机调试，但是已经包含了8051模拟器，使用`sdcdb`调试即可~~
 
 SDCC的调试器`sdcdb`目前还处于非常不完备的状态，基本无法使用，可以使用[VM8051](https://github.com/lukbettale/VM8051)，pdf版使用[说明](src/201220a01/VM8051Guide.pdf)
 
@@ -133,7 +96,7 @@ pacman -S arm-none-eabi-gcc arm-none-eabi-binutils arm-none-eabi-gdb
 
 **FreeBSD**
 
-~~FreeBSD正在去GNU化~~，官方仓库只有`arm-none-eabi-gcc`，可以使用`llvm`工具链作为替代（目前最新的Keil AC6已经转向`llvm`），或者下载`arm-none-eabi`编译安装
+官方仓库只有`arm-none-eabi-gcc`，可以使用`llvm`工具链作为替代（目前最新的Keil AC6已经转向`llvm`），或者下载`arm-none-eabi`编译安装
 
 ```shell
 pkg install llvm
