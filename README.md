@@ -1,27 +1,25 @@
 # 日常笔记，备忘
 
-记录学习与玩耍生活。
-
 ![](images/000000a027.jpg)
 
 # 快速传送门
 
-| 链接 |
+| 列表 |
 | :- |
 | [ARMv7-M指令集](201020a_stm32.md#16-isa详解指令集) |
 | [ELF文件格式解析，程序链接与运行原理](220429a_compiler.md#1-elf文件结构) |
-| [设备树](210731b_usb.md#7-补充设备树) |  |
-| [USB通信](210731b_usb.md) |  |
+| [设备树](210731b_usb.md#7-补充设备树) |
+| [USB通信](210731b_usb.md) |
 | [Intel hex文件格式](220429a_compiler.md#31-intel-hex文件格式) |
 | [IEEE754浮点数](200920c_verilog.md#51-IEEE754浮点数标准) |
 | [RS232](210524a_8051.md#8-补充rs232串口通信) |
 | [Shell脚本基础](201219a_shell.md#2-shell脚本基础) |
-| [Awk字符串处理](201219a_shell.md#31-awk) |
+| [Awk字符串处理，正则表达式](201219a_shell.md#31-awk) |
 | [固态存储原理](201225a_ssd.md) |
 | [实现软件状态机的N种方法](210524a_8051.md#9-补充软件状态机) |
 | [PID自动控制算法](210524a_8051.md#10-补充pid自动控制算法) |
-| [FreeBSD物理机安装踩坑与玩耍](210115a_freebsd.md) |
-| [Tribblix、Slackware物理机安装踩坑](220420a_tribblix.md) |
+| [FreeBSD物理机安装](210115a_freebsd.md) |
+| [Tribblix、Slackware物理机安装](220420a_tribblix.md) |
 
 # 列表
 
