@@ -1064,26 +1064,6 @@ elfdump -d prog | grep NEEDED
 程序中使用到的每一个共享目标都可以有自己的初始化以及终止代码，分别放在`DT_INIT`（`.init`）和`DT_FINI`（`.fini`）。这些程序分别会在程序执行前以及执行后运行
 
 
-## 1.6 实例分析：ARMv7-M 裸机程序
-
-以`arm-none-eabi-gcc`工具链为例，使用`arm-none-eabi-readelf`，`arm-none-eabi-objdump`以及16进制编辑器对目标文件进行分析
-
-> 在`arm-none-eabi-gcc 11.3`中需要添加参数使用`arm-none-eabi-gcc --specs=nosys.specs`编译
-
-```shell
-# Archlinux
-sudo pacman -S arm-none-eabi-gcc arm-none-eabi-gdb arm-none-eabi-newlib hex hexedit
-```
-
-
-## 1.7 实例分析：x86_64 Linux应用程序
-
-```shell
-# Archlinux
-sudo pacman -S gcc gdb
-```
-
-
 ## 2 CSAPP第7章：链接
 
 ## 2.1 编译工具链基本工作流程
