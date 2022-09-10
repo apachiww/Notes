@@ -2,7 +2,7 @@
 
 有关数字电路的一些较为底层的理论知识，Verilog语法、仿真以及FPGA开发入门
 
-可以作为CPLD、FPGA以及ASIC开发的基础知识
+可以作为CPLD、FPGA开发的基础知识
 
 包含了[IEEE754浮点标准解读](#51-ieee754浮点数标准)
 
@@ -19,8 +19,6 @@
 EDA: Intel Quartus Prime Lite
 
 FPGA: Intel Altera Cyclone IV EP4CE10E22C8N
-
-**2021.02.20更新：之前在网上找类似ModelSim的Verilog仿真软件时，了解到国外高校教学很多都使用开源的Verilator和iVerilog（Icarus Verilog），配合gtkwave波形编辑器使用。在搜索FreeBSD、ArchLinux仓库之后发现官方仓库都有收录，可以直接安装。加上《CPU自制入门》介绍了Icarus Verilog和gtkwave的使用，因此添加Verilator、iVerilog以及gtkwave的使用教程**
 
 
 ## 目录
