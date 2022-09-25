@@ -3,6 +3,15 @@
 支持的MCU：8051，STM8，AVR，ARM
 
 
+## 工具链下载
+
+8051，STM8使用[SDCC](http://sdcc.sourceforge.net/)
+
+AVR使用[GCC](https://www.microchip.com/en-us/tools-resources/develop/microchip-studio/gcc-compilers)
+
+ARM使用[GCC](https://launchpad.net/gcc-arm-embedded)
+
+
 ## 1 环境搭建
 
 
