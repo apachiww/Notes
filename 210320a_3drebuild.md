@@ -1,10 +1,8 @@
 # 图像处理，卫星遥感
- 
-关键词： SLAM RFM PCA-RFM 遥感 三维重建 双目视觉
 
 ## 参考
 
-*An Introduction to 3D Computer Vision Techniques and Algorithms, Boguslaw lyganek, J. Paulsiebert, 2010*
+An Introduction to 3D Computer Vision Techniques and Algorithms, Boguslaw lyganek, J. Paulsiebert, 2010
 
 计算机视觉之三维重建篇（精简版）北京邮电大学 鲁鹏 https://www.bilibili.com/video/BV15f4y1v7pa
 

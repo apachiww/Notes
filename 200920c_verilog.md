@@ -9,9 +9,9 @@
 
 ## 参考书籍
 
-*Fundamentals of Digital Logic with Verilog Design (Second Edition), Stephen Brown, Zvonko Vranesic, Canada, 2007*
+Fundamentals of Digital Logic with Verilog Design (Second Edition), Stephen Brown, Zvonko Vranesic, Canada, 2007
 
-*CPU自作入門, Kazutoshi Suito, Ryo Yonezawa, Yuji Fujita, Japan, 2012*
+CPU自作入門, Kazutoshi Suito, Ryo Yonezawa, Yuji Fujita, Japan, 2012
 
 
 ## 开发平台

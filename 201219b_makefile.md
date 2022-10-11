@@ -162,7 +162,7 @@ Makefile的基本组成单位是**规则**（**rules**），而每一个**规则
 
 以下`imm`和`def`指变量的类型（immediate或deferred）
 
-建议先看[3.2规则](201219b_makefile.md#32-规则Rule)
+建议先看[3.2规则](#32-规则rule)
 
 
 ### 3.1.1 变量的赋值
