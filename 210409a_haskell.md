@@ -38,11 +38,13 @@ https://www.haskell.org/documentation/
         + [**2.3.8**](#238-重载类型overloaded-types) 重载类型（Overloaded Types）
         + [**2.3.9**](#239-代码示例) 代码示例
     + [**2.4**](#24-函数定义) 函数定义
-        + [**2.4.1**](#241-条件表达式if-then-else) 条件表达式：if-then-else
-        + [**2.4.2**](#242-条件表达式guarded-equations) 条件表达式：guarded-equations
-        + [**2.4.3**](#243-模式匹配) 模式匹配
-        + [**2.4.4**](#244-lambda表达式) Lambda表达式
-        + [**2.4.5**](#245-操作符) 操作符
+        + [**2.4.1**](#241-函数定义基本格式) 函数定义基本格式
+        + [**2.4.2**](#242-条件表达式if-then-else) 条件表达式：if-then-else
+        + [**2.4.3**](#243-条件表达式case) 条件表达式：case
+        + [**2.4.4**](#244-条件表达式guarded-equations) 条件表达式：guarded-equations
+        + [**2.4.5**](#245-模式匹配) 模式匹配
+        + [**2.4.6**](#246-lambda表达式) Lambda表达式
+        + [**2.4.7**](#247-操作符) 操作符
     + [**2.5**](#25-list-comprehensions) List Comprehensions
         + [**2.5.1**](#251-基本概念) 基本概念
         + [**2.5.2**](#252-guards) Guards
@@ -154,7 +156,7 @@ main = print(show(qsortMe [1782,2,109805,7336096,6509,143]))
 
 `Haskell`中函数是一等公民。函数名可以作为其他函数的参数输入，其优先级也要高于例如`+ - * / ^ !! ++ /= == < > >= <=`等运算符。这和目前大部分语言不同
 
-`Haskell`中的**函数只有一个返回值，且不同的返回值必须为同一类型**（例如`Bool`类型的`True`和`False`）
+`Haskell`中的**函数只有一个返回值，且不同的返回值必须为同一类型**（例如`Bool`类型的`True`和`False`）。所以如果想要返回多个变量，就需要使用元组`()`或列表`[]`
 
 `Haskell`一大特性就是规避了`side effects`。广义上讲，`Haskell`认为一个函数只要对外界产生影响（例如在终端输出，或读写一个全局内存，或依赖于输入参数以外的数据产生返回结果，或更改了输入的参数），那它就有`side effects`。如果一个函数功能仅依赖于参数输入，且只产生返回结果，那么它就是`pure`的。`Haskell`隔离了一般的函数与外界打交道的功能
 
@@ -244,7 +246,7 @@ module Main
 | `..` | [2.3.2](#232-列表和元组) |
 | `:` |  |
 | `::` | [2.3.1](#231-类型的基本概念) |
-| `=` |  |
+| `=` | [2.4.1](#241-函数定义基本格式) |
 | `\` |  |
 | `\|` |  |
 | `<-` |  |
@@ -274,7 +276,7 @@ c = '\ACK' -- ASCII
 d = '\x37' -- ASCII
 e = '\r' -- Escape
 f = "Multiple \
-Lines" -- String
+\Lines" -- String
 ```
 
 ## 2.3 类型系统
@@ -399,7 +401,7 @@ myFunc3 :: (Int -> Bool) -> Bool
 
 ### 2.3.6 高阶函数（Curried Functions）
 
-所谓高阶函数就是拥有多个输入参数的函数。这些函数可以看成是逐个提取输入参数，并返回一个函数。可以观察以下示例
+所谓高阶函数就是拥有多个输入参数的函数。这些函数可以看成是逐个提取输入参数，并依次返回一个函数。可以观察以下示例
 
 ```haskell
 triMult :: Int -> Int -> Int -> Int
@@ -419,7 +421,7 @@ triMult x y z = x*y*z
 
 高阶函数可以理解为**依次将已知的输入参数注入到函数表达式后将函数以及表达式本身返回**。在Lambda表达式中，未被注入的变量我们称之为`Free Variable`
 
-也是由于**自由变量**特性，我们在调用一个函数时可以不传入每一个参数。如此调用函数将会返回一个已知参数变量已经被替换的匿名函数，而不是函数最终的执行结果
+也是由于**自由变量**特性，我们在调用一个函数时可以不传入每一个参数。如此调用函数将会返回一个已知参数变量被替换的匿名函数，而不是函数最终的执行结果
 
 > 上述代码示例中，`triMult x y z`可以添加括号成为`(((triMult x) y) z)`（左相联）。如果我们调用`triMult 13 2`，那么我们将会得到一个匿名函数`\z -> 13*2*z`（不用Lambda表述相当于`func z = 13*2*z`）
 
@@ -432,7 +434,7 @@ triMult x y z = x*y*z
 head :: [a] -> a
 
 -- 取Pair中第一个元素
-fst :: (a,b) -> a
+fst :: (a, b) -> a
 
 -- 计算长度
 length :: Foldable t => t a -> Int
@@ -442,7 +444,7 @@ length :: Foldable t => t a -> Int
 
 ### 2.3.8 重载类型（Overloaded Types）
 
-我们在设计一类`class`适用的函数时，需要使用**类型限制**`class constraints`，将函数声明为**重载类型**`overloaded types`，典型的如`(+)`加法运算
+和多态类型适用于所有`class`不同，我们在设计某类`class`适用的函数时，需要使用**类型限制**`class constraints`，将函数声明为**重载类型**`overloaded types`，典型的如`(+)`加法运算
 
 ```haskell
 -- 加法
@@ -451,7 +453,7 @@ length :: Foldable t => t a -> Int
 
 > 加法需要将两个相同类型的数字`Num`相加，返回一个同样类型的`Num`。这里的`a`同样是`type variable`。`class constraints`就是示例中的`Num a`。我们在定义重载类型时就使用`Class a`的格式进行类型限制。而以上这个`type`定义本身就是一个`overloaded type`
 
-格式
+格式。出现`class constraints`的地方就会出现运算符`=>`
 
 ```haskell
 myFunc1 :: Class a => a -> a -> a
@@ -462,25 +464,25 @@ myFunc2 :: (Class1 a, Class2 b) => a -> b -> a
 
 以下为一些变量的显式类型声明示例
 
-显式`type`声明
+`type`
 
 ```haskell
 myVar :: Int
-myList ::
-myTuple ::
+myList :: [Int]
+myTuple :: (Int, Int, Bool)
 ```
 
-显式`class`声明
+`class`
 
 ```haskell
 myVar :: Fractional p => p
-myList ::
-myTuple :: 
+myList :: Integral p => [p]
+myTuple :: (Integral a, Num b) => (a, b, Int, Bool)
 ```
 
 以下为一些函数的显式类型声明示例。注意，只要是出现了运算符`->`（**用于顺序连接各个输入参数类型名以及唯一的返回结果类型名**），就表示该声明为一个函数类型声明
 
-显式`type`声明
+`type`
 
 ```haskell
 -- 输入1个Int型变量，返回1个Int型结果
@@ -489,26 +491,23 @@ myFunc1 :: Int -> Int
 -- 输入2个参数，1个Int型List，1个Int型变量，返回1个Int型结果
 myFunc2 :: [Int] -> Int -> Int
 
-
 -- Haskell中一个函数可以作为另一个函数的输入参数
 -- 输入2个参数。例如myFunc3之后接受myFunc1作为函数参数，外加一个Int型变量。返回一个Bool型结果
 -- myFunc1的type为(Int -> Int)
 myFunc3 :: (Int -> Int) -> Int -> Bool
+
+myFunc4 :: [a] -> a
 ```
 
-显式`class`声明
+`class`
 
 ```haskell
+myFunc1 :: Num a => [a] -> Int -> Bool
 
+myFunc2 :: (Integral a, Fractional b) => a -> b -> Bool
 ```
 
-显式`type` `class`混合
-
-```haskell
-
-```
-
-我们可以先在`ghci`进行以下尝试进行大致的理解（使用`:t`命令查询一个表达式的类型）：
+我们可以在`ghci`进行以下尝试对默认的字面数据类型进行大致的理解（使用`:t`命令查询一个表达式的类型）：
 
 示例1，默认声明为`Num`（`class`）
 
@@ -526,26 +525,26 @@ ghci> :t myIntNum
 myIntNum :: Int
 ```
 
-示例3，括号可以省略，显式声明为`Integer`（`type`）
+示例3，显式声明为`Integer`（`type`）
 
 ```
-ghci> myIntNum = (1987 :: Integer)
+ghci> myIntNum = 1987 :: Integer
 ghci> :t myIntNum 
 myIntNum :: Integer
 ```
 
-示例4，括号可以省略，显式声明为`Integral`（`class`）（注意和`Integer`进行区分）
+示例4，显式声明为`Integral`（`class`）（注意和`Integer`进行区分）
 
 ```
-ghci> myIntNum = (1987 :: Integral p => p)
+ghci> myIntNum = 1987 :: Integral p => p
 ghci> :t myIntNum 
 myIntNum :: Integral p => p
 ```
 
-示例5，括号可以省略，显式声明为`Fractional`（`class`）。显示时以小数形式
+示例5，显式声明为`Fractional`（`class`）。显示时以小数形式
 
 ```
-ghci> myIntNum = (1987 :: Fractional p => p)
+ghci> myIntNum = 1987 :: Fractional p => p
 ghci> :t myIntNum 
 myIntNum :: Fractional p => p
 ghci> myIntNum 
@@ -560,10 +559,10 @@ ghci> :t myFloatNum
 myFloatNum :: Fractional p => p
 ```
 
-示例7，括号可以省略，显式声明为`Double`（`type`）
+示例7，显式声明为`Double`（`type`）
 
 ```
-ghci> myFloatNum = (1987.875 :: Double)
+ghci> myFloatNum = 1987.875 :: Double
 ghci> :t myFloatNum 
 myFloatNum :: Double
 ```
@@ -571,7 +570,7 @@ myFloatNum :: Double
 示例8，报错
 
 ```
-ghci> myFloatNum = (1987.875 :: Integral p => p)
+ghci> myFloatNum = 1987.875 :: Integral p => p
 
 <interactive>:41:15: error:
     • Could not deduce (Fractional p1)
@@ -581,7 +580,7 @@ ghci> myFloatNum = (1987.875 :: Integral p => p)
 示例9，报错
 
 ```
-ghci> myFloatNum = (1987.875 :: Num p => p)
+ghci> myFloatNum = 1987.875 :: Num p => p
 
 <interactive>:47:15: error:
     • Could not deduce (Fractional p1)
@@ -590,15 +589,49 @@ ghci> myFloatNum = (1987.875 :: Num p => p)
 
 ## 2.4 函数定义
 
-### 2.4.1 条件表达式：if-then-else
+不是[函数类型声明](#235-函数类型)
 
-### 2.4.2 条件表达式：guarded-equations
+### 2.4.1 函数定义基本格式
 
-### 2.4.3 模式匹配
+函数本质由**输入参数**以及**函数体表达式**组成，函数只产生一个返回。函数的输入参数以及返回可以是**函数或普通变量（包括列表和元组）**。如果想要返回多个变量只能使用元组`()`或列表`[]`
 
-### 2.4.4 Lambda表达式
+函数的定义中，**输入参数**和**函数体表达式**之间使用`=`隔开
 
-### 2.4.5 操作符
+```haskell
+myFunc1 :: Integral a => a -> a -> a
+myFunc1 x y = x `div` y
+```
+
+```haskell
+myFunc2 :: Int -> Int -> Int
+myFunc2 x y = x + y
+```
+
+### 2.4.2 条件表达式：if-then-else
+
+`Haskell`中函数体表达式支持和其他语言类似的`if else`语句，区别是`Haskell`要求`else`分支**不可省略**
+
+```haskell
+myAbs :: Int -> Int
+myAbs n = if n > 0 then n else (-n)
+```
+
+可以嵌套
+
+```haskell
+myFunc x = if x > 0 then x else
+            if x == 0 then 1 else -x 
+```
+
+### 2.4.3 条件表达式：case
+
+### 2.4.4 条件表达式：guarded-equations
+
+### 2.4.5 模式匹配
+
+### 2.4.6 Lambda表达式
+
+### 2.4.7 操作符
 
 ## 2.5 List Comprehensions
 
