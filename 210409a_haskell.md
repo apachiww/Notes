@@ -33,7 +33,7 @@ https://www.haskell.org/documentation/
         + [**2.3.3**](#233-type) type
         + [**2.3.4**](#234-class) class
         + [**2.3.5**](#235-函数类型) 函数类型
-        + [**2.3.6**](#236-高阶函数curried-functions) 高阶函数（Curried Functions）
+        + [**2.3.6**](#236-curried-functions) Curried Functions
         + [**2.3.7**](#237-多态类型polymorphic-types) 多态类型（Polymorphic Types）
         + [**2.3.8**](#238-重载类型overloaded-types) 重载类型（Overloaded Types）
         + [**2.3.9**](#239-代码示例) 代码示例
@@ -76,6 +76,14 @@ https://www.haskell.org/documentation/
     + [**3.4**](#34-foldables-and-friends) Foldables and friends
     + [**3.5**](#35-深入探究lazy-evaluation) 深入探究：Lazy evaluation
 + [**4**](#4-prelude) Prelude
++ [**5**](#5-补充) 补充
+    + [**5.1**](#51-lambda-calculus浅析) Lambda Calculus浅析
+        + [**5.1.1**](#511-apply操作) Apply操作
+        + [**5.1.2**](#512-lambda) Lambda
+        + [**5.1.3**](#513-语法树构建) 语法树构建
+        + [**5.1.4**](#514-free-variables自由变量) Free variables：自由变量
+        + [**5.1.5**](#515-reduction) Reduction
+        + [**5.1.6**](#516-y-combinator) Y-Combinator
 
 ## 1 Haskell简介以及使用方法
 
@@ -247,10 +255,10 @@ module Main
 | `:` |  |
 | `::` | [2.3.1](#231-类型的基本概念) |
 | `=` | [2.4.1](#241-函数定义基本格式) |
-| `\` |  |
-| `\|` |  |
+| `\` | [2.4.6](#246-lambda表达式) |
+| `\|` | [2.4.4](#244-条件表达式guarded-equations) |
 | `<-` |  |
-| `->` | [2.3.5](#235-函数类型) |
+| `->` | [2.3.5](#235-函数类型) [2.4.3](#243-条件表达式case) [2.4.6](#246-lambda表达式) |
 | `@` |  |
 | `~` |  |
 | `=>` | [2.3.8](#238-重载类型overloaded-types) |
@@ -326,6 +334,19 @@ charList3 = ['W'..'Z'] -- ASCII ['W', 'X', 'Y', 'Z']
 stringList = ["Alaska", "San Francisco", "Ohio", "New Jersey"]
 ```
 
+此外，`List`的常用运算符还有`:`，表示将一个元素连接到`List`开头
+
+```haskell
+1 : [3, 2, 5] -- 该表达式返回[1, 3, 2, 5]
+```
+
+在之后的内容中我们会遇到很多`:`的应用，例如用于函数的输入参数中，用于分隔`List`的开头1个元素以及后续元素组成的列表
+
+```haskell
+myTail :: [a] -> [a]
+myTail (x:xs) = xs -- 去除List的开头元素后返回，这里的括号不是表示元组，只是将`x:xs`括起来而已
+```
+
 `Tuple`不能使用下标，其中数据类型可以不同，包含了不同类型数据、不同长度的`Tuple`算作不同类型。`Tuple`是有限长度的，且长度（这里称为`arity`）不能为`1`，例如`(False)`就是非法的。**因为**`()`**圆括号兼具调整表达式解析次序的功能**，如果一个元组的`arity`为`1`那么将会产生冲突
 
 ```haskell
@@ -399,9 +420,9 @@ myFunc2 :: [Float] -> [Int]
 myFunc3 :: (Int -> Bool) -> Bool
 ```
 
-### 2.3.6 高阶函数（Curried Functions）
+### 2.3.6 Curried Functions
 
-所谓高阶函数就是拥有多个输入参数的函数。这些函数可以看成是逐个提取输入参数，并依次返回一个函数。可以观察以下示例
+所谓高阶函数就是拥有多个输入参数的函数。这些函数可以看成是逐个提取输入参数，并依次返回一个部分符号被替换后的函数。可以观察以下示例
 
 ```haskell
 triMult :: Int -> Int -> Int -> Int
@@ -415,15 +436,15 @@ triMult :: Int -> (Int -> (Int -> Int))
 triMult x y z = x*y*z
 ```
 
-> 这个使用[Lambda表达式](#244-lambda表达式)比较容易解释通
+> `Haskell`中的所有函数事实上都可以看作[Lambda表达式](#246-lambda表达式)。`Haskell`会将语法树最终按照`Lambda`来处理
 >
 > 以上的代码将`x y z`三个变量相乘后返回。类型`Int -> (Int -> (Int -> Int))`可以这样理解：函数`triMult`接受一个`Int`类型的变量`x=4`(假设)后返回一个`Int -> (Int -> Int)`类型的函数，表达式为`4*y*z`；该函数接受`y=5`后再返回一个`Int -> Int`类型的函数，表达式为`4*5*z`，依次类推
 
-高阶函数可以理解为**依次将已知的输入参数注入到函数表达式后将函数以及表达式本身返回**。在Lambda表达式中，未被注入的变量我们称之为`Free Variable`
+可以理解为**依次将已知的输入参数注入到函数表达式后将函数以及表达式本身返回**。在Lambda表达式中，未被注入的符号我们称之为`Free Variable`
 
 也是由于**自由变量**特性，我们在调用一个函数时可以不传入每一个参数。如此调用函数将会返回一个已知参数变量被替换的匿名函数，而不是函数最终的执行结果
 
-> 上述代码示例中，`triMult x y z`可以添加括号成为`(((triMult x) y) z)`（左相联）。如果我们调用`triMult 13 2`，那么我们将会得到一个匿名函数`\z -> 13*2*z`（不用Lambda表述相当于`func z = 13*2*z`）
+> 上述代码示例中，`triMult x y z`可以添加括号成为`(((triMult x) y) z)`（左相联）。如果我们调用`triMult 13 2`，那么我们将会得到一个匿名函数`\z -> 13*2*z`（为这个Lambda表达式起一个函数名`func`，`func z = 13*2*z`）
 
 ### 2.3.7 多态类型（Polymorphic Types）
 
@@ -453,7 +474,7 @@ length :: Foldable t => t a -> Int
 
 > 加法需要将两个相同类型的数字`Num`相加，返回一个同样类型的`Num`。这里的`a`同样是`type variable`。`class constraints`就是示例中的`Num a`。我们在定义重载类型时就使用`Class a`的格式进行类型限制。而以上这个`type`定义本身就是一个`overloaded type`
 
-格式。出现`class constraints`的地方就会出现运算符`=>`
+出现`class constraints`的地方就会出现运算符`=>`
 
 ```haskell
 myFunc1 :: Class a => a -> a -> a
@@ -593,7 +614,7 @@ ghci> myFloatNum = 1987.875 :: Num p => p
 
 ### 2.4.1 函数定义基本格式
 
-函数本质由**输入参数**以及**函数体表达式**组成，函数只产生一个返回。函数的输入参数以及返回可以是**函数或普通变量（包括列表和元组）**。如果想要返回多个变量只能使用元组`()`或列表`[]`
+函数本质由**输入参数**以及**函数体表达式**组成，函数只产生一个返回。函数的输入参数以及返回可以是**函数或普通变量（包括列表和元组）**。如果想要返回多个元素只能使用元组`()`或列表`[]`
 
 函数的定义中，**输入参数**和**函数体表达式**之间使用`=`隔开
 
@@ -607,6 +628,21 @@ myFunc2 :: Int -> Int -> Int
 myFunc2 x y = x + y
 ```
 
+同一个函数可以有多条定义语句对应，可以定义不同输入情况下的不同输出。这实际上是`case`语句的语法糖，**需要注意判断条件有顺序要求**，见[2.4.3](#243-条件表达式case)
+
+```haskell
+myFunc3 [] = []
+myFunc3 (x:xs) = xs
+```
+
+可以使用`do`语句块规定该函数被调用时需要执行的多个语句，这些语句会依次执行
+
+```haskell
+myAction x = do
+    inputNum <- getLine
+    putStrLn "Got it"
+```
+
 ### 2.4.2 条件表达式：if-then-else
 
 `Haskell`中函数体表达式支持和其他语言类似的`if else`语句，区别是`Haskell`要求`else`分支**不可省略**
@@ -616,7 +652,7 @@ myAbs :: Int -> Int
 myAbs n = if n > 0 then n else (-n)
 ```
 
-可以嵌套
+可以嵌套。和其他表达式一样，`if else`语句也可以放在括号内
 
 ```haskell
 myFunc x = if x > 0 then x else
@@ -625,11 +661,136 @@ myFunc x = if x > 0 then x else
 
 ### 2.4.3 条件表达式：case
 
+`Haskell`中有类似C中的`switch`结构，就是`case`语句（不是`switch`）。和C的`switch`语句只能使用非复合变量作为判断依据不同，由于`Haskell`中万物皆表达式，`case`同样可以输入表达式。语句中每一行都是真值以及对应的返回值（返回语句），两者使用`->`隔开。`Haskell`的`case`语句不存在`break`的概念，而是和`if else`一样，**然而如果各条件之间有包含或交集关系，需要将范围较小或我们偏好的匹配条目放在前面**。如下例中匹配条件`_`事实上包含了`14`与`15`，依照程序本意需要放在最后
+
+```haskell
+myFunc x = case (x - 1) of
+    14 -> x - 1
+    15 -> 0
+    _ -> 2
+```
+
+> `Haskell`的`case`语句可以看作就是嵌套`if else`的变种，程序会依次匹配。而以C为代表的一些较贴近底层的语言中，`switch`语句和嵌套`if else`并不是等价的，C的`switch`基于跳转表，它只能接受非复合变量为判断跳转依据，且大部分已有的ISA都为C的`switch`语句提供专用的指令支持，如ARM的`TBB`和`TBH`指令。因此C的`switch`在遇到较多分支时可以达到优于嵌套`if else`的平均表现。也是因为非复式变量的原子性，C中的`switch`语句除`default`以外其余`case`条件不会出现交集
+
 ### 2.4.4 条件表达式：guarded-equations
+
+另一种条件格式，使用`|`分隔。本质和`case`与`if else`是相同的，更易阅读。`otherwise`用于匹配所有的其他情况，**放在最后**
+
+```haskell
+myAbs x | x >= 0    = x
+        | otherwise = -x
+```
 
 ### 2.4.5 模式匹配
 
+上面我们讲述过`Haskell`中同一函数的多条定义语句，用以针对不同的输入，此时我们就需要针对所有可能的输入进行处理，防止程序异常。但是有些特定情况下，函数的输入输出对应关系无法使用一个或数个特定表达式表述，只能使用逐个列举的方法，这有可能会非常繁琐。由此`Haskell`定义了通配符`_`，用以匹配同一`type`的任意值。例如逻辑与函数`(&&)`可以使用如下定义：
+
+```haskell
+(&&) :: Bool -> Bool -> Bool
+True && True    = True
+_    && _       = False
+```
+
+实际上在库中`(&&)`是如下定义的：
+
+```haskell
+True  && b  = b
+False && _  = False
+```
+
+> 以上使用了变量`b`。然而`Haskell`不允许一个变量在函数的参数列表中多次出现。遇到这种情况只能使用前面讲述的条件语句
+
+在`Tuple`中使用通配符`_`，传入函数的元组必须有对应的长度，例如`fst`以及`snd`的定义。**我们可以将不想要（不会在函数体表达式中出现）的输入参数写成**`_`
+
+```haskell
+fst :: (a,b) -> a
+snd :: (a,b) -> b
+
+fst (x,_) = x
+snd (_,y) = y
+```
+
+也可以在`List`中使用`_`，结合构造符`:`可以有许多巧妙的应用
+
+```haskell
+-- 判断是否为长度为3且以字符'a'开头的字符串
+myFunc1 ['a',_,_] = True
+myFunc1 _ = False
+
+-- 判断是否为'a'开头的字符串
+myFunc2 ('a':_) = True
+myFunc2 _ = False
+
+-- 取List头
+myHead (x:_) = x -- 写成(x:xs)作用是一样的
+```
+
 ### 2.4.6 Lambda表达式
+
+`Haskell`将函数和数据（变量）同等看待。Lambda表达式即**匿名函数**，是`Haskell`的核心，本质和函数相同，都是数据处理方式的表达。它具备函数的参数输入以及函数体，但是没有名字。事实上`Haskell`中所有的函数最终都会转换到Lambda表达式的语法树处理方法。处理Lambda表达式的理论都属于Lambda Calculus，美国逻辑学家Haskell Brooks Curry（1900-1982）对这个领域作出了突出贡献，这也是`Haskell`名称的由来。之前的[Curried Functions](#236-curried-functions)（~~咖喱函数~~）概念也是起源于此
+
+`Haskell`中使用反斜杠`\`代替希腊字母$ \lambda $，示例如下
+
+```
+\x -> x * 2
+```
+
+单独的Lambda表达式无意义，以上写法在程序中不被允许
+
+和有名函数一样，调用Lambda表达式的实参写在表达式后，使用空格` `分隔
+
+> Lambda表达式的用法有多种形式：
+>
+> 直接将Lambda表达式写到其他有名函数体中
+>
+> 或者什么也不添加，直接为该表达式起一个函数名，之后该函数名可以作为其他函数的参数传入
+>
+> 将Lambda表达式应用（apply）到输入变量上，返回一个数据结果后赋一个变量名
+>
+> ...
+
+简单示例
+
+```haskell
+-- 3^2，myVar1等于9
+myVar1 = (\x -> x ^ 2) 3
+
+-- 2^6，myVar2等于64。->右结合，里层的括号可以不加，但是外层括号必须加
+myVar2 = (\x -> (\y -> x ^ y)) 2 6
+
+-- myFunc1将两个输入相加后返回
+-- 相当于 myFunc1 x y = x + y
+myFunc1 = \x -> \y -> x + y
+-- 结果等于9
+myVar3  = myFunc1 5 4
+
+-- myFunc2将输入加4
+-- 相当于 myFunc2 a = (\x -> \y -> x + y) 4 a
+myFunc2 = (\x -> \y -> x + y) 4
+-- 结果等于11
+myVar4  = myFunc2 7 
+
+-- myFunc3输入x，返回2^x。这里由于x属于最外层Lambda的输入，x可以省略
+myFunc3 x = (\a -> \b -> a ^ b) 2 x
+
+-- Lambda中符号的作用域仅限于表达式内且独立。myFunc3和myFunc4相同，myFunc4传入的参数x和Lambda表达式中的x不是同一个，不会冲突
+myFunc4 x = (\x -> \y -> x ^ y) 2 x
+
+-- 甚至可以将一个表达式应用到另一个表达式上面，因为Haskell中数据和函数两者地位相同
+-- myFunc5相当于myFunc5 a = 2 ^ (a + 1)，这里的a属于内层Lambda输入，不能省略
+myFunc5 a = (\x -> \y -> x ^ y) 2 ((\x -> x + 1) a)
+
+-- 也可以应用函数名，abc不可省略
+myFunc6 a b c = (\x -> \y -> x ^ y) (myFunc1 a b) ((\x -> x + 1) c)
+-- 结果(-3 + 5) ^ (4 + 1) = 32
+myVar5 = myFunc6 (-3) 5 4
+```
+
+> 这里再次回到`Haskell`中函数本质的理解方法
+>
+> 在`Haskell`中我们调用一个函数`a`向它传参（显式定义的有名函数或Lambda表达式都可以，但是`a`**必须是函数**。其实显式定义的有名函数最终也可以转化为匿名函数处理），就相当于将一个函数体`f`或数据`d`**注入**（也可以理解为**替换**）到这个函数`a`里面，之后将注入后的运算结果或函数体返回，这个过程的官方称呼就是**应用**（`apply`），也即我们将函数`a`应用到函数`f`或数据`d`
+
+关于Lambda Calculus的更多内容可以参见[5.1](#51-lambda-calculus浅析)
 
 ### 2.4.7 操作符
 
@@ -694,3 +855,108 @@ myFunc x = if x > 0 then x else
 ## 3.5 深入探究：Lazy evaluation
 
 ## 4 Prelude
+
+## 5 补充
+
+## 5.1 Lambda Calculus浅析
+
+我们讲到过`Haskell`中Lambda表达式的基本格式。下式相当于`3 * 2`
+
+```
+\a -> (a * 2) 3
+```
+
+本小节我们规定为以下格式，`apply`依然为空格，将`->`替换为`.`，`\`依然代表$ \lambda $，表示`binder`绑定操作
+
+```
+\a.(a*2) 3
+```
+
+### 5.1.1 Apply操作
+
+在Lambda表达式中`apply`操作的运算符就是一个空格` `，写作`a f`或`a d`，且`apply`操作是左相联的。`a b c`等于`((a b) c)`而不是`(a (b c))`。`apply`操作的本质就是将` `运算符后面的函数或数据带入到前面的函数中（这里的函数是匿名函数也即Lambda表达式）
+
+在实际应用中，我们一般认为`apply`表达式中左侧的符号是一个函数，右侧符号（即被`apply`的符号）可以是函数或变量，例如`a (b c)`中，`a`和`b`一般是一个函数名，而`c`是一个数据。我们可以将一个函数`apply`到另一个函数或数据上，而将一个数据`apply`到其他函数或数据上是无意义的
+
+### 5.1.2 Lambda
+
+`\`即绑定符`binder`，后面紧接匿名函数的形参（即`bound variable`），如`\x`，这个形参`x`的作用域局限于该匿名函数内。按照上面规定的格式，`\x`后面必定会接一个`.`，成为`\x.M`的形式
+
+`\`操作的本意是将符号`x`规定为该表达式内需要替换的参数。所谓替换即`apply`
+
+在Lambda表达式中基本的操作只有`bind`和`apply`两种，`apply`**优先级高于**`bind`。可以使用括号`()`规定运算顺序
+
+完整的Lambda表达式简单示例：
+
+```
+\x.\y.x y x
+```
+
+相当于
+
+```
+\x.(\y.((x y) x))
+```
+
+运算顺序遵照括号层次
+
+### 5.1.3 语法树构建
+
+我们在这里引入一种Lambda表达式二叉语法树的构造方法，在语法树中我们将`apply`运算定义为分支节点`@`，其下左分支节点将会被`apply`到右分支节点；而`bind`运算定义为`\`。观察以下示例
+
+```
+\x.((\z.z x) ((\r.\s.s r) y f))
+```
+
+构建语法树结果
+
+![](images/210409a001.svg)
+
+> `\`的左支永远都是叶子节点`bound variable`
+
+### 5.1.4 Free variables：自由变量
+
+所谓自由变量，就是在一个Lambda表达式中未被`bind`的变量。`Free variable`的存在往往意味着表达式的不完全替换，该表达式在被`apply`后返回的结果是一个表达式而不是最终的数据
+
+示例
+
+```
+\x.\y.x x -- 无FV
+\y.x x -- FV为x
+\x.\x.x -- 无FV
+```
+
+我们使用 $FV(M)$ 表示表达式`M`的自由变量
+
+### 5.1.5 Reduction
+
+Reduction就是依照Lambda表达式定义的`apply`以及`bind`规则进行的一系列代入替换操作，准确来说是 $\beta -$ Reduction。而这种表达式的基本组合形式为`(\x.M) N`，称为 $\beta -$ Redex。如果两个表达式之间可以通过 $\beta -$ Reduction转换，那么就说它们之间是 $\beta -$ Equal的
+
+> 此外还有 $\alpha -$ Equivalence等基础概念不再讲述
+
+以上例
+
+```
+\x.((\z.z x) ((\r.\s.s r) y f))
+```
+
+Reduction步骤如下
+
+```
+-> \x.((\z.z x) ((\s.s y) f))
+-> \x.((\z.z x) (f y))
+-> \x.((f y) x)
+-> \x.(f y x)
+```
+
+到语法树中，看到如下结构就表示可以进行1步Reduction替换。替换后产生新的类似结构需要继续进行处理。建议遍历替换操作依照从下层向上层，先右支后左枝的顺序
+
+![](images/210409a002.svg)
+
+### 5.1.6 Y-Combinator
+
+Y Combinator是一种解决Lambda表达式无法递归的方案。实际编程当中很少会涉及到Y Combinator
+
+在讲Y Combinator之前先要引入一个Fixpoint的概念
+
+离散数学学过代数系统中幺元的定义。Fixpoint的基本概念也较为类似：假设`f`为
