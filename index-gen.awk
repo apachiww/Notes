@@ -12,7 +12,6 @@ BEGIN {
 
 /^##* [[:digit:]]+(\.[[:digit:]]+)* / {
     index_num = gensub(/[[:punct:]]/, "", "g", $2)
-    
     index_name_init = gensub(/^##* [[:digit:]]+(\.[[:digit:]]+)* /, "", "g", $0)
     index_name_init = gensub(/\r/, "", "g", index_name_init)
     index_name = gensub(/ /, "-", "g", index_name_init)

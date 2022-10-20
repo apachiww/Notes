@@ -4,8 +4,6 @@
 
 [ArchWiki](https://wiki.archlinux.org/)
 
-[ArtixWiki](https://wiki.artixlinux.org/)
-
 [Gentoo Handbook](https://wiki.gentoo.org/wiki/Handbook:Main_Page)
 
 [Slackware](http://docs.slackware.com/)
@@ -22,11 +20,7 @@
 
 ### 3.1 基于systemd
 
-### 3.2 基于SysVinit
-
-### 3.3 基于OpenRC
-
-### 3.4 基于runit
+### 3.2 基于OpenRC
 
 ## 4 内核模块
 

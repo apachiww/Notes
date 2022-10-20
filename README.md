@@ -10,6 +10,7 @@
 | [ELF文件格式解析，程序链接与运行原理](220429a_compiler.md#1-elf文件结构) |
 | [设备树](210731b_usb.md#7-补充设备树) |
 | [USB通信](210731b_usb.md) |
+| [Haskell函数式编程](210409a_haskell.md) |
 | [Intel hex文件格式](220429a_compiler.md#31-intel-hex文件格式) |
 | [IEEE754浮点数](200920c_verilog.md#51-IEEE754浮点数标准) |
 | [RS232](210524a_8051.md#8-补充rs232串口通信) |
@@ -19,7 +20,6 @@
 | [实现软件状态机的N种方法](210524a_8051.md#9-补充软件状态机) |
 | [PID自动控制算法](210524a_8051.md#10-补充pid自动控制算法) |
 | [FreeBSD物理机安装](210115a_freebsd.md) |
-| [Tribblix、Slackware物理机安装](220420a_tribblix.md) |
 
 # 列表
 
@@ -76,6 +76,7 @@
 | [220420a](220420a_tribblix.md) | Tribblix、Slackware安装与日常使用 |
 | [220429a](220429a_compiler.md) | 链接器原理 |
 | [220502a](220502a_psychoanalysis.md) | 精神分析学 |
+| [221018a](221018a_uboot.md) | Das U-Boot |
 
 ![](images/000000a001.png)
 

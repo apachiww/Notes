@@ -729,13 +729,13 @@ myHead (x:_) = x -- 写成(x:xs)作用是一样的
 
 `Haskell`将函数和数据（变量）同等看待。Lambda表达式即**匿名函数**，是`Haskell`的核心，本质和函数相同，都是数据处理方式的表达。它具备函数的参数输入以及函数体，但是没有名字。事实上`Haskell`中所有的函数最终都会转换到Lambda表达式的语法树处理方法。处理Lambda表达式的理论都属于Lambda Calculus，美国逻辑学家Haskell Brooks Curry（1900-1982）对这个领域作出了突出贡献，这也是`Haskell`名称的由来。之前的[Curried Functions](#236-curried-functions)（~~咖喱函数~~）概念也是起源于此
 
-`Haskell`中使用反斜杠`\`代替希腊字母$ \lambda $，示例如下
+`Haskell`中使用反斜杠`\`代替希腊字母 $\lambda$ ，示例如下
 
 ```
 \x -> x * 2
 ```
 
-单独的Lambda表达式无意义，以上写法在程序中不被允许
+单独的Lambda表达式无法构成完整的运算，在程序中不被允许
 
 和有名函数一样，调用Lambda表达式的实参写在表达式后，使用空格` `分隔
 
@@ -792,11 +792,42 @@ myVar5 = myFunc6 (-3) 5 4
 
 关于Lambda Calculus的更多内容可以参见[5.1](#51-lambda-calculus浅析)
 
-### 2.4.7 操作符
+### 2.4.7 操作符块（Operator sections）
+
+`Haskell`中除[保留符号](#224-关键字)以外的运算符号不属于语言本身的特性，需要进行定义
+
+我们可以在一个拥有2个参数输入的函数名外部加上` `` `括起来，作为中置运算符使用，如下示例
+
+```haskell
+va = 32 `div` 4 -- 相当于 div 32 4
+```
+
+相反的，我们可以在`+ - * ^`等运算符外部加上`()`括起来，这样可以作为前置运算符使用，这就是`Operator section`，**它相当于一个Lambda表达式**
+
+```haskell
+va = (+) 3 14 -- va为17。(+)相当于表达式\x -> (\y -> x + y)
+```
+
+还可以在`()`内的中置运算符任意一边加上一个表达式
+
+```haskell
+addTwo = (+2) -- 相当于\x -> x + 2
+va = addTwo 13 -- 结果为15
+```
+
+> `Operator section`一般有以下作用：
+>
+> 以简化的方式定义表达式用于简单的运算，例如加1操作可以定义为`(+1)`
+>
+> 用于定义新的运算符或重载运算符（函数名不能含有下划线以外的特殊符号）
+>
+> 将该运算符定义的函数运算作为参数传入到其他函数中，例如`sum = foldl (+) 0`
 
 ## 2.5 List Comprehensions
 
 ### 2.5.1 基本概念
+
+`List comprehension`类似于数学语言中对于一个集合中数据的描述信息（Comprehension notation）。我们定义3到12的自然数，数学语言写作 $ \{x | x \in \mathbb{N}, 3 \leq x \leq 12 \} $ 。在`Haskell`中，定义一个这样的List，只需要`[x | x <- [3..12]]`即可
 
 ### 2.5.2 Guards
 
@@ -955,8 +986,83 @@ Reduction步骤如下
 
 ### 5.1.6 Y-Combinator
 
-Y Combinator是一种解决Lambda表达式无法递归的方案。实际编程当中很少会涉及到Y Combinator
+Y Combinator是一种解决Lambda Calculus中无法实现函数递归的方案。实际编程当中很少会涉及到Y Combinator。`Haskell`中使用了`lazy evaluation`来应对函数递归的问题，而不是Y Combinator
 
-在讲Y Combinator之前先要引入一个Fixpoint的概念
+> 在讲Y Combinator之前先要引入一个Fixpoint的概念。例如函数 $f(x) = x^2$ ，我们都知道 $f(0) = 0, f(1) = 1$，也就是说对于 $0$ 和 $1$ 来说， $f(x) = x^2$ 将它们映射到了自身，那么我们就认为 $0$ 和 $1$ 就是 $f(x)$ 的Fixpoint， $fix (f) = \{0,1\}$ ，同时我们可以推导出 $f(f(f(f(0)))) = 0$， $f(f(f(f(1)))) = 1$
 
-离散数学学过代数系统中幺元的定义。Fixpoint的基本概念也较为类似：假设`f`为
+Lambda Calculus中一个函数的输入可以是另一个函数。Y Combinator定义如下
+
+$$
+Y = \lambda f.(\lambda x.f(x x))(\lambda x.f(x x))
+$$
+
+```
+Y = \f.(\x.f(xx))(\x.f(xx))
+```
+
+假设我们将 $Y$ 应用到一个函数 $g$ ，我们可以对 $Yg$ 进行以下展开
+
+$$
+\begin{align*}
+Yg &= (\lambda f.(\lambda x.f(x x))(\lambda x.f(x x))) g\\
+&=_{\beta} (\lambda x.g(x x))(\lambda x.g(x x)) \\
+&=_{\beta} g((\lambda x.g(x x))(\lambda x.g(x x))) \\
+&=_{\beta} g(Yg) \\
+&=_{\beta} g(g((\lambda x.g(x x))(\lambda x.g(x x)))) \\
+&=_{\beta} g(g(Yg)) \\
+&=_{\beta} g(g(g(Yg))) \\
+&=_{\beta} ...
+\end{align*}
+$$
+
+也就是说， $Yg$ 就是函数 $g$ 的一个Fixpoint
+
+下面假设我们有一个`add`函数，它是一个有名函数，定义如下：
+
+```
+add a b = if b == 0
+          then a
+          else add (a+1) (b-1)
+```
+
+这个有名函数无法转换为有限长度的Lambda表达式，如果我们对它的语法树进行构建，会陷入死循环
+
+> 这里说明的是Lambda Calculus计算系统对于递归实现的先天不足。能否递归和函数有无名无关
+
+接下来我们对`add`稍加更改。我们在`add`函数名后紧接着添加一个参数`f`，这样`add`的函数体表达式内就不会出现`add`这个名称，语法树不再是无限大。当然这样单独的`add`也就不再表示递归的含义，失去了本义
+
+```
+add f a b = if b == 0
+            then a
+            else f (a+1) (b-1)
+```
+
+改进后的`add`可以使用Lambda表示如下
+
+```
+\f.\a.\b.(if b == 0 then a else f (a+1) (b-1))
+```
+
+接下来我们将`Y=\f.(\x.f(xx))(\x.f(xx))`应用到更改后的`add`，那么此时一定有
+
+```
+Y add
+= add (Y add) 
+= add (add (Y add))
+= add (add (add (Y add)))
+...
+```
+
+> 上式第二行，我们就相当于给`add f a b`的`f`传入了一个参数`(Y add)`，返回的表达式相当于`\a.\b.(if b == 0 then a else (Y add) (a+1) (b-1))`
+
+我们设`Y add`为一个新的函数`add'`。那么我们计算`add' 3 2`可以得到以下推导过程
+
+```
+add' 3 2
+= (Y add) 3 2
+= add (Y add) 3 2
+= (\a.\b.(if b == 0 then a else (Y add) (a+1) (b-1))) 3 2
+= (Y add) 4 1
+= (Y add) 5 0
+= 5
+```
