@@ -16,7 +16,6 @@
 | [RS232](210524a_8051.md#8-补充rs232串口通信) |
 | [Shell脚本基础](201219a_shell.md#2-shell脚本基础) |
 | [Awk字符串处理，正则表达式](201219a_shell.md#31-awk) |
-| [固态存储原理](201225a_ssd.md) |
 | [实现软件状态机的N种方法](210524a_8051.md#9-补充软件状态机) |
 | [PID自动控制算法](210524a_8051.md#10-补充pid自动控制算法) |
 | [FreeBSD物理机安装](210115a_freebsd.md) |
@@ -77,6 +76,7 @@
 | [220429a](220429a_compiler.md) | 链接器原理 |
 | [220502a](220502a_psychoanalysis.md) | 精神分析学 |
 | [221018a](221018a_uboot.md) | Das U-Boot |
+| [221019a](221019a_bsd_impl.md) | FreeBSD设计与实现 |
 
 ![](images/000000a001.png)
 
@@ -108,10 +108,12 @@
 24. 《新概念模拟电路》，杨建国著，网络资源
 25. 《矩阵计算（第4版）》，Gene H. Golub，Charles F. Van Loan著，人民邮电出版社
 26. 《精神分析引论》，Sigmond Freud著
+27. 《The Design and Implementation of the FreeBSD Operating System （2nd Edition）》，McKusick M.K.，Neville-Neil G.V.著
+28. 《Programming in Haskell （Second Edition）》，Graham Hutton著
 
 # Recipe
 
-🍥 C CPP Java Go Rust Python Ruby Haskell Lua JavaScript
+🍥 C CPP Rust Haskell Java Go Ruby Python Lua TypeScript JavaScript
 
 🍜 CSS HTML5
 
@@ -123,109 +125,12 @@
 
 🥥 Matlab
 
+🍒 SQL
+
 🍓 GLSL
 
-🍉 Qt Rails
+🍉 Qt Rails wxWidgets
 
-🍋 ARM AVR RISCV 8051 FPGA
+🍋 ARM AVR 8051 FPGA
 
 🍍 ArchLinux Slackware FreeBSD Tribblix FreeRTOS RT-Thread
-
----
-
-
-🍁📰📷📱💤
-
-![](images/000000a002.png)
-
-📖🧪⚗🍄🎃
-
-![](images/000000a003.jpg)
-
-🌕🍵🌌
-
-![](images/000000a004.png)
-
-🌂🌈🍀
-
-![](images/000000a005.jpg)
-
-🥩🍶🥃🍱🥓🍖🍢🍣🧆🍤🍻🍥
-
-![](images/000000a006.jpg)
-
-🛏💤
-
-![](images/000000a007.jpg)
-
-🍁🍂🌲🌳🍁🍂🌲🌳
-
-![](images/000000a008.jpg)
-
-🍉
-
-![](images/000000a009.jpg)
-
-🍰☕
-
-![](images/000000a010.jpg)
-
-🧊🌽
-
-![](images/000000a011.png)
-
-🍧🍸🍰🍨🍹🍷🌹
-
-![](images/000000a012.png)
-
-🍓🍪🌲⛄❄
-
-![](images/000000a013.png)
-
-🔨🛠🔧⚙🏗
-
-![](images/000000a014.png)
-
-🖋📖📚🔍☕💤🌼
-
-![](images/000000a015.jpg)
-
-☀🐈
-
-![](images/000000a016.jpg)
-
-🥘🍢
-
-![](images/000000a017.jpg)
-
-📖🍷
-
-![](images/000000a018.png)
-
-⚾🐇
-
-![](images/000000a019.jpg)
-
-📏🔥
-
-![](images/000000a020.jpg)
-
-🍶
-
-![](images/000000a021.png)
-
-🍖🍶🍺
-
-![](images/000000a022.jpg)
-
-📚
-
-![](images/000000a023.jpg)
-
-🍁🍇🧊📷🍡🍷
-
-![](images/000000a024.jpg)
-
-🌧🌧🌧
-
-![](images/000000a025.jpg)
