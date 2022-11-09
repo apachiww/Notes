@@ -1155,8 +1155,9 @@ gcc -static ./libfruit.a main.o
 
 有时候由于库文件之间会有相互引用，可能需要将库文件名重复多次（这种情况较为少见，同时静态库的设计者应当尽力避免这种情况）
 
-> gcc -static main.c libanimal.a libfruit.a libanimal.a
-
+```shell
+gcc -static main.c libanimal.a libfruit.a libanimal.a
+```
 
 ## 2.3 重定位
 

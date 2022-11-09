@@ -26,13 +26,14 @@ ARMv7-M体系结构笔记[传送门](201020a_stm32.md)
 
 + Allwinner (sunxi) 全志科技 （主打低端，适合低难度廉价DIY）
     + 新论坛 https://bbs.aw-ol.com/
-    + 已废弃Wiki https://linux-sunxi.org/Main_Page
+    + Wiki https://linux-sunxi.org/Main_Page
     + 部分新产品文档 https://gitee.com/aw-sunxi/awesome-sunxi
     + RISCV产品省略
     + T113-s3 (2xA7 with 128MB DDR3, eLQFP128)
     + R328/528-s3 (2xA7 with 128MB DDR3)
-    + F1C100/200s (ARM9 with DDR)
     + A133 (4xA53)
+    + R818 (4xA53)
+    + F1C100/200s (ARM9 with DDR)
     + H616 (4xA53)
     + V3s (1xA7 with 64MB DDR2, eLQFP128)
     + V833 (1xA7)
@@ -42,7 +43,7 @@ ARMv7-M体系结构笔记[传送门](201020a_stm32.md)
     + H5 (4xA53)
     + H6 (4xA53)
 + Rockchip 瑞芯微 （主打中高端）
-    + 文档开源 https://opensource.rock-chips.com/wiki_Main_Page
+    + Wiki https://opensource.rock-chips.com/wiki_Main_Page
     + RK3588 (4xA76+4xA55)
     + RK3568 (4xA55)
     + RK3566 (4xA55)
