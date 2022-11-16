@@ -11,7 +11,7 @@
 | [设备树](210731b_usb.md#7-补充设备树) |
 | [USB通信](210731b_usb.md) |
 | [Haskell函数式编程](210409a_haskell.md) |
-| [Intel hex文件格式](220429a_compiler.md#31-intel-hex文件格式) |
+| [Intel hex文件格式](220429a_compiler.md#41-intel-hex文件格式) |
 | [IEEE754浮点数](200920c_verilog.md#51-IEEE754浮点数标准) |
 | [RS232](210524a_8051.md#8-补充rs232串口通信) |
 | [Shell脚本基础](201219a_shell.md#2-shell脚本基础) |
@@ -43,40 +43,42 @@
 | [201220b](201220b_crack.md) | 密码爆破 |
 | [201220c](201220c_metasploit.md) | Metasploit的渗透测试 |
 | [201225a](201225a_ssd.md) | 计算机存储：固态硬盘工作原理与优化方法 |
-| [201229a](201229a_ror.md) | Ruby学习笔记以及Ruby On Rails Web开发 |
+| [201229a](201229a_ror.md) | Ruby，Ruby On Rails Web开发 |
 | [201230a](201230a_cryptography.md) | 加密算法，密码学 |
 | [210108a](210108a_autocad.md) | AutoCAD基本操作 |
-| [210110a](210110a_computer-arch.md) | 计算机体系结构以及处理器的设计，流水线原理 |
+| [210110a](210110a_computer-arch.md) | 计算机体系结构以及处理器的设计 |
 | [210111a](210111a_qt.md) | Qt应用开发 |
 | [210115a](210115a_freebsd.md) | FreeBSD日常使用，FreeBSD驱动开发 |
 | [210130a](210130a_install-notice.md) | 各种类Unix的管理维护以及安全优化 |
-| [210216a](210216a_rust.md) | Rust学习笔记 |
-| [210316a](210316a_computer-graphics.md) | 计算机图形学算法和Vulkan，OpenGL（GLSL） |
+| [210216a](210216a_rust.md) | Rust |
+| [210316a](210316a_computer-graphics.md) | 计算机图形学算法，Vulkan，OpenGL（GLSL） |
 | [210317a](210317a_parallel.md) | 并行计算，C++11线程库 |
 | [210320a](210320a_3drebuild.md) | 卫星遥感 |
-| [210409a](210409a_haskell.md) | 函数式编程，Haskell学习笔记 |
-| [210501a](210501a_famitracker.md) | 计算机音乐原理，编曲作曲，（爵士）和声，FamiTracker，经典计算机音乐集成电路解析 |
-| [210515a](210515a_go.md) | Go笔记 |
-| [210515b](210515b_python.md) | Python笔记 |
+| [210409a](210409a_haskell.md) | 函数式编程，Haskell |
+| [210501a](210501a_famitracker.md) | 计算机音乐，编曲作曲，（爵士）和声，FamiTracker，经典计算机音乐集成电路解析 |
+| [210515a](210515a_go.md) | Go |
+| [210515b](210515b_python.md) | Python |
 | [210515c](210515c_nginx.md) | Nginx/Apache Web服务原理以及部署 |
 | [210524a](210524a_8051.md) | 8051单片机开发 |
 | [210625a](210625a_uefi.md) | UEFI开发 |
-| [210702a](210702a_avr.md) | AVR单片机开发（基于Arduino） |
+| [210702a](210702a_avr.md) | AVR单片机开发 |
 | [210729a](210729a_ai.md) | 机器学习，深度学习 |
-| [210731a](210731a_llvm.md) | 编译器原理，LLVM |
+| [210731a](210731a_llvm.md) | 编译原理与LLVM |
 | [210731b](210731b_usb.md) | USB协议，应用以及驱动开发 |
-| [210808a](210808a_lcd.md) | LCD驱动芯片 |
+| [210808a](210808a_lcd.md) | LCD驱动 |
 | [210811a](210811a_sata.md) | 计算机常用存储设备接口协议 |
 | [210904a](210904a_algo.md) | 算法 |
 | [210904b](210904b_power.md) | 开关电源，DC-DC |
 | [211017a](211017a_analog.md) | 模电，无线电 |
-| [211119a](211119a_rpipico.md) | 树莓派Pico学习笔记 |
+| [211119a](211119a_rpipico.md) | 树莓派Pico笔记 |
 | [211211a](211211a_codestyle-and-licence.md) | 代码编码规范，开源协议 |
 | [220420a](220420a_tribblix.md) | Tribblix、Slackware安装与日常使用 |
-| [220429a](220429a_compiler.md) | 链接器原理 |
+| [220429a](220429a_compiler.md) | 编译，链接原理 |
 | [220502a](220502a_psychoanalysis.md) | 精神分析学 |
 | [221018a](221018a_uboot.md) | Das U-Boot |
-| [221019a](221019a_bsd_impl.md) | FreeBSD设计与实现 |
+| [221019a](221019a_bsd-impl.md) | FreeBSD设计与实现 |
+| [221112a](221112a_network.md) | 计算机网络 |
+| [221116a](221116a_wacom.md) | Wacom数位板手动配置 |
 
 ![](images/000000a001.png)
 
@@ -108,8 +110,9 @@
 24. 《新概念模拟电路》，杨建国著，网络资源
 25. 《矩阵计算（第4版）》，Gene H. Golub，Charles F. Van Loan著，人民邮电出版社
 26. 《精神分析引论》，Sigmond Freud著
-27. 《The Design and Implementation of the FreeBSD Operating System （2nd Edition）》，McKusick M.K.，Neville-Neil G.V.著
-28. 《Programming in Haskell （Second Edition）》，Graham Hutton著
+27. 《The Design and Implementation of the FreeBSD Operating System (2nd Edition)》，McKusick M.K.，Neville-Neil G.V.著
+28. 《Programming in Haskell (Second Edition)》，Graham Hutton著
+29. 《Compilers: Principles, Techniques and Tools (Second Edition)》，Alfred V. Aho，Monica S. Lam，Ravi Sethi，Jeffrey D. Ullman著
 
 # Recipe
 
