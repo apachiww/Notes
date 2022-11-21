@@ -71,9 +71,9 @@
 | [210904b](210904b_power.md) | 开关电源，DC-DC |
 | [211017a](211017a_analog.md) | 模电，无线电 |
 | [211119a](211119a_rpipico.md) | 树莓派Pico笔记 |
-| [211211a](211211a_codestyle-and-licence.md) | 代码编码规范，开源协议 |
+| [211211a](211211a_codestyle-and-licence.md) | 代码规范，开源协议 |
 | [220420a](220420a_tribblix.md) | Tribblix、Slackware安装与日常使用 |
-| [220429a](220429a_compiler.md) | 编译，链接原理 |
+| [220429a](220429a_compiler.md) | 编译原理，二进制ELF文件格式 |
 | [220502a](220502a_psychoanalysis.md) | 精神分析学 |
 | [221018a](221018a_uboot.md) | Das U-Boot |
 | [221019a](221019a_bsd-impl.md) | FreeBSD设计与实现 |

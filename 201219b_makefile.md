@@ -1,6 +1,6 @@
 # Make原理和使用
 
-基于GNU Make，涵盖现代高级工具如CMake，autotools，Ninja的使用
+基于GNU Make，涵盖现代工具如CMake，autotools，Ninja的使用
 
 http://www.gnu.org/software/make/
 
@@ -111,7 +111,7 @@ GNU Make 官方文档 http://www.gnu.org/software/make/manual/
 
 ## 2.1 两个阶段
 
-Make的主要任务，主要是文件依赖的推导，以及自动调用文件构建命令
+Make的任务，主要是文件依赖的推导，以及自动调用文件构建命令
 
 GNU Make的执行过程大致分为两个阶段（Phase）
 
