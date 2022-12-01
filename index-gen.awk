@@ -20,9 +20,9 @@ BEGIN {
     gsub(/[[:punct:]]/, "", index_name)
     gsub(/A/, "-", index_name)
 
-    if ($0 ~ /^##* [[:digit:]]+(\.[[:digit:]]+){2} /) {
+    if ($0 ~ /^### [[:digit:]]+(\.[[:digit:]]+){2} /) {
         printf "        + [**%s**](#%s-%s) %s\n", $2, index_num, index_name, index_name_init
-    } else if ($0 ~ /^##* [[:digit:]]+\.[[:digit:]]+ /) {
+    } else if ($0 ~ /^## [[:digit:]]+\.[[:digit:]]+ /) {
         printf "    + [**%s**](#%s-%s) %s\n", $2, index_num, index_name, index_name_init
     } else if ($0 ~ /^## [[:digit:]]+ /) {
         printf "+ [**%s**](#%s-%s) %s\n", $2, index_num, index_name, index_name_init
