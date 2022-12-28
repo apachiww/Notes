@@ -34,10 +34,16 @@
     + [**4.6**](#46-nat) NAT
 + [**5**](#5-传输层) 传输层
     + [**5.1**](#51-tcp) TCP
+        + [**5.1.1**](#511-tcp通信原理) TCP通信原理
+        + [**5.1.2**](#512-tcp数据包) TCP数据包
+        + [**5.1.3**](#513-tcp实验) TCP实验
+        + [**5.1.4**](#514-tcp附加说明) TCP附加说明
     + [**5.2**](#52-udp) UDP
+        + [**5.2.1**](#521-udp通信原理) UDP通信原理
+        + [**5.2.2**](#522-udp数据包) UDP数据包
     + [**5.3**](#53-icmp和icmpv6) ICMP和ICMPv6
-    + [**5.4**](#54-quic) QUIC
-    + [**5.5**](#55-tls) TLS
+    + [**5.4**](#54-tls) TLS
+    + [**5.5**](#55-quic) QUIC
 + [**6**](#6-应用层) 应用层
     + [**6.1**](#61-http) HTTP
     + [**6.2**](#62-https) HTTPS
@@ -48,6 +54,26 @@
     + [**6.6**](#66-ftp) FTP
     + [**6.7**](#67-smtp) SMTP
     + [**6.8**](#68-snmp) SNMP
++ [**7**](#7-附录) 附录
+    + [**7.1**](#71-wireshark中部分tcp分析的定义) Wireshark中部分TCP分析的定义
+        + [**7.1.1**](#711-tcp-acked-unseen-segment) TCP ACKed unseen segment
+        + [**7.1.2**](#712-tcp-dup-ack) TCP Dup ACK
+        + [**7.1.3**](#713-tcp-fast-retransmission) TCP Fast Retransmission
+        + [**7.1.4**](#714-tcp-keep-alive) TCP Keep-Alive
+        + [**7.1.5**](#715-tcp-keep-alive-ack) TCP Keep-Alive ACK
+        + [**7.1.6**](#716-tcp-out-of-order) TCP Out-Of-Order
+        + [**7.1.7**](#717-tcp-port-numbers-reused) TCP Port numbers reused
+        + [**7.1.8**](#718-tcp-previous-segment-not-captured) TCP Previous segment not captured
+        + [**7.1.9**](#719-tcp-spurious-retransmission) TCP Spurious Retransmission
+        + [**7.1.10**](#7110-tcp-retransmission) TCP Retransmission
+        + [**7.1.11**](#7111-tcp-window-full) TCP Window Full
+        + [**7.1.12**](#7112-tcp-window-update) TCP Window Update
+        + [**7.1.13**](#7113-tcp-zerowindow) TCP ZeroWindow
+        + [**7.1.14**](#7114-tcp-zerowindowprobe) TCP ZeroWindowProbe
+        + [**7.1.15**](#7115-tcp-zerowindowprobeack) TCP ZeroWindowProbeAck
+        + [**7.1.16**](#7116-tcp-ambiguous-interpretations) TCP Ambiguous Interpretations
+        + [**7.1.17**](#7117-tcp-conversation-completeness) TCP Conversation Completeness
+
 
 ## 1 协议栈分层模型
 
@@ -815,6 +841,8 @@ NAT的应用场景不限于以上示例。Outbound NAT时，数据从私有网�
 > 发起连接的客户端首先向被请求方（服务器）发送一个`TCP`数据包，其中`SYN`标记置位，`Seq`通常为`0`。被请求方收到后返回一个`SYN`和`ACK`置位的数据包，`Seq`通常为`0`，而`Ack`值为上一个数据包`Seq+1`，通常为`1`。发起连接一方接收到后再返回一个`ACK`置位的数据包，`Ack`值为上一个数据包`Seq+1`。此时连接建立，可以开始传输数据
 >
 > 这个过程可以描述为`SYN SYN-ACK ACK`
+>
+> 在连接建立时的SYN包中还会在`TCP Options`携带上一些配置信息，例如最大Segment大小MSS（Option `2`），允许SACK（Option `4`），Timestamp时间戳（Option `8`），Window Scaling系数（Option `3`）等
 
 `TCP`四次挥手释放连接的过程如下
 
@@ -822,7 +850,7 @@ NAT的应用场景不限于以上示例。Outbound NAT时，数据从私有网�
 
 > 连接的终止通常由请求方（客户端）发起。首先发送一个`FIN`标记置位的数据包，被请求方接收到以后返回一个`ACK`置位的数据包，此时请求方不可再主动发送数据。之后由被请求方发送一个`FIN`标记置位的数据包，请求方接收到后返回一个`ACK`置位的数据包。此时连接释放
 >
-> 以上过程可以描述为`FIN ACK FIN ACK`。为节省数据包发送次数，被请求方通常会将中间两个数据包合并为1个，该数据包`FIN`和`ACK`都置位。所谓的四次挥手变为三次，形成`FIN FIN-ACK ACK`。此外，在实际应用中请求方发送的第一个`FIN`数据包通常也会和数据传输中最后一个`ACK`合并，会形成`FIN-ACK FIN-ACK ACK`
+> 以上过程可以描述为`FIN ACK FIN ACK`。为节省数据包发送次数，被请求方通常会将中间两个数据包合并为1个，该数据包`FIN`和`ACK`都置位。所谓的四次挥手变为三次，形成`FIN FIN-ACK ACK`
 
 **滑动窗口原理**
 
@@ -862,7 +890,7 @@ NAT的应用场景不限于以上示例。Outbound NAT时，数据从私有网�
 >
 > 需要注意的是，在上述丢包后接收方发送的那些Dup ACK依然ACK了丢失数据包之后的数据包。此时发送方**不能移动发送窗口**，但是可以将之后的数据包标记为已发送成功。如果丢包未成功重传的情况下接收方发现再次发生了丢包，其发送的ACK依旧使用原来的`Ack`。直到原先丢失的包重传成功后，接收方首先回复该数据包对应的ACK；之后发送的Dup ACK对应下一个丢失的数据包的`Ack`值
 >
-> 这种情况下，在一定时间以后发送方会触发**快速重传**，通常在十几个Dup ACK以后
+> 这种情况下，通常在一定时间以后发送方会触发**快速重传**，通常在十几个Dup ACK以后（开启了SACK的非实时应用中也可能会立即重传）
 
 > 接收方回复的ACK包一旦出现丢失情况，发送方的发送窗口就无法向前移动。发送方将会对窗口中未ACK的数据包设定一个定时器，超过一定时间还未收到也会对数据包进行重传，通常对应下面的**Spurious重传**
 
@@ -873,6 +901,53 @@ NAT的应用场景不限于以上示例。Outbound NAT时，数据从私有网�
 > 传输时，获取到第一个`RTT`后，设`SRTT = RTT, RTTVAR = RTT/2, RTO = SRTT + max(G, 4*RTTVAR)`
 >
 > 获取到后续`RTT`后，设`RTTVAR = (1 - b) * RTTVAR + b * abs(SRTT - RTT), SRTT = (1 - a) * SRTT + a * RTT`，再使用同样方法计算得到`RTO`。通常取`a = 0.125, b = 0.25`
+
+**时间戳扩展Timestamp**
+
+现在大部分的`TCP`通信默认都开启了时间戳功能来提高可靠性，每个数据包都会包含时间戳信息，方便RTT测量以及PAWS（Protection Against Wrapped Sequences，在超大带宽的网络中32位`Seq`可能不够用，在上一个`Seq = x`还在窗口中就传输了超过4GiB数据从而导致`Seq = x`在窗口中重复出现）
+
+Timestamp Option长度10字节，通常`TCP`通信中如果建立连接时选择了Timestamp，那么之后每个数据包都会有Timestamp，格式如下
+
+```
+    +-------+-------+---------------------+---------------------+
+    |Kind=8 |  10   |   TS Value (TSval)  |TS Echo Reply (TSecr)|
+    +-------+-------+---------------------+---------------------+
+        1       1              4                     4
+```
+
+> `TSval`表示发送该数据包一方的`TCP`时钟，该时钟相比数据包的传送速度慢许多。`TSecr`必须在`ACK`置位时才有效（`ACK`未置位必须置`TSecr = 0`），此时`TSecr`的值等于对方最近一个数据包的`TSval`时钟
+
+**SACK扩展**
+
+SACK即选择性ACK。SACK是为更高效地提供丢包信息而设计，尤其是接收方的ACK回复丢失时，可以减少多余的Spurious重传，这种重传下面会讲到。在实际应用中接收方默认几乎不会使用SACK。但是发送方通常需要支持SACK
+
+注意SACK只是一个扩展，它只是附加的提示信息，没有对`TCP`通信的ACK回复进行本质的更改
+
+SACK信息由`TCP`数据头中的可选的`SACK Option`搭载，格式如下
+
+```
+                      +--------+--------+
+                      | Kind=5 | Length |
+    +--------+--------+--------+--------+
+    |      Left Edge of 1st Block       |
+    +--------+--------+--------+--------+
+    |      Right Edge of 1st Block      |
+    +--------+--------+--------+--------+
+    |                                   |
+    /            . . .                  /
+    |                                   |
+    +--------+--------+--------+--------+
+    |      Left Edge of nth Block       |
+    +--------+--------+--------+--------+
+    |      Right Edge of nth Block      |
+    +--------+--------+--------+--------+
+```
+
+> SACK选项中每一个数据项由一对`Seq`构成，每个`Seq`长4字节，它们分别表示接收方已接收到数据包区间的左界和右界（注意一个数据包本身是一个`Seq`区间，例如`35650 36843` `36843 38126`合并为`35650 38126`）
+>
+> `TCP`规定`1st Block`必须是最近的一个Block（也就是导致接收方发送当前ACK的Block）。`TCP`要求尽量多地包含Block，其余较近的Block可以乱序，但是不要重叠，且建议依旧遵照由近及远排列
+>
+> 发送方的数据包丢包时，之后数据包中的`Ack`会小于最远区块的左边界，这表示第一个丢失数据包的`Seq`区间。之后丢包的`Seq`区间在`SACK Option`中体现
 
 **接收窗口满和零窗口**
 
@@ -892,13 +967,13 @@ Spurious重传通常由ACK回复丢失引发，最终通过发送方定时器超
 
 **普通重传**
 
-Wireshark定义快速重传中，上一个Dup ACK必须出现在20mS以内，且之前有至少3个对应的Dup ACK。由于不同`TCP`协议栈的实现也会有所不同，有时抓取到的快速重传数据包可能不满足Wireshark对于快速重传的判定要求，这些重传可能会显示为普通重传
+Wireshark定义快速重传中，上一个Dup ACK必须出现在20mS以内，且之前有至少3个对应的Dup ACK。由于不同`TCP`协议栈的实现也会有所不同，有时抓取到的快速重传数据包可能不满足Wireshark对于快速重传的判定要求，这些快速重传可能会显示为普通重传
 
 普通重传还有可能在发送窗口满时触发（这种情况很少）。此时发送方不能再发送新数据，为继续传输数据只能将原先未ACK的数据包进行重传。此外还有更罕见的情况，可能由接收端自身问题接收数据包而没有发送ACK引发等
 
 **窗口大小更新**
 
-接收方可以在传输过程中更改接收窗口`Win`大小，通常情况下数据传输时接收窗口大小一直会随RTT变化（无论是否使能Window Scaling）。Wireshark中如果检测到当前`Win`和先前ACK的`Win`不等，且发送方的数据包发生了丢失（出现了Dup ACK），此时接收端有必要扩大接收窗口，Wireshark就判定`Window Update`
+接收方可以在传输过程中更改接收窗口`Win`大小，通常情况下数据传输时接收窗口大小一直会随RTT变化（无论是否使能Window Scaling）。Wireshark中如果检测到当前`Win`和先前ACK的`Win`不等，且发送方的数据包发生了丢失（出现了Dup ACK），此时说明接收端有必要扩大接收窗口，Wireshark就判定`Window Update`
 
 **TCP Keep-Alive**
 
@@ -1058,17 +1133,234 @@ IPv6 Pseudo-header
 | :-: | :-: | :-: |
 | `0` |  | End-of-Option，表示`Options`的结束 |
 | `1` |  | No-Operation，有时作占位符使用，进行对齐 |
-| `2` | `4` | Segment最大大小，通常只在连接初始化时使用 |
+| `2` | `4` | Segment最大大小MSS，通常只在连接初始化时使用 |
 | `3` | `3` | Window Scaling系数 |
+| `4` | `2` | 允许SACK（Selective ACK） |
 | `8` | `10` | Timestamps |
 
 ### 5.1.3 TCP实验
 
 使用Wireshark进行抓包，更便于理解TCP的通信过程
 
+> 注意事项：Wireshark虽然可以方便的抓包分析，但是经过后续一些实际研究，发现Wireshark对于`TCP`事件的判断算法有较多设计不合理的地方，许多特定条件下容易导致事件的误判。建议理解`TCP`不要过于依赖Wireshark的提示信息
+
+测试URL：
+
+```
+$ curl URL > /dev/null
+
+LAN IPv4 address 10.80.193.210
+
+[ Linux host 1 ] IPv4 45.76.35.230
+
+http://tcpdynamics.uk:4000/8M
+
+[ Linux host 2 ] IPv4 39.155.141.16
+
+https://mirrors.bfsu.edu.cn/slackware/slackware-13.1/kernels/hugesmp.s/bzImage
+
+[ FreeBSD host ] IPv4 213.138.116.73
+
+http://pkg.freebsd.org/FreeBSD:13:aarch64/release_1/packagesite.txz
+```
+
 **连接建立和释放**
 
+`[ FreeBSD host ]`连接建立，三次握手
 
+![](images/221112a008.png)
+
+> `[]`括号内表示该数据包中置位的标记位。点击本机发送的第一个SYN，可以观察到一些Options
+
+![](images/221112a010.png)
+
+> 本机支持`MSS = 1460`，使能SACK功能以及时间戳，启用Window Scaling，系数为`7`（左移`7`位）。此时`SYN`置位`ACK`不置位，`Seq`实际值`2675542447`（`TCP`使用这个值作为初值，当作`Seq = 0`看待。注意Wireshark显示的`Seq`和`Ack`都是**相对值**）。接下来观察服务器发送的`SYN-ACK`
+
+![](images/221112a011.png)
+
+> Options的顺序由所不同。此时`SYN`和`ACK`都置位，初始值`Seq = 0, Ack = 1`（这里`Ack`需要相对对方发来的`Seq`加`1`），服务器端Window Scaling系数为`11`。可以发现`TSecr`等于本机先前发送SYN的`TSval`
+
+![](images/221112a012.png)
+
+> 本机回复一个ACK数据包，Options只剩下Timestamp。此时`SYN`复位，`ACK`置位，`Seq = 1, Ack = 1`（`Seq`等于对方发来的`Ack`，`Ack`相对对方发来的`Seq`加`1`）
+
+`[ FreeBSD host ]`连接释放，四次挥手
+
+![](images/221112a009.png)
+
+> 以上是最典型的`TCP`连接释放操作
+>
+> 服务器发来的HTTP OK数据包`Seq = 6395817, Len = 4331`。此时本机在ACK该最后一个数据包后才发送FIN
+>
+> 本机发送的第一个FIN中`FIN, ACK`置位，而`Ack`相比上一个ACK数据包不会变化，`Ack = 6400148`（这两个数据包中间没有任何来自服务器的数据）。
+>
+> 服务器发送的ACK回复中`Ack`等于接收到数据包的`Seq + 1`，值为`125`
+>
+> 下一步由服务器发送FIN，相比上一个服务器发送的ACK最大的区别是`FIN`置位
+>
+> 最后本机回复ACK，`Ack`同样需要`1`，连接断开
+>
+> 连接释放过程中数据包的Options没有特殊的注意点，和正常数据传输一样都只有Timestamp
+
+`[ Linux host 1 ]`连接建立
+
+![](images/221112a014.png)
+
+> 过程和`[ FreeBSD host ]`同理
+
+`[ Linux host 1 ]`连接释放
+
+![](images/221112a015.png)
+
+> 这里的连接释放和`[ FreeBSD host ]`有所不同，可以看到服务器端将ACK和FIN压缩为一个数据包，此时为三次挥手，`Ack`需要加`1`为`87`（相对值），最后本机回复的`Ack`同样加`1`
+
+**正常数据传输**
+
+`[ FreeBSD host ]`数据传输
+
+![](images/221112a013.png)
+
+> 正常的`TCP`数据传输中，发送方的`Seq`以及接收方的`Ack`应当都是单调增的。如上示例，发送方（服务器）发送了`Seq = 233129`和`Seq = 236025`（相对值）两个数据包，长度分别为`2896`和`13032`，接收方（本机）回复了`Ack = 236025 = 233129 + 2896`和`Ack = 249057 = 236025 + 13032`两个数据包分别作为上述两个数据包的ACK。之后的`Seq = 249057`同理
+>
+> 我们可以观察到接收方（本机）的接收窗口大小`Win`一直在变化（由RTT统计数据得来）
+>
+> `TCP`是流水线协议，接收方会在接收到数据后尽早ACK。以上抓包结果并不一定说明服务器的前2个数据包和后1个数据包是间隔发送的。`TCP`中发送方应当控制单位时间发送的数据量，尽量保证数据以最高效率传输
+
+`[ Linux host 1 ]`数据传输，端口4000（Window Scaling & SACK Enabled, Packet loss set to 0%）
+
+![](images/221112a016.png)
+
+> 数据的传输也是同理。这里的区别是发送端经常会置位`PSH`。在`TCP`中，如果数据包的`PSH`置位，就表示发送方要求接收方在接收到数据包后，立即将数据递交给上层应用。这在发送端也表示数据包需要立即从发送缓冲区发出
+>
+> 传输是否使用`PSH`视情况而定。实时性要求较高的场合通常需要配置`PSH`置位
+
+**数据包乱序**
+
+`[ Linux host 1 ]`，端口4030（Window Scaling & SACK Disabled, Packet loss set to 0%）
+
+![](images/221112a017.png)
+
+> 在上述警告中，发送方连续发送了`Seq = 44644737 44647633 44649081 44650529`四个数据包，其中数据包`44649081`和`44647633`出现了倒序。相应的，接收方发送了四个ACK分别为`Ack = 44647633 44647633 44650529 44653425`，其中前两个ACK为Dup ACK
+
+**丢包与快速重传**
+
+`[ Linux host 1 ]`，端口4030（Window Scaling & SACK disabled, Packet loss set to 0%）
+
+![](images/221112a018.png)
+
+> 出现以上现象（许多个同`Ack`的Dup ACK）基本就表示出现了丢包。此时接收方也知道发现了丢包。超时后会进行如下所示的**快速重传**
+
+![](images/221112a019.png)
+
+> 通过计算我们可以得知之前丢失了大小为`4344`字节的数据。但是在重传中使用了3个`1448`字节的数据进行回复，这三个数据包分别为`Seq = 40625089, 40626537, 40627985`。而发送方在快速重传还未完成时就进行了之后新数据包的传输（`Seq = 40626537`之后的`40690249`）
+>
+> 这里的着色规律可能有点难以理解，只要记住之前提过的**原则**：接收方回复的ACK**永远只表现当前其期望的最小**`Seq`**数据包**（即便是陆续丢失了好几个不连续的包），而不必过度关心Wireshark的提示信息。事实上以上三个快速重传数据包都应当标记为`Fast Retransmission`，而由于Wireshark的标记算法问题有2个数据包被误标记为`Out-Of-Order`
+>
+> 尽管类似上面的丢包现象很多时候重传会只使用一个数据包，这个示例的情况在实际应用中也较为常见，需要注意甄别
+
+> 以上丢包重传过程在打开Wireshark的`Statistics -> TCP Stream Graphs -> Time Sequence (tcptrace)`可以观察到如下现象
+
+![](images/221112a020.png)
+
+> tcptrace有三条线，蓝线为数据包的`Seq`，黄线为`Ack`，绿线是黄线加上`Win`的结果，绿线黄线之间的距离就表示当前**接收窗口的大小**。由于当前没有启用Window Scaling，并且传输的是单个大文件，显然接收窗口`Win`一直维持在最大值`65535`。这也从一定程度上说明64kB窗口是不太足够的
+
+> 当黄线变水平就意味着丢包的发生，此时接收方回复的`Ack`不再增长
+>
+> 我们将后半部分放大看
+
+![](images/221112a021.png)
+
+> 上图是已经做好标记的重传过程。数字对应蓝色标记处数据包的`Seq`，粉色箭头表示数据重传的顺序，上方三个蓝色标记为正常传输的数据，下方三个蓝色标记是重传的数据包。蓝色圆圈内为丢包后继续传输的后续数据包
+
+接下来我们可以观察一下启用了Window Scaling和SACK后的效果
+
+`[ Linux host 1 ]`，端口4001（Window Scaling & SACK Enabled, Packet loss set to 5%）
+
+> 启用Window Scaling后首先就是突破了`65535`字节的`Win`大小限制，其次启用SACK后可以使发送方对丢包情况有更多了解。首先我们在实际测试中就已经感觉到性能的大幅提升
+>
+> 以下为第一次出现丢包时的数据包和tcptrace图表
+
+![](images/221112a022.png)
+
+![](images/221112a023.png)
+
+> 上图中标记粉色圈的位置就是发生第一次丢包的地方，可以发现蓝线段高度在此处不连续。此时`Ack`不再增长，但是`Win`还在增长（体现为`[ TCP Window Update ]`），接收方为后续数据包的到来提供足够的空间
+>
+> 同时我们观察到本机回复的ACK包大小从`66`字节变成了`78`字节。变大的ACK包意味着此时SACK开始发挥作用，上图中一条红色线段就是对应一个ACK数据包的SACK区间。我们可以对比一下前后的Options变化
+
+![](images/221112a024.png)
+
+> 变化后的Options，增加了12字节。`NOP`为数据对齐而存在
+
+![](images/221112a025.png)
+
+> 此时有SACK，同时发送方发送的是Dup ACK。但是同样由于Wireshark的事件判断算法问题，这些Dup ACK（`Ack = 28961`）数据包没有高亮（疑似和`[ TCP Window Update ]`判断冲突）
+>
+> 由于该`TCP`传输被配置为偏实时性任务，该丢失的数据包最终还是通过**快速重传**传输成功
+
+最后观察一下`[ Linux host 2 ]`（Window Scaling & SACK Enabled）的丢包重传行为
+
+![](images/221112a026.png)
+
+> 由于该服务器传输数据时没有置位`PSH`，这意味着该次`TCP`数据传输是低实时性任务，也是因此数据传输需要保证总时间的最短，总效率的最优，而非偏实时应用中数据的准时性。这就需要保证丢失的数据第一时间得到重传，之后的数据可以相对延后一些
+>
+> 上图中，发送方接收到含有SACK的数据包后立即对`Seq = 7241`进行了重传。这里丢失数据包的优先级通常要高于后续的新数据包
+
+**超时重传**
+
+最常见的超时重传在Wireshark中通常会显示为`Spurious Retransmission`。此时接收方接收到了数据包并回复了ACK，但ACK在途中丢失。超时计时由发送方触发，并进行重传。启用SACK后Spurious重传会大大减少
+
+`[ Linux host 1 ]`，端口4031（Window Scaling & SACK Disabled, Packet loss set to 5%）
+
+通过`Analyze -> Expert Information`，我们可以查找一些`Spurious Retransmission`数据包的`Seq`，并在过滤条件中添加该`Seq`（例如`tcp.seq == 76182`）
+
+![](images/221112a027.png)
+
+> 通过以上方法（`tcp.seq == 842737`），我们可以发现如上两个`Seq`相同的数据包。正常传输时是不会出现两个相同的数据包的。第一个数据包接收方确确实实收到了（否则Wireshark就捕捉不到它了）。这说明接收方没有接到对应ACK，最后超时进行了重传
+
+**接收窗口满**
+
+未启用Window Scaling时非常容易导致接收窗口满，启用后几乎不会出现窗口满的情况
+
+`[ Linux host 1 ]`，端口4031（Window Scaling & SACK Disabled, Packet loss set to 5%）
+
+![](images/221112a028.png)
+
+![](images/221112a029.png)
+
+> 如上。`[ TCP Window Full ]`出现的位置蓝线和绿线触碰，在本数据包传输完毕后接收方窗口就满了。发送方需要通过接收方的`Win`以及之前发送过的数据、接收到的ACK进行自动的计算，发现接收窗口满时暂时停止发送
+>
+> 有些`TCP`使能了Zero Window功能。在接收方发现数据快要满时，发送ACK，将`Win`置为`0`，强制发送方停止发送 
+
+**连接复位**
+
+`[ Linux host 2 ]`
+
+接收方的连接复位可以在`curl`未完成时通过`Ctrl-C`触发。得到如下结果
+
+![](images/221112a030.png)
+
+类似的在`[ Linux host 1 ]`得到如下结果
+
+![](images/221112a031.png)
+
+> 可以观察到RST时，通常第一个RST维持了上一个ACK包的`Seq`和`Ack`值。后续的RST每接收到一个发送方的数据包就会回复一个，同时只有`RST`置位，`Win`和`Len`都为`0`
+>
+> 在网络极度不稳定时，`TCP`有时也会自动复位
+
+**Keep-Alive**
+
+高丢包率最终会导致双方之间数据包交换阻塞时间越来越长。在一段时间没有数据交换以后，可能出现Keep-Alive数据包。捕捉较耗费时间，不再测试
+
+### 5.1.4 TCP附加说明
+
+**窗口大小对传输距离的限制**
+
+在没有启用`TCP`的Window Scaling扩展的情况下，数据通信双方的收发窗口大小最大为`65535`字节，这意味着必须将通信的RTT限制在一定范围内，否则非常容易导致瓶颈
+
+> 假设我们使用速度为1000Mbps的以太网，中间没有任何路由或交换机带来的延时，只计算电信号传播（光速）带来的延迟。设接收方在接收到数据以后立即发送ACK。通过该网络发送完65535B数据需要`65535*8 / 1000M = 524.28us (RTT)`，也就是说第一个ACK回复需要在该RTT时间限制之内到达，否则发送方窗口会满导致阻塞。假设电信号速度`3e8m/s`，那么双方之间最大的距离为`524.28us * 3e8m/s / 2 = 76.842km`
+>
+> 实际应用中路由以及交换等操作会引入比上述大的多的延迟，所以`65535`字节的窗口是不够的，需要用到`Window Scaling`
 
 ## 5.2 UDP
 
@@ -1076,7 +1368,7 @@ IPv6 Pseudo-header
 
 相比于`TCP`，`UDP`要简单的多，它是一种无状态、不可靠的传输层协议，可以看成是网络层协议的简单包装。现在的实际应用中很少直接使用`UDP`，而是将`UDP`作为基础设施，再次包装以后使用，例如目前流行的传输层协议`QUIC`。直接利用`UDP`的典型应用层协议有`DNS`，`SNMP`等
 
-由于`UDP`的特性，对于接收方来说`UDP`数据包是突然到来的，并没有建立连接与状态机的概念，也就没有必要为每一个`<src addr, src port, dest addr, dest port>`都创建一个socket。此时socket只以接收端地址`<dest addr, dest port>`区分。**发往同一主机同一端口的**`UDP`**数据包实际上在接收端由同一个socket接收**，而不是像`TCP`一样由OS的协议栈针对不同发送端地址创建多个socket分别接收
+由于`UDP`的特性，对于接收方来说`UDP`数据包是突然到来的，并没有建立连接与状态机的概念，系统也就没有必要为每一个`<src addr, src port, dest addr, dest port>`都创建一个socket。此时socket只以接收端地址`<dest addr, dest port>`区分。**发往同一主机同一端口的**`UDP`**数据包实际上在接收端由同一个socket接收**，而不是像`TCP`一样由OS的协议栈针对不同发送端地址创建多个socket分别接收
 
 ### 5.2.2 UDP数据包
 
