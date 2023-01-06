@@ -14,9 +14,9 @@ ARMv7-M体系结构笔记[传送门](201020a_stm32.md)
 
 ## 前言
 
-随着2000年代中后期从苹果开始的智能手机大爆发，ARM逐渐统治了手机领域。ARMv7是ARM历史上具有革命性的一代，也是这一代开始ARM将产品线分为A、R、M三大系列。在工业控制领域ST推出了基于ARMv7-M系列核心的STM32。也是从这里开始32位MCU得到了推广，并最终由ARM的Cortex-M系列统治了32位MCU领域。现在ARM处理器是全世界出货量最多的处理器，它已经渗透到我们生活的各个角落，从超算到玩具都可以见到它的存在
+随着2000年代中后期从苹果开始的智能手机大爆发，ARM逐渐统治了手机领域。ARMv7是ARM历史上具有革命性的一代（ARMv8是第一代64位架构，同样是划时代的），也是这一代开始ARM将产品线分为A、R、M三大系列。在工业控制领域ST推出了基于Cortex-M系列核心的STM32。也是从这里开始32位MCU得到了推广，并最终由ARM的Cortex-M系列统治了32位MCU领域。现在ARM处理器是全世界出货量最多的处理器，它已经渗透到我们生活的各个角落，从超算到玩具都可以见到它的存在
 
-如今ARM已经推出了ARMv9，作为ARMv8的小幅升级。即便如此，老旧的ARMv7处理器依然凭借成熟的生态以及足够的性能维持强大的生命力，在工控以及低端数码领域继续发展。许多厂商依然在推出基于32位ARMv7-A处理器的新产品，例如Allwinner等，ST也开始涉及SoC领域，推出了STM32MP1系列，这些产品大部分都是基于Cortex-A7设计
+如今ARM已经推出了ARMv9，作为ARMv8的小幅升级。即便如此，老旧的32位ARMv7处理器依然凭借成熟的生态以及足够的性能维持强大的生命力，在工控以及低端数码领域继续发展。许多厂商依然在推出基于32位ARMv7-A处理器的新产品，例如Allwinner等，ST也开始涉及SoC领域，推出了STM32MP1系列，这些产品大部分都是基于Cortex-A7设计
 
 ## 0 常见SoC厂商与产品
 
@@ -24,7 +24,7 @@ ARMv7-M体系结构笔记[传送门](201020a_stm32.md)
 
 **国内**
 
-+ Allwinner (sunxi) 全志科技 （主打低端，适合低难度廉价DIY）
++ Allwinner (sunxi) 全志科技 （主打低端，适合低难度廉价DIY开发板）
     + 新论坛 https://bbs.aw-ol.com/
     + Wiki https://linux-sunxi.org/Main_Page
     + 部分新产品文档 https://gitee.com/aw-sunxi/awesome-sunxi
@@ -64,11 +64,11 @@ ARMv7-M体系结构笔记[传送门](201020a_stm32.md)
 
 + ST 意法半导体
     + STM32MP1
-+ NXP 恩智浦
++ NXP 恩智浦半导体
     + i.MX Series
 + AMD Xilinx 赛灵思
     + ZYNQ-7000
-+ Qualcomm
++ Qualcomm 高通
     + MSM8916(Snapdragon 410)/APQ8016 https://github.com/msm8916-mainline https://wiki.postmarketos.org/wiki/MSM8916_Mainlining
 + TI 德州仪器
     + Sitara AMxxxx

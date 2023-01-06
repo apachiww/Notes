@@ -10,9 +10,9 @@ BEGIN {
     print ""
 }
 
-/^##* [[:digit:]]+(\.[[:digit:]]+)* / {
+/^##* [0-9]+(\.[0-9]+)* / {
     index_num = gensub(/[[:punct:]]/, "", "g", $2)
-    index_name_init = gensub(/^##* [[:digit:]]+(\.[[:digit:]]+)* /, "", "g", $0)
+    index_name_init = gensub(/^##* [0-9]+(\.[0-9]+)* /, "", "g", $0)
     index_name_init = gensub(/\r/, "", "g", index_name_init)
     index_name = gensub(/ /, "-", "g", index_name_init)
     index_name = tolower(index_name)
@@ -20,11 +20,11 @@ BEGIN {
     gsub(/[[:punct:]]/, "", index_name)
     gsub(/A/, "-", index_name)
 
-    if ($0 ~ /^### [[:digit:]]+(\.[[:digit:]]+){2} /) {
+    if ($0 ~ /^### [0-9]+(\.[0-9]+){2} /) {
         printf "        + [**%s**](#%s-%s) %s\n", $2, index_num, index_name, index_name_init
-    } else if ($0 ~ /^## [[:digit:]]+\.[[:digit:]]+ /) {
+    } else if ($0 ~ /^## [0-9]+\.[0-9]+ /) {
         printf "    + [**%s**](#%s-%s) %s\n", $2, index_num, index_name, index_name_init
-    } else if ($0 ~ /^## [[:digit:]]+ /) {
+    } else if ($0 ~ /^## [0-9]+ /) {
         printf "+ [**%s**](#%s-%s) %s\n", $2, index_num, index_name, index_name_init
     } else {
         index_err_cnt++
