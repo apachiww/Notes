@@ -64,8 +64,8 @@
         + [**5.5.6**](#556-附加说明openssl) 附加说明：OpenSSL
     + [**5.6**](#56-quic) QUIC
 + [**6**](#6-应用层) 应用层
-    + [**6.1**](#61-http) HTTP
-    + [**6.2**](#62-https) HTTPS
+    + [**6.1**](#61-http11) HTTP/1.1
+    + [**6.2**](#62-http2和http3) HTTP/2和HTTP/3
     + [**6.3**](#63-dns) DNS
         + [**6.3.1**](#631-dns域名基本概念) DNS域名基本概念
         + [**6.3.2**](#632-dns系统组成) DNS系统组成
@@ -74,8 +74,11 @@
         + [**6.3.5**](#635-question数据格式) Question数据格式
         + [**6.3.6**](#636-rr数据格式) RR数据格式
         + [**6.3.7**](#637-dns抓包) DNS抓包
-    + [**6.4**](#64-dhcp和dhcpv6) DHCP和DHCPv6
-        + [**6.4.1**](#641-slaac) SLAAC
+    + [**6.4**](#64-dhcp) DHCP
+        + [**6.4.1**](#641-dhcp数据包格式) DHCP数据包格式
+        + [**6.4.2**](#642-dhcp消息类型) DHCP消息类型
+        + [**6.4.3**](#643-dhcp工作过程) DHCP工作过程
+        + [**6.4.4**](#644-常用options) 常用Options
     + [**6.5**](#65-telnet) Telnet
     + [**6.6**](#66-ftp和sftp) FTP和SFTP
     + [**6.7**](#67-smtp) SMTP
@@ -2295,11 +2298,9 @@ Certificate:
 
 ## 6 应用层
 
-## 6.1 HTTP
+## 6.1 HTTP/1.1
 
-
-
-## 6.2 HTTPS
+## 6.2 HTTP/2和HTTP/3
 
 ## 6.3 DNS
 
@@ -2589,11 +2590,214 @@ dig @10.80.192.1 github.com
 ![](images/221112a047.png)
 
 
-## 6.4 DHCP和DHCPv6
+## 6.4 DHCP
 
+参考RFC2131
 
+`DHCP`协议由`BOOTP`发展而来，现在主要用于网络内IP地址的协商和分发。在一个网络内的主机可以通过`DHCP`请求获取支持其他支持正常工作的参数，包括掩码，默认网关，`DNS`服务器地址等。此外，`DHCP`服务器会尽量保证每次分配`IP`地址时，对于同一个MAC分配同一个`IP`地址。客户端申请`IP`地址时可以选择有限长或无限长（`0xffffffff`）的租期（`lease`），客户端可以申请延长租期
 
-### 6.4.1 SLAAC
+`DHCP`服务器也相当于存储网络中主机相关配置的数据库，其中的数据使用`key-value`形式存储
+
+### 6.4.1 DHCP数据包格式
+
+`DHCP`数据包传输基于`UDP`，服务器在端口`67`监听，客户端在端口`68`监听
+
+```
+    0                   1                   2                   3
+    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |     op (1)    |   htype (1)   |   hlen (1)    |   hops (1)    |
+   +---------------+---------------+---------------+---------------+
+   |                            xid (4)                            |
+   +-------------------------------+-------------------------------+
+   |           secs (2)            |           flags (2)           |
+   +-------------------------------+-------------------------------+
+   |                          ciaddr  (4)                          |
+   +---------------------------------------------------------------+
+   |                          yiaddr  (4)                          |
+   +---------------------------------------------------------------+
+   |                          siaddr  (4)                          |
+   +---------------------------------------------------------------+
+   |                          giaddr  (4)                          |
+   +---------------------------------------------------------------+
+   |                                                               |
+   |                          chaddr  (16)                         |
+   |                                                               |
+   |                                                               |
+   +---------------------------------------------------------------+
+   |                                                               |
+   |                          sname   (64)                         |
+   +---------------------------------------------------------------+
+   |                                                               |
+   |                          file    (128)                        |
+   +---------------------------------------------------------------+
+   |                                                               |
+   |                          options (variable)                   |
+   +---------------------------------------------------------------+
+```
+
+| 位域 | 作用 |
+| :-: | :-: |
+| `op` | 消息类型，`1`为`REQUEST`（客户端发送），`2`为`REPLY`（服务器发送） |
+| `htype` | 硬件地址类型，`1`表示MAC |
+| `hlen` | 硬件地址长度，MAC为`6` |
+| `hops` | 通常不使用为`0`。`DHCP`中继会使用 |
+| `xid` | `Transaction ID`，用于匹配一对请求和回复 |
+| `secs` | 用于客户端消息，表示客户端从开始获取地址到目前的时间 |
+| `flags` | 见下 |
+| `ciaddr` | 用于客户端消息，表示客户端目前的`IP`地址（只在`BOUND` `RENEW` `REBINDING`状态下有效，此时客户端有可用的`IP`地址） |
+| `yiaddr` | 通常用于服务端，告知客户端分配的`IP`（`your IP`） |
+| `siaddr` | 通常用于服务端的`DHCPACK` `DHCPOFFER`消息，告知客户端下一次请求时的`DHCP`服务器地址 |
+| `giaddr` | 中继地址 |
+| `chaddr` | 客户端硬件地址 |
+| `sname` | 服务器名称，`0x00`结尾的字符串，不再使用 |
+| `file` | `Boot file name`，不再使用 |
+| `options` | 可选附加参数，开头有`4`字节的`99 130 83 99`魔法数，最后有一个`end option`。一定包含`DHCP message type` |
+
+`flags`定义如下
+
+```
+                         1 1 1 1 1 1
+     0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |B|             MBZ             |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+    B:  BROADCAST flag
+
+    MBZ:  MUST BE ZERO (reserved for future use)
+```
+
+> 有些`TCP/IP`协议栈不支持在没有IP地址时从数据链路层接收带有目标IP的数据包。`B`标记位就是用于解决这个问题，可以告知服务器发送IP分配通知时使用广播IP还是单播IP。现在已经很少使用，置`0`
+
+### 6.4.2 DHCP消息类型
+
+| 类型 | 解释 |
+| :-: | :-: |
+| `DHCPDISCOVER` | 客户端发送的广播消息，请求可用的`DHCP`服务器 |
+| `DHCPOFFER` | 服务器对于`DHCPDISCOVER`的回复，包含了一些配置参数 |
+| `DHCPREQUEST` | 用于客户端回应确认服务器发送的参数，或证实IP地址的一致，或延长IP地址的租期 |
+| `DHCPACK` | 服务器的回复，会包含配置参数 |
+| `DHCPNAK` | 服务器通知客户端IP配置不正确，或IP租期到期 |
+| `DHCPDECLINE` | 客户端告知服务器IP已被使用 |
+| `DHCPRELEASE` | 客户端主动告知服务器释放为其分配的IP |
+| `DHCPINFORM` | 客户端已经手动配置IP后向服务器请求本地配置 |
+
+### 6.4.3 DHCP工作过程
+
+一次完整的`DHCP`过程可以描述为`DHCPDISCOVER-DHCPOFFER-DHCPREQUEST-DHCPACK`，最后可以使用`DHCPRELEASE`释放IP，如下图
+
+![](images/221112a049.png)
+
+> 首先客户端广播一个`DHCPDISCOVER`，等待`DHCP`服务器回应（`ci yi si gi`都为`0`）。之后`DHCP`服务器根据客户端要求回复一个广播或单播`DHCPOFFER`数据包（仅`yi si`有效），其中包含了一些配置数据
+>
+> 接下来`DHCP`客户端广播一个`DHCPREQUEST`数据包（仅`si`有效），并必须在其中的`server identifier`中指定其选择的`DHCP`服务器（一个网络内可以有多台`DHCP`服务器，但是通常不会这样做），以及`requested IP address`（和之前服务器中的`yiaddr`相同），外加一些可能还需要的配置参数请求。`DHCPREQUEST`中的`secs`必须和之前`DHCPDISCOVER`的相同
+>
+> 最后由`DHCPREQUEST`选中的服务器回复`DHCPACK`（仅`yi si`有效），并且在服务器内部建立一个`chaddr-ipaddr`格式的数据项，用于维护对应客户端的配置。如果服务器不能满足`DHCPREQUEST`，必须发送一个`DHCPNAK`
+>
+> 客户端接收到`DHCPACK`以后需要最后检查一下包含的配置参数，例如使用`ARP`检测`IP`是否已经被使用。如果是，那么需要广播一个`DHCPDECLINE`，表示发生问题
+>
+> 客户端释放`IP`时发送一个`DHCPRELEASE`（`ci si`有效），其中需要包含其硬件地址以及`IP`地址
+>
+> `DHCPREQUEST`和`DHCPDISCOVER`都需要包含客户端想要的参数列表（`parameter request list`选项）。`DHCPDISCOVER`也可以包含客户端想要的特定`requested IP address`或`IP address lease time`
+
+> `DHCP`也可以省略一些步骤，直接使用之前的配置。此时只会有`DHCPREQUEST`以及之后的步骤
+>
+> 在这种情况下，如果客户端移动到了另一个子网下（尤其是使用以太网的VLAN时），服务器要发送一个`DHCPNAK`。此后客户端必须重新请求
+
+> 如果手动进行了`IP`地址的配置，之后使用`DHCP`时可以使用`DHCPINFORM`来请求其他本地参数，`ciaddr`有效。服务器回复`DHCPACK`
+
+### 6.4.4 常用Options
+
+每一个Option格式如下，长度可变
+
+```
+    0                   1                   2                   3
+    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |    code (1)   |  length (1)   |             data              |
+   +---------------+---------------+                               +
+   |                                                               |
+   +                              ...                              +
+```
+
+常用`Option`如下
+
+| Option | 作用 | Length |
+| :-: | :-: | :-: |
+| `0` | Pad，占位符 | `0` |
+| `1` | Subnet mask，子网掩码 | `4` |
+| `2` | Time offset，相对UTC时间偏移 | `4` |
+| `3` | Router，可用的路由器IP，优先级高到低 | `4n` |
+| `4` | Time server，可用的时间服务器IP | `4n` |
+| `6` | Domain name server，可用的`DNS` | `4n` |
+| `12` | Host name，客户端主机名 | `>=1` |
+| `15` | Domain name，域名 | `>=1` |
+| `42` | NTP，可用的NTP时间同步服务器IP | `4n` |
+| `50` | `Requested IP address`，客户端请求的IP | `4` |
+| `51` | `IP address lease time`，IP租期 | `4` |
+| `52` | `Option overload` | `1` |
+| `53` | `DHCP message type`，消息类型 | `1` |
+| `54` | `Server identifier`，`DHCP`服务器IP | `4` |
+| `55` | `Parameter request list`，参数请求列表 | `>=1` |
+| `56` | `Message` | `>=1` |
+| `57` | `Maximum DHCP message size` | `2` |
+| `58` | `Renewal (T1) time value` | `4` |
+| `60` | `Vendor class identifier` | `>=1` |
+| `61` | `Client-identifier` | `>=2` |
+| `100` | `Time zone`，时区 |  |
+| `101` | `Time zone`，tz database style |  |
+| `119` | `Domain search` |  |
+| `121` | `Classless static route` |  |
+| `255` | `End`，结束 | `0` |
+
+其中服务器端`Options`如下
+
+```
+Option                    DHCPOFFER    DHCPACK            DHCPNAK
+------                    ---------    -------            -------
+IP address lease time     MUST         MUST (DHCPREQUEST) MUST NOT
+                                       MUST NOT (DHCPINFORM)
+DHCP message type         DHCPOFFER    DHCPACK            DHCPNAK
+Message                   SHOULD       SHOULD             SHOULD
+Client identifier         MUST NOT     MUST NOT           MAY
+Vendor class identifier   MAY          MAY                MAY
+Server identifier         MUST         MUST               MUST
+All others                MAY          MAY                MUST NOT
+```
+
+客户端`Options`如下
+
+```
+Option                     DHCPDISCOVER  DHCPREQUEST      DHCPDECLINE,
+                           DHCPINFORM                     DHCPRELEASE
+------                     ------------  -----------      -----------
+Requested IP address       MAY           MUST (in         MUST
+                           (DISCOVER)    SELECTING or     (DHCPDECLINE),
+                           MUST NOT      INIT-REBOOT)     MUST NOT
+                           (INFORM)      MUST NOT (in     (DHCPRELEASE)
+                                         BOUND or
+                                         RENEWING)
+IP address lease time      MAY           MAY              MUST NOT
+                           (DISCOVER)
+                           MUST NOT
+                           (INFORM)
+DHCP message type          DHCPDISCOVER/ DHCPREQUEST      DHCPDECLINE/
+                           DHCPINFORM                     DHCPRELEASE
+Client identifier          MAY           MAY              MAY
+Vendor class identifier    MAY           MAY              MUST NOT
+Server identifier          MUST NOT      MUST (after      MUST
+                                         SELECTING)
+                                         MUST NOT (after
+                                         INIT-REBOOT,
+                                         BOUND, RENEWING
+                                         or REBINDING)
+Parameter request list     MAY           MAY              MUST NOT
+Maximum message size       MAY           MAY              MUST NOT
+Message                    SHOULD NOT    SHOULD NOT       SHOULD
+Site-specific              MAY           MAY              MUST NOT
+All others                 MAY           MAY              MUST NOT
+```
 
 ## 6.5 Telnet
 
