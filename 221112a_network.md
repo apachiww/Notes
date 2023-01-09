@@ -64,8 +64,14 @@
         + [**5.5.6**](#556-附加说明openssl) 附加说明：OpenSSL
     + [**5.6**](#56-quic) QUIC
 + [**6**](#6-应用层) 应用层
-    + [**6.1**](#61-http11) HTTP/1.1
-    + [**6.2**](#62-http2和http3) HTTP/2和HTTP/3
+    + [**6.1**](#61-http) HTTP
+        + [**6.1.1**](#611-http基本概念) HTTP基本概念
+        + [**6.1.2**](#612-uri) URI
+        + [**6.1.3**](#613-http11报文结构) HTTP/1.1报文结构
+        + [**6.1.4**](#614-http请求方法以及返回状态码) HTTP请求方法以及返回状态码
+        + [**6.1.5**](#615-http2) HTTP/2
+        + [**6.1.6**](#616-http3) HTTP/3
+    + [**6.2**](#62-https) HTTPS
     + [**6.3**](#63-dns) DNS
         + [**6.3.1**](#631-dns域名基本概念) DNS域名基本概念
         + [**6.3.2**](#632-dns系统组成) DNS系统组成
@@ -2459,7 +2465,35 @@ magnet:?xt=urn:btih:8402E328F819AADD68A333A75729DE890F8...
 
 通用`Headers`
 
+![](images/221112a052.png)
+
 请求`headers`
+
+![](images/221112a053.png)
+
+![](images/221112a054.png)
+
+![](images/221112a055.png)
+
+![](images/221112a056.png)
+
+![](images/221112a057.png)
+
+响应`headers`
+
+![](images/221112a058.png)
+
+![](images/221112a059.png)
+
+![](images/221112a060.png)
+
+`Body headers`
+
+![](images/221112a061.png)
+
+![](images/221112a062.png)
+
+![](images/221112a063.png)
 
 ### 6.1.5 HTTP/2
 
