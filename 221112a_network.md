@@ -2298,9 +2298,176 @@ Certificate:
 
 ## 6 应用层
 
-## 6.1 HTTP/1.1
+## 6.1 HTTP
 
-## 6.2 HTTP/2和HTTP/3
+`HTTP/1.1`参考RFC2616 RFC2818，`HTTP/2`参考RFC9113，`HTTP/3`参考RFC9114。`HTTP`综述参考RFC9110
+
+参考《HTTP权威指南》
+
+`HTTP`是最流行的应用层协议。它可以用于传输各种文本以及非文本数据。同时`HTTP`也是一种无状态协议，基于`TCP`传输，服务器在`80`端口监听
+
+`HTTP`的三个主要版本`1.1 2 3`目前都被广泛使用，对于不同应用环境来说各有优劣，所以它们并不完全是新版替换旧版的关系
+
+### 6.1.1 HTTP基本概念
+
+网络服务器上提供的**资源**非常多样，有`.svg .jpg .mp4`等静态文件，也有软件程序服务，例如我们在网络购买了一件衣服，就是调用了网站的服务资源。`HTTP`需要传输所有以上类型的数据
+
+`HTTP`沿用了邮件系统的`MIME`类型，所有通过`HTTP`传输的对象都拥有自己的`MIME`属性。这在服务器响应中体现为`Content-Type`。例如`html`类型为`text/html`，`txt`类型为`text/plain`，`jpg`类型为`image/jpg`，二进制字节流为`application/octet-stream`等
+
+一个`HTTP`**事务**由客户端发送的**请求命令**和服务端回复的**响应结果**构成
+
+参与`HTTP`通信常用的组件有以下几种
+
+> **代理**是客户端和服务器（不直接通信）的中间人，它通常负责转发数据，同时可以对数据进行修改（例如屏蔽不安全的内容）
+>
+> **缓存**是一种特殊的代理，它的主要作用是缓存常用的资源，使得客户端访问速度更快，同时减轻服务器负担
+>
+> **网关**gateway是一种特殊的代理，它主要用于协议的转换，例如接收`HTTP`请求并使用`FTP`协议到其他服务器获取资源
+>
+> **隧道**tunnel也是一种特殊的代理，通常需要两台中间服务器。两台服务器之间的数据相当于在原有的数据流上再添加了一层`HTTP`包装（它们分别负责打包和还原），这样就可以使得`TLS`流量流过仅允许`HTTP`流量的服务器了
+>
+> **Agent**是客户端发起`HTTP`请求的应用程序，例如`curl`和浏览器等
+
+### 6.1.2 URI
+
+每一个`URI`在全球范围内唯一表示一个信息资源。`URI`包含了`URL`和`URN`，其中`URL`将资源的具体位置表现了出来，而`URN`是资源的一个名字，而不是具体位置
+
+以下是一个`URL`。我们通过该URL向`HTTP`服务器请求服务，查询`symphony x`这个乐队
+
+```
+http://www.metal-archives.com:80/search?searchString=symphony+x&type=band_name
+```
+
+> 其中`http:`+`//`表示访问协议类型，也可以是`ftp smb`等。`www.metal-archives.com`为`host`主机名，`80`为端口，使用`:`分隔。`/search`为请求的资源（绝对路径形式），`?`之后的内容表示请求服务对应的查询内容，使用`=`键值对形式，并且使用`&`分隔
+
+`URN`只在磁力链接等地方有应用
+
+```
+magnet:?xt=urn:btih:8402E328F819AADD68A333A75729DE890F8...
+```
+
+### 6.1.3 HTTP/1.1报文结构
+
+`HTTP`报文主要由`start line`，`header`，`body`**三大部分**组成。而`HTTP`报文按照方向分为`Inbound`和`Outbound`，是相对于服务器而言的。而数据发送方永远位于接收方上游`Upstream`，相反接收方位于发送方下游`Downstream`
+
+在`HTTP/1.1`中，`start line`起始行以及`header`都是直接使用**字符行**形式，每一项都以`\r\n`（`\x0d\x0a`）回车换行结尾。而`body`就是该`HTTP`数据包搭载的必要数据（实体）。客户端发送的请求中，通常只有`POST`和`PUT`会拥有`body`
+
+**客户端的请求报文**
+
+请求报文的一般格式如下
+
+```
+<method> <request-URL> <version>
+<headers>
+
+<body>
+```
+
+> 在客户端，`start line`通常包含请求的**方法**，**资源路径**以及`HTTP`的版本，如下所示，字符串`GET /16M HTTP/1.1\r\n`就是`start line`，使用空格` `分隔
+
+![](images/221112a050.png)
+
+> 而`header`的每一行都是一个文本形式的键值对，使用`: `冒号加空格定义。例如上图中的`User-Agent`指发起请求的应用，这里是`curl/7.86.0`，而`Accept`表示客户端可以接收的数据类型（`MIME`），这里为`*/*\r\n`表示任意类型。注意在`header`之后一定会有一个**空行**`\r\n`，接下来才是`body`。而`GET`请求没有`body`，所以到这里也就结束了
+>
+> `headers`中的一个值可以拥有多个**延续行**（为了可读性），该延续行开头必须要有` `空格或`\t`制表符
+>
+> `headers`分为通用，请求，响应，Body，扩展共五大类
+
+**服务器的响应报文**
+
+响应报文的一般格式如下
+
+```
+<method> <status> <reason-phrase>
+<headers>
+
+<body>
+```
+
+> 在服务器端，`start line`通常包含回复的`HTTP`版本，以及状态码，如下为`HTTP/1.1 200 OK\r\n`，同样使用空格` `分隔
+
+![](images/221112a051.png)
+
+> `header`的格式相同。这里的`Content-Type`（`MIME`）为`application/octet-stream`，`Content-Length`为`16777216`（数据总长度）。这里的服务器回复有`body`（我们请求大小`16M`文件的最后一些字节），所以空行后面还有数据
+>
+> 日期格式是统一的，`Date: Mon, 09 Jan 2023 13:29:40 GMT\r\n`
+
+### 6.1.4 HTTP请求方法以及返回状态码
+
+客户端发送的`HTTP`请求方法分为以下几种
+
+| 方法 | 解释 | Side-effects | Body |
+| :-: | :-: | :-: | :-: |
+| `GET` | 请求服务器把资源发送过来（仅通过`URL`请求） | 无 | 无 |
+| `POST` | 请求服务器处理发过去的数据，包含待处理的数据以及其他一些必要参数，例如请求的内容，调用的服务等。常用于`HTML`表单数据等 | 通常有 | 有 |
+| `PUT` | 请求服务器存储发过去的数据到指定路径 | 有 | 有 |
+| `HEAD` | 仅发送被请求资源的头部。通常用于检查资源是否存在，资源类型，修改时间等 | 无 | 无 |
+| `DELETE` | 请求服务器删除指定资源 | 有 | 无 |
+| `OPTIONS` | 询问可用的请求类型（例如`Allow: GET, POST, OPTIONS`） | 无 | 无 |
+| `TRACE` | 请求最终的接收方重复一下我们发送的请求内容，查看途中进行了哪些更改 | 无 | 无 |
+| `CONNECT` | 用于tunnel |  | 无 |
+
+> `Side-effects`表示该种请求是否会导致服务器端数据的改变，它不是绝对的，行为可以由开发者定义。但实际应用中还是需要遵守这些方法的应用场合
+
+服务器返回状态码如下
+
+| 状态码 | 可读格式 | 解释 |
+| :-: | :-: | :-: |
+| `100` | `Continue` | 继续请求。客户端发送数据包前可以先发送一个试探性的数据包，其中`header`包含了`Expect: 100 Continue`，得到服务器的`100`响应后再发送数据（如果响应超时，客户端无论是否收到响应都要立即发送数据包）。取决于试探性数据包的`body`是否已经**包含**了部分数据，服务器会回应`100`（不包含）或不回应（包含）。有些服务器的`100`响应会有bug，在实际应用中需要注意 |
+| `101` | `Switching Protocols` | 服务器按要求正在切换`HTTP`协议版本 |
+| `200` | `OK` | 请求成功，本数据包`body`包含了响应数据 |
+| `201` | `Created` | 主要响应`PUT`，需要包含`Location`（服务器端创建的`URL`） |
+| `202` | `Accepted` | 已接受请求但未处理。`body`需要包含附加信息，例如预计时间等 |
+| `203` | `Non-Authoritative Information` | 通常在有缓存服务器的场合中出现，表明缓存服务器暂时无法验证它响应的信息是否可信 |
+| `204` | `No Content` | 响应没有`body`，但是客户端需要根据`headers`进行一些本地操作 |
+| `205` | `Reset Content` | 清除所有（`HTML`）元素 |
+| `206` | `Partial Content` | 部分请求（客户端只请求了文档的一部分）成功 |
+| `300` | `Multiple Choices` | 同一`URL`对应多资源 |
+| `301` | `Moved Permanently` | `URL`已经移除，通过`Location`指示现在的可用`URL`（以后都使用新的） |
+| `302` | `Found` | `URL`暂时不可用，通过`Location`指示现在的可用`URL`（以后仍然使用旧的）。只用于`HTTP/1.0` |
+| `303` | `See Other` | 使用`Location`指定`URL`访问，主要用于`POST`（重定向访问使用`GET`） |
+| `304` | `Not Modified` | 资源未修改 |
+| `305` | `Use Proxy` | 必须通过代理`Location`访问 |
+| `306` |  |  |
+| `307` | `Temporary Redirect` | 作用同`302`，用于`HTTP/1.1` |
+| `400` | `Bad Request` | 请求错误 |
+| `401` | `Unauthorized` | 未输入用户名和密码 |
+| `402` | `Payment Required` | 保留 |
+| `403` | `Forbidden` | 拒绝访问 |
+| `404` | `Not Found` | 服务器没有`URL`对应资源 |
+| `405` | `Method Not Allowed` | 不支持该请求方法 |
+| `406` | `Not Acceptable` | 无法接收 |
+| `407` | `Proxy Authentication Required` | 类似`401`，用于代理服务器 |
+| `408` | `Request Timeout` | 客户端发送请求时间过长（一般很少出现） |
+| `409` | `Conflict` | 资源冲突 |
+| `410` | `Gone` | 类似`404`，但是资源曾经存在 |
+| `411` | `Length Required` | 服务器要求客户端包含`Content-Length` |
+| `412` | `Precondition Failed` | 客户端请求中的条件失败 |
+| `413` | `Request Entity Too Large` | 请求过大 |
+| `414` | `Request URI Too Long` | URI过长 |
+| `415` | `Unsupported Media Type` | 服务器不支持该类型文件 |
+| `416` | `Request Range Not Satisfiable` | 非法的范围请求 |
+| `417` | `Expectation Failed` | 无法满足客户端的`Expectation` |
+| `500` | `Internal Server Error` | 服务端程序出错，无法提供服务 |
+| `501` | `Not Implemented` | 不支持的请求 |
+| `502` | `Bad Gateway` | 代理服务器背后的链路故障 |
+| `503` | `Service Unavailable` | 服务不可用 |
+| `504` | `Gateway Timeout` | 类似`408`，客户端向代理服务器发送请求时间过长（一般很少出现） |
+| `505` | `HTTP Version Not Supported` | 不支持的`HTTP`协议 |
+
+常见`Headers`
+
+通用`Headers`
+
+请求`headers`
+
+### 6.1.5 HTTP/2
+
+### 6.1.6 HTTP/3
+
+## 6.2 HTTPS
+
+`HTTP/1.1`参考RFC2818
 
 ## 6.3 DNS
 

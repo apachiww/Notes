@@ -120,6 +120,7 @@
 28. 《Programming in Haskell (Second Edition)》，Graham Hutton著
 29. 《Compilers: Principles, Techniques and Tools (Second Edition)》，Alfred V. Aho，Monica S. Lam，Ravi Sethi，Jeffrey D. Ullman著
 30. 《OpenSSL Cookbook (Second Edition)》，Ivan Ristić著
+31. 《HTTP权威指南》，David Gourley，Brian Totty著
 
 ## Recipe
 
