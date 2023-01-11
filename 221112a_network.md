@@ -15,6 +15,7 @@
         + [**3.1.4**](#314-以太网设施二层交换机switch) 以太网设施：二层交换机Switch
         + [**3.1.5**](#315-csmacd) CSMA/CD
     + [**3.2**](#32-atm-asynchronous-transfer-mode) ATM Asynchronous-Transfer-Mode
+    + [**3.3**](#33-avian-carriers-草) Avian Carriers （草）
 + [**4**](#4-网络层) 网络层
     + [**4.1**](#41-ipv4) IPv4
         + [**4.1.1**](#411-格式) 格式
@@ -305,6 +306,80 @@ ATM数据包格式如下
 > ATM网络中用户到网络以及网络和网络之间使用的数据包是不相同的。用户到网络`UNI`数据包中`GFC`表示`Generic Flow Control`，没有实际作用永远为`0`。`VPI`为`Virtual Path ID`，长度1或1.5字节，`VCI`为`Virtual Channel ID`，长度2字节，这2个数据域表示该数据包下一个目的地。`PT`表示数据包类型，`0b1XX`表示数据包用于网络管理，`0b0XX`表示用户数据包，`0b01X`表示网络拥塞。`CLP`为丢包优先级，只有2级。`HEC`为`CRC`，使用多项式`0x107`进行校验
 
 ATM基于虚拟线路的设计导致其较为混乱，资源分配效率低，且带宽分配缺乏灵活性。最终其大部分普通应用被以太网替代
+
+## 3.3 Avian Carriers （草）
+
+It's April Fool's Day.
+
+RFC1149 A Standard for the Transmission of IP Datagrams on Avian Carriers (IPoAC)
+
+RFC2549 IP over Avian Carriers with Quality of Service
+
+RFC6214 Adaptation of RFC 1149 for IPv6
+
+鸟类也能用作网络传输
+
+> 不是很好用。更高级的方法是使用装满硬盘的卡车（不要小看卡车的带宽）
+>
+> ~~WWIII以后也许会用上，但那时候就不是搭载IP了~~
+
+![](images/221112a064.jpg)
+
+```
+RFC1149
+
+Status of this Memo
+
+   This memo describes an experimental method for the encapsulation of
+   IP datagrams in avian carriers.  This specification is primarily
+   useful in Metropolitan Area Networks.  This is an experimental, not
+   recommended standard.  Distribution of this memo is unlimited.
+
+Overview and Rational
+
+   Avian carriers can provide high delay, low throughput, and low
+   altitude service.  The connection topology is limited to a single
+   point-to-point path for each carrier, used with standard carriers,
+   but many carriers can be used without significant interference with
+   each other, outside of early spring.  This is because of the 3D ether
+   space available to the carriers, in contrast to the 1D ether used by
+   IEEE802.3.  The carriers have an intrinsic collision avoidance
+   system, which increases availability.  Unlike some network
+   technologies, such as packet radio, communication is not limited to
+   line-of-sight distance.  Connection oriented service is available in
+   some cities, usually based upon a central hub topology.
+
+Frame Format
+
+   The IP datagram is printed, on a small scroll of paper, in
+   hexadecimal, with each octet separated by whitestuff and blackstuff.
+   The scroll of paper is wrapped around one leg of the avian carrier.
+   A band of duct tape is used to secure the datagram's edges.  The
+   bandwidth is limited to the leg length.  The MTU is variable, and
+   paradoxically, generally increases with increased carrier age.  A
+   typical MTU is 256 milligrams.  Some datagram padding may be needed.
+
+   Upon receipt, the duct tape is removed and the paper copy of the
+   datagram is optically scanned into a electronically transmittable
+   form.
+
+Discussion
+
+   Multiple types of service can be provided with a prioritized pecking
+   order.  An additional property is built-in worm detection and
+   eradication.  Because IP only guarantees best effort delivery, loss
+   of a carrier can be tolerated.  With time, the carriers are self-
+   regenerating.  While broadcasting is not specified, storms can cause
+   data loss.  There is persistent delivery retry, until the carrier
+   drops.  Audit trails are automatically generated, and can often be
+   found on logs and cable trays.
+
+Security Considerations
+
+   Security is not generally a problem in normal operation, but special
+   measures must be taken (such as data encryption) when avian carriers
+   are used in a tactical environment.
+```
 
 ## 4 网络层
 
