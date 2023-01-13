@@ -15,7 +15,7 @@
         + [**3.1.4**](#314-以太网设施二层交换机switch) 以太网设施：二层交换机Switch
         + [**3.1.5**](#315-csmacd) CSMA/CD
     + [**3.2**](#32-atm-asynchronous-transfer-mode) ATM Asynchronous-Transfer-Mode
-    + [**3.3**](#33-avian-carriers-草) Avian Carriers （草）
+    + [**3.3**](#33-avian-carriers草) Avian Carriers（草）
 + [**4**](#4-网络层) 网络层
     + [**4.1**](#41-ipv4) IPv4
         + [**4.1.1**](#411-格式) 格式
@@ -307,17 +307,19 @@ ATM数据包格式如下
 
 ATM基于虚拟线路的设计导致其较为混乱，资源分配效率低，且带宽分配缺乏灵活性。最终其大部分普通应用被以太网替代
 
-## 3.3 Avian Carriers （草）
+## 3.3 Avian Carriers（草）
 
-It's April Fool's Day.
+```
+🖥  <--------  🕊✉️  <--------  🖥
+```
 
-RFC1149 A Standard for the Transmission of IP Datagrams on Avian Carriers (IPoAC)
+RFC IPoAC April Fool's Day Series:
+
+RFC1149 A Standard for the Transmission of IP Datagrams on Avian Carriers
 
 RFC2549 IP over Avian Carriers with Quality of Service
 
 RFC6214 Adaptation of RFC 1149 for IPv6
-
-鸟类也能用作网络传输
 
 > 不是很好用。更高级的方法是使用装满硬盘的卡车（不要小看卡车的带宽）
 >
@@ -841,7 +843,7 @@ Entry
 
 > 以上报文通常需要搭配[多播IPv6](#424-ipv6多播地址)使用，`ff02::1`网络内所有节点，`ff02::2`网络内所有路由
 >
-> 除了MAC地址获取以及IP冲突检测外，`NDP`还可以寻找网络内路由，获取网络MTU、hop limit参数，地址分配获取（`SLAAC`，之后会讲解），重定向，可用性检测（reachability）功能等
+> 除了MAC地址获取以及IP冲突检测外，`NDP`还可以寻找网络内路由，获取网络MTU、hop limit参数，地址分配获取，重定向，可用性检测（reachability）功能等
 
 `NDP`协议主要使用`NS`和`NA`报文来进行MAC地址的请求，地址冲突检测和可用性检测
 
@@ -2377,6 +2379,8 @@ Certificate:
         e3:74:30:98
 ```
 
+### 5.5.7 TLS1.3
+
 
 ## 5.6 QUIC
 
@@ -2595,7 +2599,7 @@ IP地址难以记忆。且如果一个网站更换了IP，访问它的客户端�
 
 以域名`www.metal-archives.com`为例，这个域名中的`www` `metal-archives` `com`称为标签`label`，每个长度不超过`63`字节，总长不超过`255`字节。所有的域名最后都有一个长度`0`的`null`标签，表示根域`root`，域名在此结束
 
-> 根域`root`下的顶级域`Top Level Domains`有`.com .org .edu .gov .mil .net .info .uk .jp .de .cn .hk .fi`等，主要包括了常用机构，以及国家名。而二级域在顶级域之下，常见的例如`.cn`下的`.com .edu`，`.jp`下的`.co .ac`。上例中`metal-archives.com`的`metal-archives`也是直接挂靠在`.com`顶级域下的一个二级域
+> 根域`root`下的顶级域`Top Level Domains`有`.com .org .edu .gov .mil .net .info .uk .jp .de .cn .es .fi`等，主要包括了常用机构，以及国家名。而二级域在顶级域之下，常见的例如`.cn`下的`.com .edu`，`.jp`下的`.co .ac`。上例中`metal-archives.com`的`metal-archives`也是直接挂靠在`.com`顶级域下的一个二级域
 >
 > 域名的概念和域不同。`metal-archives.com`这个域名本身是一个顶级域名，而`zol.com.cn`是一个二级域名
 >
@@ -2611,7 +2615,7 @@ IP地址难以记忆。且如果一个网站更换了IP，访问它的客户端�
 
 边缘服务器在接收到客户端的`DNS`请求后，首先会查找缓存是否有已有的记录。如果没有，再按从高级权威服务器到低级权威服务器的顺序进行询问，直到有权威服务器给出具体的IP地址
 
-> `DNS`服务器监听`TCP`和`UDP`的`53`端口，其中通过`UDP`传输的数据包不超过`512`字节，更大的数据包需要使用`TCP`传输。通常**边缘服务器**和**客户端**之间优先使用`UDP`进行数据传输（大小不够再使用`TCP`），而**边缘服务器**和**权威服务器**之间的数据交换通常使用`TCP`传输
+> `DNS`服务器监听`TCP`和`UDP`的`53`端口，其中通过`UDP`传输的数据包不超过`512`字节，更大的数据包需要使用`TCP`传输。通常**边缘服务器**和**客户端**之间优先使用`UDP`进行数据传输（大小不够再使用`TCP`），而**边缘服务器**和**权威服务器**之间的数据交换经常使用`TCP`传输
 
 
 ### 6.3.3 Resource Records
