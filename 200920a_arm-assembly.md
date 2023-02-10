@@ -14,9 +14,9 @@ ARMv7-M体系结构笔记[传送门](201020a_stm32.md)
 
 ## 前言
 
-随着2000年代中后期从苹果开始的智能手机大爆发，ARM逐渐统治了手机领域。ARMv7是ARM历史上具有革命性的一代（ARMv8是第一代64位架构，同样是划时代的），也是这一代开始ARM将产品线分为A、R、M三大系列。在工业控制领域ST推出了基于Cortex-M系列核心的STM32。也是从这里开始32位MCU得到了推广，并最终由ARM的Cortex-M系列统治了32位MCU领域。现在ARM处理器是全世界出货量最多的处理器，它已经渗透到我们生活的各个角落，从超算到玩具都可以见到它的存在
+随着00年代中后期从苹果开始的智能手机大爆发，ARM逐渐统治了手机领域。ARMv7是ARM历史上具有革命性的一代（ARMv8是第一代64位架构，同样是划时代的），也是这一代开始ARM将产品线分为A、R、M三大系列。在工业控制领域ST推出了基于Cortex-M系列核心的STM32。也是从这里开始32位MCU得到了推广，并最终由ARM的Cortex-M系列统治了32位MCU领域。现在ARM处理器是全世界出货量最多的处理器，它已经渗透到我们生活的各个角落，从超级计算机，军事设备，工控设备，到汽车，消费电子，玩具中都可以见到它的存在
 
-如今ARM已经推出了ARMv9，作为ARMv8的小幅升级。即便如此，老旧的32位ARMv7处理器依然凭借成熟的生态以及足够的性能维持强大的生命力，在工控以及低端数码领域继续发展。许多厂商依然在推出基于32位ARMv7-A处理器的新产品，例如Allwinner等，ST也开始涉及SoC领域，推出了STM32MP1系列，这些产品大部分都是基于Cortex-A7设计
+如今ARM已经推出了ARMv9，作为ARMv8的小幅改进，并且部分新产品中已经取消了32位应用的兼容支持。即便如此，老旧的32位ARMv7处理器依然凭借成熟的生态以及足够的性能维持强大的生命力，在工控以及低端数码领域继续生存。许多厂商依然在推出基于32位ARMv7-A处理器的新产品，例如Allwinner等，ST也开始涉及SoC领域，推出了STM32MP1系列，这些产品大部分都是基于Cortex-A7设计
 
 ## 0 常见SoC厂商与产品
 
@@ -24,9 +24,10 @@ ARMv7-M体系结构笔记[传送门](201020a_stm32.md)
 
 **国内**
 
-+ Allwinner (sunxi) 全志科技 （主打低端，适合低难度廉价DIY开发板）
++ Allwinner 全志科技（珠海）（主打低端）
+    + ~~山寨之王，马甲遍地~~，价格相对友好，性能一般，适合DIY入门级Linux开发板。官方不开放手册，许多手册和资料由第三方泄露
     + 新论坛 https://bbs.aw-ol.com/
-    + Wiki https://linux-sunxi.org/Main_Page
+    + sunxi wiki https://linux-sunxi.org/Main_Page
     + 部分新产品文档 https://gitee.com/aw-sunxi/awesome-sunxi
     + RISCV产品省略
     + T113-s3 (2xA7 with 128MB DDR3, eLQFP128)
@@ -40,18 +41,20 @@ ARMv7-M体系结构笔记[传送门](201020a_stm32.md)
     + V853 (1xA7+1xRISCV)
     + R11 (1xA7)
     + H3 (4xA7)
-    + H5 (4xA53)
     + H6 (4xA53)
-+ Rockchip 瑞芯微 （主打中高端）
-    + Wiki https://opensource.rock-chips.com/wiki_Main_Page
++ Rockchip 瑞芯微（福州）（主打中高端）
+    + ~~资料开放程度相对某志较高~~，高端产品线性能较强，也有许多高性价比主力产品。许多手册也是泄露得来。未来中高端Linux开源硬件首选
+    + wiki https://opensource.rock-chips.com/wiki_Main_Page
     + RK3588 (4xA76+4xA55)
     + RK3568 (4xA55)
     + RK3566 (4xA55)
     + RK3399 (2xA72+4xA53)
     + RK3328 (4xA53)
-    + RK3288 (4xA17)
+    + RK3308 (4xA35)
     + RK1808 (2xA35)
-+ Amlogic 晶晨半导体 （主打中高端）
+    + RK3288 (4xA17)
++ Amlogic 晶晨半导体（上海）（主打中高端）
+    + ~~由于运营商机顶盒以及某讯而闻名天下的S905~~
     + A311D2 (4xA73+4xA53)
     + A311D (4xA73+2xA53)
     + S922X (4xA73+2xA53)
@@ -63,20 +66,28 @@ ARMv7-M体系结构笔记[传送门](201020a_stm32.md)
 **国际**
 
 + ST 意法半导体
+    + 文档齐全
     + STM32MP1
 + NXP 恩智浦半导体
+    + 文档齐全
     + i.MX Series
 + AMD Xilinx 赛灵思
+    + FPGA+ARM混合。文档齐全
     + ZYNQ-7000
 + Qualcomm 高通
     + MSM8916(Snapdragon 410)/APQ8016 https://github.com/msm8916-mainline https://wiki.postmarketos.org/wiki/MSM8916_Mainlining
 + TI 德州仪器
+    + 文档齐全
     + Sitara AMxxxx
-    + Jacinto 
 + Nvidia 英伟达
+    + 注册成为开发者就可以下载Jetson系列平台的SoC手册
 + Microchip 微芯半导体
     + ATSAMA5
 + Samsung 三星半导体
+
+> 其他绝大部分SoC（尤其是手机SoC）没有开放的手册（产品策略不同，这些SoC厂商通常直接和客户签订NDA，发放资料并安排员工指导）
+>
+> **因为博通不开放的缘故，树莓派也不是开源硬件**，它只适合软件应用，不适合真正的硬件工程师。这些产品不在考虑范围内
 
 
 ## 1 简介
@@ -97,7 +108,7 @@ ARMv7-A部分指令和ARMv7-M工作原理相同，例如`IT`指令，这里不�
 
 ![](images/200920a001.png)
 
-> 后来推出的Cortex-A17是Cortex-A12的升级版，Rockchip的RK3288就使用了Cortex-A17核心并且获得了良好的市场表现
+> 后来推出的Cortex-A17是Cortex-A12的改进版，Rockchip的RK3288就使用了Cortex-A17核心并且获得了良好的市场表现
 
 ## 1.3 微架构概览：以Cortex-A9为例
 
@@ -111,11 +122,11 @@ MPCore，单个Cluster结构
 
 > Cortex-A9 MPCore可以配备多个核心，且核心的功能只包含指令的执行、数据的运算和存取，核心包含了L1指令和数据缓存
 >
-> 其他部件相当于处理器核心的外壳，每一个核心可以拥有一个私有的定时器以及看门狗。其他的部件，如全局定时器，访存并行加速器ACP，中断控制GIC，扇出的AXI接口等，都是由4个核心共享的。4个处理器的中断都是由一个GIC进行分配和控制。而SCU主要负责多个核心之间L1缓存的同步
+> 其他部件相当于处理器核心的外壳，每一个核心可以拥有一个私有的定时器以及看门狗。其他的部件，如全局定时器，访存并行加速器ACP，中断控制GIC，AXI总线接口等，都是由4个核心共享的。4个处理器的中断都是由一个GIC进行分配和控制。而SCU主要负责多个核心之间L1缓存的同步
 >
 > Cortex-A9使用AMBA3 AXI连接到L2缓存。L2不属于Cortex-A9的组成部分，但是几乎所有的SoC都会配备有L2
 >
-> 其他MPCore处理器除核心外，组成结构基本类似。ARM经常会推出两款拥有相近指令集特性的MPCore处理器用于组成big.LITTLE大小核架构，ARMv7中使用Cortex-A7和Cortex-A15组成大小核。而ARMv8常见的有Cortex-A53+Cortex-A53组合，Cortex-A53+Cortex-A57组合，Cortex-A53+Cortex-A72组合，Cortex-A55+Cortex-A76组合等
+> 其他MPCore处理器除核心外，组成结构基本类似。ARM经常会推出两款拥有相近特性的MPCore处理器用于组成big.LITTLE大小核架构，ARMv7中使用Cortex-A7和Cortex-A15组成大小核。而ARMv8常见的有Cortex-A53+Cortex-A53组合，Cortex-A53+Cortex-A57组合，Cortex-A53+Cortex-A72组合，Cortex-A55+Cortex-A76组合，Cortex-A55+Cortex-A77组合等
 
 ## 1.4 其他关键特性
 
@@ -135,14 +146,16 @@ TrustZone安全扩展
 
 可选的VFP浮点扩展，NEON SIMD扩展
 
-> ARMv7-A处理器基本废弃了旧有的Jazelle以及ThumbEE支持
+> 许多ARMv7-A处理器中，旧有的Jazelle以及ThumbEE支持是可选的。有些SoC厂商选择不配备这些扩展
 
 
 ## 2 工作模式与寄存器
 
 ## 2.1 工作模式
 
-带有虚拟化扩展以及TrustZone安全扩展的ARMv7-A处理器支持以下工作模式
+Cortex-A的运行模式和Cortex-M完全不同
+
+带有**虚拟化扩展**以及**TrustZone安全扩展**的ARMv7-A处理器支持以下工作模式
 
 ![](images/200920a004.png)
 

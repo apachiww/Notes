@@ -1,31 +1,31 @@
 #!/usr/bin/awk -f
 
 BEGIN {
-    print ""
-    print "   ###########################################"
-    print "   #                                         #"
-    print "   #  Index generator for markdown notes :)  #"
-    print "   #                                         #"
-    print "   ###########################################"
-    print ""
+    print "\n\
+        ###########################################\n\
+        #                                         #\n\
+        #  Index generator for markdown notes :)  #\n\
+        #                                         #\n\
+        ###########################################\n\
+    "
 }
 
-/^##* [0-9]+(\.[0-9]+)* / {
-    index_num = gensub(/[[:punct:]]/, "", "g", $2)
-    index_name_init = gensub(/^##* [0-9]+(\.[0-9]+)* /, "", "g", $0)
-    index_name_init = gensub(/\r/, "", "g", index_name_init)
-    index_name = gensub(/ /, "-", "g", index_name_init)
-    index_name = tolower(index_name)
-    gsub(/-/, "A", index_name)
-    gsub(/[[:punct:]]/, "", index_name)
-    gsub(/A/, "-", index_name)
-
+/^#+ [0-9]+(\.[0-9]+)* / {
+    index_name = gensub(/^#+ [0-9]+(\.[0-9]+)* |\r/, "", "g", $0)
+    index_link = gensub(/^#+ /, "", "g", tolower($0))
+    gsub(/ /, "-", index_link)
+    gsub(/-/, "A", index_link)
+    gsub(/_/, "B", index_link)
+    gsub(/\r|[[:punct:]]/, "", index_link)
+    gsub(/A/, "-", index_link)
+    gsub(/B/, "_", index_link)
+    index_string = "[**" $2 "**](#" index_link ") " index_name
     if ($0 ~ /^### [0-9]+(\.[0-9]+){2} /) {
-        printf "        + [**%s**](#%s-%s) %s\n", $2, index_num, index_name, index_name_init
+        printf "        + %s\n", index_string
     } else if ($0 ~ /^## [0-9]+\.[0-9]+ /) {
-        printf "    + [**%s**](#%s-%s) %s\n", $2, index_num, index_name, index_name_init
+        printf "    + %s\n", index_string
     } else if ($0 ~ /^## [0-9]+ /) {
-        printf "+ [**%s**](#%s-%s) %s\n", $2, index_num, index_name, index_name_init
+        printf "+ %s\n", index_string
     } else {
         index_err_cnt++
         index_err[index_err_cnt] = FNR
@@ -33,16 +33,16 @@ BEGIN {
 }
 
 END {
-    print ""
-    print "   ###########################################"
-    print "   #                                         #"
-    print "   #                 Hit EOF                 #"
-    print "   #                                         #"
-    print "   ###########################################"
-    print ""
+    print "\n\
+        ###########################################\n\
+        #                                         #\n\
+        #                 Hit EOF                 #\n\
+        #                                         #\n\
+        ###########################################\n\
+    "
     print "Reports:"
     if (index_err_cnt) {
-        printf "%d headings not printed at\n", index_err_cnt
+        printf "%d headings not printed at:\n", index_err_cnt
         for (i in index_err) {
             printf "Line %d\n", index_err[i]
         }

@@ -17,7 +17,7 @@
 | [设备树](210731b_usb.md#7-补充设备树) |
 | [USB通信](210731b_usb.md) |
 | [Haskell函数式编程](210409a_haskell.md) |
-| [Intel hex文件格式](220429a_compiler.md#41-intel-hex文件格式) |
+| [Intel hex文件格式](220429a_compiler.md#31-intel-hex文件格式) |
 | [IEEE754浮点数](200920c_verilog.md#51-IEEE754浮点数标准) |
 | [RS232](210524a_8051.md#8-补充rs232串口通信) |
 | [Shell脚本基础](201219a_shell.md#2-shell脚本基础) |
@@ -79,7 +79,7 @@
 | [211119a](211119a_rpipico.md) | 树莓派Pico笔记 | 0% |
 | [211211a](211211a_codestyle-and-licence.md) | 代码规范，开源协议 | 50% |
 | [220420a](220420a_tribblix.md) | Tribblix、Slackware安装与日常使用 | 0% |
-| [220429a](220429a_compiler.md) | 编译原理，二进制ELF文件格式 | 50% |
+| [220429a](220429a_compiler.md) | 二进制ELF文件格式 | 100% |
 | [220502a](220502a_psychoanalysis.md) | 精神分析学 | 0% |
 | [221018a](221018a_uboot.md) | Das U-Boot | 0% |
 | [221019a](221019a_bsd-impl.md) | FreeBSD设计与实现 | 0% |
