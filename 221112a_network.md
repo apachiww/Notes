@@ -1,5 +1,7 @@
 # 计算机网络
 
+以具体协议为主
+
 ## 目录
 
 + [**1**](#1-协议栈分层模型) 协议栈分层模型
@@ -68,7 +70,11 @@
         + [**5.6.1**](#561-简介) 简介
         + [**5.6.2**](#562-关键功能) 关键功能
         + [**5.6.3**](#563-quic通信原理) QUIC通信原理
-        + [**5.6.4**](#564-quic数据包) QUIC数据包
+        + [**5.6.4**](#564-quic数据包长数据头) QUIC数据包：长数据头
+        + [**5.6.5**](#565-quic数据包短数据头) QUIC数据包：短数据头
+        + [**5.6.6**](#566-quic数据包帧) QUIC数据包：帧
+        + [**5.6.7**](#567-错误码) 错误码
+    + [**5.7**](#57-quic-tls) QUIC-TLS
 + [**6**](#6-应用层) 应用层
     + [**6.1**](#61-http) HTTP
         + [**6.1.1**](#611-http基本概念) HTTP基本概念
@@ -77,6 +83,9 @@
         + [**6.1.4**](#614-http请求方法以及返回状态码) HTTP请求方法以及返回状态码
         + [**6.1.5**](#615-http2) HTTP/2
         + [**6.1.6**](#616-http3) HTTP/3
+        + [**6.1.7**](#617-token) Token
+        + [**6.1.8**](#618-session) Session
+        + [**6.1.9**](#619-cookie) Cookie
     + [**6.2**](#62-https) HTTPS
     + [**6.3**](#63-dns) DNS
         + [**6.3.1**](#631-域名基本概念) 域名基本概念
@@ -116,6 +125,7 @@
         + [**7.1.17**](#7117-tcp-conversation-completeness) TCP Conversation Completeness
     + [**7.2**](#72-bgp) BGP
     + [**7.3**](#73-cdn) CDN
+
 
 ## 1 协议栈分层模型
 
@@ -2410,7 +2420,7 @@ https://www.chromium.org/quic/
 
 ![](images/221112a064.png)
 
-为解决`TCP`的队头阻塞问题，`QUIC`引入了**数据流**（Stream）的概念，一个`QUIC`连接可以有**多个并行**的**数据流**。通常一个`QUIC`数据包会携带有**多个数据流**的数据，它们称为**流帧**（Stream Frame），每个流帧都标记有其所属流的ID（Stream ID）。`QUIC`数据包正是由**数据头**（Header）和**帧**（Frame）构成（还有其他类型的帧，例如`CRYPTO Frame`）
+为解决`TCP`的队头阻塞问题，`QUIC`引入了**数据流**（Stream）的概念，一个`QUIC`连接可以有**多个并行**的**数据流**。通常一个`QUIC`数据包会携带有**多个数据流**的数据，这些帧称为**流帧**（Stream Frame），每个流帧都标记有其所属流的ID（Stream ID）。`QUIC`数据包正是由**数据头**（Header）和**帧**（Frame）构成（还有其他类型的帧，例如`CRYPTO Frame`）
 
 现在的网页通常包含许多独立的资源，不同的资源可以通过一个连接中不同的**数据流**进行传输，例如一张图片丢包不会导致另一张图片无法加载。原先这部分工作是由`HTTP/2`负责的
 
@@ -2539,14 +2549,651 @@ https://www.chromium.org/quic/
 
 `QUIC`支持`0-RTT`和`1-RTT`两种连接建立方式
 
-### 5.6.4 QUIC数据包
+### 5.6.4 QUIC数据包：长数据头
 
-`QUIC`数据包由`Header`和`Frame`构成
+> `QUIC`数据包主要由`Header`和`Frame`构成。`QUIC`处于不同状态下时（例如建立连接时、连接建立成功后），数据包会有不同程度的加密保护
+>
+> `QUIC`数据包的数据头有长短两种。其中长数据头通常用于**连接建立**过程中，这些数据包又分为`Version Negotiation`，`Initial`，`0-RTT`，`Handshake`，`Retry`共计5种。而短数据头用于**后续的数据传输**，此时连接已建立，`1-RTT`密钥已经协商完成
 
-**数据头**
+不同版本的`QUIC`数据包的处理方式不同，通信前首先需要通过`Version Negotiation`进行协商。以下对这5种数据包分别作解释
 
-`QUIC`数据头有长短两种
+**整数数据域的可变长编码**
 
+下文如果不作特殊说明，数据包中的整数可变长编码定义如下
+
+| 2MSB | 编码长度（Byte） | 可表示范围 |
+| :-: | :-: | :-: |
+| `00` | `1` | `[0..2^6-1]` |
+| `01` | `2` | `[0..2^14-1]` |
+| `10` | `4` | `[0..2^30-1]` |
+| `11` | `8` | `[0..2^62-1]` |
+
+> 2MSB表示最高2bit
+
+**Version Negotiation**
+
+版本协商数据包**由服务器发往客户端**，特征是`Version`域为`0x00000000`。客户端接收到以后无需回复`ACK`
+
+```
+Version Negotiation Packet {
+  Header Form (1) = 1,
+  Unused (7),
+  Version (32) = 0,
+  Destination Connection ID Length (8),
+  Destination Connection ID (0..2040),
+  Source Connection ID Length (8),
+  Source Connection ID (0..2040),
+  Supported Version (32) ...,
+}
+```
+
+`()`括号内的数字表示该域长度`bit`。各部分定义如下
+
+| 名称 | 解释 |
+| :-: | :-: |
+| `Header Form` | 恒为`1`表示长数据头 |
+| `Unused` | 可以设置为任意值。通常最高位可以置`1`（`0x40`）以和其他非`QUIC`协议共存（RFC7983） |
+| `Version` | 全`0` |
+| `Destination Connection ID Length` | 接收端的连接ID长度`Byte`，最大`255` |
+| `Destination Connection ID` | 接收端的连接ID，等于先前客户端发来数据包的`Source Connection ID` |
+| `Source Connection ID Length` | 发送端的连接ID长度`Byte`，最大`255` |
+| `Source Connection ID` | 发送端的连接ID，由服务器生成 |
+| `Supported Version` | 服务器支持的一些`QUIC`版本的列表 |
+
+**Initial**
+
+初始包用于服务器、客户端之间**协商密钥**，其中搭载了`CRYPTO`帧，同时也可能搭载`ACK`帧进行相应的回应。通常由客户端首先发送`Initial`包（`CRYPTO`的offset为`0`），之后才开始协商。此外，`Initial`包中还可以搭载`PING`，`PADDING`，`CONNECTION_CLOSE`帧等
+
+```
+Initial Packet {
+  Header Form (1) = 1,
+  Fixed Bit (1) = 1,
+  Long Packet Type (2) = 0,
+  Reserved Bits (2),
+  Packet Number Length (2),
+  Version (32),
+  Destination Connection ID Length (8),
+  Destination Connection ID (0..160),
+  Source Connection ID Length (8),
+  Source Connection ID (0..160),
+  Token Length (i),
+  Token (..),
+  Length (i),
+  Packet Number (8..32),
+  Packet Payload (8..),
+}
+```
+
+| 名称 | 解释 |
+| :-: | :-: |
+| `Header Form` | 恒为`1`表示长数据头 |
+| `Fixed Bit` | 为`1` |
+| `Long Packet Type` | 为`0b00`表示`Initial` |
+| `Reserved Bits` | `0b00` |
+| `Packet Number Length` | 后面`Packet Number`长度（`Byte`）为该域`+1`（也即`1`到`4`字节） |
+| `Version` | `QUIC`版本 |
+| `Destination Connection ID Length` | 接收端的连接ID长度`Byte`，最大`20` |
+| `Destination Connection ID` | 接收端的连接ID |
+| `Source Connection ID Length` | 发送端的连接ID长度`Byte`，最大`20` |
+| `Source Connection ID` | 发送端的连接ID |
+| `Token Length` | `Token`长度（`Byte`）。采用可变长编码。如果没有`Token`，那么为`0`。服务器发出的`Initial`包没有`Token` |
+| `Token` | 先前的`Retry`包或`NEW_TOKEN`帧提供的`Token` |
+| `Length` | 该数据包后续剩余字节数（`Packet Number`和`Packet Payload`）。采用可变长编码 |
+| `Packet Number` | 数据包序号，长度对应上面的`Packet Number Length` |
+| `Packet Payload` | 搭载了一些帧 |
+
+**0-RTT**
+
+`0-RTT`包用于在**握手完成之前**客户端向服务器传送数据包。`0-RTT`是`QUIC`的一大特性，牺牲了一定的安全性换取更高的响应速度。`0-RTT`使用的数据包序号和后续的`1-RTT`是对应的。客户端只有在握手完成以后才会收到`0-RTT`数据包对应的`ACK`帧（搭载于后续的`1-RTT`数据包中）
+
+```
+0-RTT Packet {
+  Header Form (1) = 1,
+  Fixed Bit (1) = 1,
+  Long Packet Type (2) = 1,
+  Reserved Bits (2),
+  Packet Number Length (2),
+  Version (32),
+  Destination Connection ID Length (8),
+  Destination Connection ID (0..160),
+  Source Connection ID Length (8),
+  Source Connection ID (0..160),
+  Length (i),
+  Packet Number (8..32),
+  Packet Payload (8..),
+}
+```
+
+| 名称 | 解释 |
+| :-: | :-: |
+| `Header Form` | 恒为`1`表示长数据头 |
+| `Fixed Bit` | 为`1` |
+| `Long Packet Type` | 为`0b01`表示`0-RTT` |
+| `Reserved Bits` | `0b00` |
+| `Packet Number Length` | 同上，略 |
+| `Version` | 略 |
+| `Destination Connection ID Length` | 略 |
+| `Destination Connection ID` | 略 |
+| `Source Connection ID Length` | 略 |
+| `Source Connection ID` | 略 |
+| `Length` | 略 |
+| `Packet Number` | 略 |
+| `Packet Payload` | 略 |
+
+**Handshake**
+
+握手包用于搭载加密握手消息与相应的`ACK`。`Handshake`**通常由服务器发起**，客户端在接收到服务器发来的`Handshake`以后需要相应的进行回复。`Handshake`包拥有独立的包序号（从`0`开始）。`Handshake`中搭载了`CRYPTO`帧，也可能搭载`PING`，`PADDING`，`ACK`，`CONNECTION_CLOSE`等
+
+```
+Handshake Packet {
+  Header Form (1) = 1,
+  Fixed Bit (1) = 1,
+  Long Packet Type (2) = 2,
+  Reserved Bits (2),
+  Packet Number Length (2),
+  Version (32),
+  Destination Connection ID Length (8),
+  Destination Connection ID (0..160),
+  Source Connection ID Length (8),
+  Source Connection ID (0..160),
+  Length (i),
+  Packet Number (8..32),
+  Packet Payload (8..),
+}
+```
+
+| 名称 | 解释 |
+| :-: | :-: |
+| `Header Form` | 恒为`1`表示长数据头 |
+| `Fixed Bit` | 为`1` |
+| `Long Packet Type` | 为`0b10`表示`Handshake` |
+| `Reserved Bits` | `0b00` |
+| `Packet Number Length` | 同上，略 |
+| `Version` | 略 |
+| `Destination Connection ID Length` | 略 |
+| `Destination Connection ID` | 略 |
+| `Source Connection ID Length` | 略 |
+| `Source Connection ID` | 略 |
+| `Length` | 略 |
+| `Packet Number` | 略 |
+| `Packet Payload` | 略 |
+
+**Retry**
+
+`Retry`包**由服务器发送**，其中包含了服务器生成的`Address Validation Token`。服务端可以在接收到客户端发来的`0-RTT`或`Initial`数据包之后回复`Retry`数据包。而客户端在接收到服务端发来的`Initial`或`Retry`以后就不能再处理后续接收到的`Retry`，**除非重新建立一个连接**；此外，`Retry`后客户端不能擅自复位任何`Packet Number`
+
+如果客户端无法验证服务器发来的`Retry Integrity Tag`，它必须丢弃这个数据包
+
+客户端在接收到服务器的`Retry`数据包后回复`Initial`数据包以继续建立连接，其中需要包含之前`Retry`数据包中的`Retry Token`（`Retry`后客户端发送的所有`Initial`数据包都需要包含最新的`Token`）；或者可能会尝试`0-RTT`。在后续如果再次接收到服务器发来的`Initial`数据包，往往意味着服务器连接ID的更新（`Initial`和`Retry`中的`Connection ID`会被验证）
+
+`Retry`数据包无法被显式`ACK`
+
+```
+Retry Packet {
+  Header Form (1) = 1,
+  Fixed Bit (1) = 1,
+  Long Packet Type (2) = 3,
+  Unused (4),
+  Version (32),
+  Destination Connection ID Length (8),
+  Destination Connection ID (0..160),
+  Source Connection ID Length (8),
+  Source Connection ID (0..160),
+  Retry Token (..),
+  Retry Integrity Tag (128),
+}
+```
+
+| 名称 | 解释 |
+| :-: | :-: |
+| `Header Form` | 恒为`1`表示长数据头 |
+| `Fixed Bit` | 为`1` |
+| `Long Packet Type` | 为`0b11`表示`Retry` |
+| `Unused` | 可以为任意值 |
+| `Version` | 略 |
+| `Destination Connection ID Length` | 略 |
+| `Destination Connection ID` | 等于客户端发送`Initial`包的`Source Connection ID` |
+| `Source Connection ID Length` | 略 |
+| `Source Connection ID` | 略 |
+| `Retry Token` | 用于验证客户端地址的Token |
+| `Retry Integrity Tag` | 见QUIC-TLS |
+
+
+### 5.6.5 QUIC数据包：短数据头
+
+在`QUIC`版本协商以及`1-RTT`密钥交换完成后就会使用短数据头数据包。短数据头格式通用，如下
+
+```
+1-RTT Packet {
+  Header Form (1) = 0,
+  Fixed Bit (1) = 1,
+  Spin Bit (1),
+  Reserved Bits (2),
+  Key Phase (1),
+  Packet Number Length (2),
+  Destination Connection ID (0..160),
+  Packet Number (8..32),
+  Packet Payload (8..),
+}
+```
+
+| 名称 | 解释 |
+| :-: | :-: |
+| `Header Form` | 恒为`0`表示短数据头 |
+| `Fixed Bit` | 为`1` |
+| `Spin Bit` | 见下 |
+| `Reserved Bits` | 必须为`0b00` |
+| `Key Phase` | 用于辅助接收方识别密钥 |
+| `Packet Number Length` | 同上，略 |
+| `Destination Connection ID` | 接收方指定的连接ID。注意这里不再有源连接ID |
+| `Packet Number` | 略 |
+| `Packet Payload` | 略 |
+
+**Latency Spin Bit**
+
+`Latency Spin Bit`使得网络通路上的设备（通常为运营商的路由器）可以对客户端、服务器之间的RTT进行估算，以便对数据的传输进行控制，是`QUIC`中一个相对较新的特性，并没有被普遍支持
+
+> RFC要求即便在支持`QUIC`的平台中，即便用户没有禁用`Spin Bit`，每16个连接中也必须要有一个连接禁用`Spin Bit`。禁用`Spin Bit`后该位的值通常是随机的
+
+`Spin Bit`只有在连接建立后的`1-RTT`数据包中起作用，双方初始值都为`0`（包括更改`Connection ID`以后）。服务器、客户端都会在内存中维护一个`Spin Bit`值，在接收到对方发来的`1-RTT`数据包后首先会对内存中的`Spin Bit`值进行更新，随后发送的数据包都使用该值
+
+> `Spin Bit`的使用需要考虑到数据包乱序的问题
+>
+> 当服务器接收到客户端的数据包后，如果发现`Packet Number`是新的，那么就会将自己的`Spin Bit`值设为接收到的`Spin Bit`值
+> 
+> 当客户端接收到服务器的数据包后，如果发现`Packet Number`是新的，那么就会将接收到的`Spin Bit`值取反并设置到当前的`Spin Bit`值
+>
+> 通过以上操作，我们简单画图便可知，**取一个方向的数据包**，只要匹配最近的一对`0`和`1`，这个时间间隔大致就是`RTT`。实际应用中会使用更复杂的算法根据`Spin Bit`来评估网络性能
+
+
+### 5.6.6 QUIC数据包：帧
+
+`QUIC`数据包中`Packet Payload`由帧`Frame`构成。帧的类型有许多，使用`1`字节的`Type`指示其类型，以下先列表后依次讲解
+
+| 名称 | Type | 作用 |
+| :-: | :-: | :-: |
+| `PADDING` | `0x00` | 占位符 |
+| `PING` | `0x01` | 用于测试对方是否仍然可达，可以用于保持连接防止连接超时。接收方只需回复`ACK`即可 |
+| `ACK` | `0x02 0x03` | 接收方向发送方表示数据包已经成功接收并处理（仅限于有`Packet Number`的） |
+| `RESET_STREAM` | `0x04` | 用于终止一个指定的数据流 |
+| `STOP_SENDING` | `0x05` | 用于主动向发送方表示停止发送数据，当前接收方无法接收数据 |
+| `CRYPTO` | `0x06` | 用于搭载加密握手信息 |
+| `NEW_TOKEN` | `0x07` | 由服务器发送往客户端的一个Token，供之后使用 |
+| `STREAM` | `0x08..0x0f` | **主要的上层数据承载媒体** |
+| `MAX_DATA` | `0x10` | **全局**流控制，向对方表示总的数据允许接收量 |
+| `MAX_STREAM_DATA` | `0x11` | **单个数据流**流控制，向对方表示指定数据流的允许接收量 |
+| `MAX_STREAMS` | `0x12 0x13` | **流数量**控制，用于向对方表示**当前连接**中允许的累计数据流数量（注意不是允许的并行数据流数量） |
+| `DATA_BLOCKED` | `0x14` | **全局**流控制，发送方主动通知接收方想要发送更多数据，但被`MAX_DATA`限制，希望调整参数 |
+| `STREAM_DATA_BLOCKED` | `0x15` | **单个数据流**流控制，发送方通知由于`MAX_STREAM_DATA`指定数据流被限制 |
+| `STREAMS_BLOCKED` | `0x16 0x17` | **流数量**控制，发送方通知接收方由于`MAX_STREAMS`限制无法新建数据流 |
+| `NEW_CONNECTION_ID` | `0x18` | 用于声明本机的新连接ID |
+| `RETIRE_CONNECTION_ID` | `0x19` | **本机**主动请求**对方**淘汰**对方**提供的连接ID（本机发送数据包的`Destination Connection ID`） |
+| `PATH_CHALLENGE` | `0x1a` | 用于测试网路是否连通（在连接迁移`Connection Migration`中也会用到） |
+| `PATH_RESPONSE` | `0x1b` | 用于回复`PATH_CHALLENGE` |
+| `CONNECTION_CLOSE` | `0x1c 0x1d` | 连接关闭 |
+| `HANDSHAKE_DONE` | `0x1e` | **服务器**向**客户端**表示握手成功 |
+| `Extension` |  | 其他扩展类型 |
+
+**PADDING帧**
+
+```
+PADDING Frame {
+  Type (i) = 0x00,
+}
+```
+
+**PING帧**
+
+```
+PING Frame {
+  Type (i) = 0x01,
+}
+```
+
+**ACK帧**
+
+`ACK`帧有两种`Type`分别为`0x02`和`0x03`。在使能`QUIC`的`ECN`特性后（可用于控制阻塞状态）需要使用`0x03`类型的`ACK`回复，其中相比`0x02`类型的数据包多出了当前已经接收到相应`ECN mark`的数据包的累计数量
+
+`ACK`中可以包含一个或多个`ACK range`，和`TCP`的`SACK`特性有点类似，不同点是`QUIC`中`ACK`的作用效果是不可逆的
+
+> 由于`QUIC`中一个连接会有多个数据包编号空间，不同的数据包可能会有相同的编号。同一个编号空间的数据包只能包含本编号空间对应的`ACK`
+
+```
+ACK Frame {
+  Type (i) = 0x02..0x03,
+  Largest Acknowledged (i),
+  ACK Delay (i),
+  ACK Range Count (i),
+  First ACK Range (i),
+  ACK Range (..) ...,
+  [ECN Counts (..)],
+}
+```
+
+> `Largest Acknowledged`中的`（i）`表示前文所述的可变长整数编码（下同），但是不去除前导`0`。该值表示当前被`ACK`的最大数据包序号
+>
+> `ACK Delay`表示接收方接收到数据包到回复`ACK`之间的这段时间，可以用于更精准地估计实际的RTT。该域需要在解码得到实际整数后，向左移动`ack_delay_exponent`位（该值在本机先前的`TLS`握手中定义，属于`TLS`的一部分）。如果不使用到`ACK Delay`通常认为没有延迟
+>
+> `ACK Range Count`表示后面`ACK Range`列表数据项的数量
+>
+> `First ACK Range`可以用于计算当前被`ACK`的最小数据包序号，将`Largest Acknowledged`减去该值就是最小序号
+>
+> `ACK Range`和`ECN Counts`格式见下
+
+每一个`ACK Range`定义如下
+
+```
+ACK Range {
+  Gap (i),
+  ACK Range Length (i),
+}
+```
+
+> 和`TCP`的`SACK`类似的，`ACK Range`也采用由近及远的排列方式
+>
+> `ACK Range Length`表示`Largest Acknowledged`之前已经被`ACK`的连续数据包数量（从`Largest Acknowledged`之前一个开始算第`1`个），那么该连续域中最小的数据包序号为`Largest Acknowledged - ACK Range Length`
+>
+> `Gap + 1`表示该连续区间之前未被`ACK`的数据包数量，同样从最小序号数据包之前一个开始算起
+
+![](images/221112a065.png)
+
+> 上图中，`ACK Range 2`中`Acked`域最大序号为`Largest Acknowledged - ACK Range Length - Gap - 2`
+
+`ECN Counts`只有在`0x03`类型的数据包中会有，定义如下
+
+```
+ECN Counts {
+  ECT0 Count (i),
+  ECT1 Count (i),
+  ECN-CE Count (i),
+}
+```
+
+> 以上三个值分别表示已经接收到`ECT0 ECT1 ECN-CE codepoint`的数据包数量
+
+**RESET_STREAM帧**
+
+```
+RESET_STREAM Frame {
+  Type (i) = 0x04,
+  Stream ID (i),
+  Application Protocol Error Code (i),
+  Final Size (i),
+}
+```
+
+> `RESET_STREAM`通常由数据发送方发送，此后发送方将不会继续重传对应数据流的数据。而接收方在接收到该帧后需要将对应数据流已经接收到的数据全部丢弃
+
+> `Stream ID`指定想要终止的数据流ID
+>
+> `Error Code`为错误码，指明发生重置的原因，见[5.6.7](#567-错误码)
+>
+> `Final Size`表示该数据流到重置为止传输的字节数
+
+**STOP_SENDING帧**
+
+```
+STOP_SENDING Frame {
+  Type (i) = 0x05,
+  Stream ID (i),
+  Application Protocol Error Code (i),
+}
+```
+
+> `STOP_SENDING`通常由数据接收方在一个数据流处于`Recv`或`Size Known`状态下发送，见[5.6.2](#562-关键功能)
+
+**CRYPTO帧**
+
+```
+CRYPTO Frame {
+  Type (i) = 0x06,
+  Offset (i),
+  Length (i),
+  Crypto Data (..),
+}
+```
+
+> 加密握手数据也是一个数据流。`CRYPTO`可能出现在`0-RTT`以外的所有数据包类型中。作为加密握手数据的载体，它和`STREAM`帧的区别是没有流控制机制，也没有`Stream ID`
+>
+> `Offset`表示当前`CRYPTO`帧搭载的数据在整个加密握手数据流中的偏移
+>
+> `Length`表示搭载加密数据的长度
+>
+> `Crypto Data`为加密握手数据
+
+> 不同的加密阶段会使用单独的数据流进行握手信息的传输。这些单独的数据流的`Offset`都从`0`开始
+
+**NEW_TOKEN帧**
+
+```
+NEW_TOKEN Frame {
+  Type (i) = 0x07,
+  Token Length (i),
+  Token (..),
+}
+```
+
+> `NEW_TOKEN`只能由服务器生成并发送往客户端。客户端在之后的`Initial`数据包中需要包含该Token
+>
+> `Token Length`表示令牌数据的字节长度
+
+**STREAM帧**
+
+```
+STREAM Frame {
+  Type (i) = 0x08..0x0f,
+  Stream ID (i),
+  [Offset (i)],
+  [Length (i)],
+  Stream Data (..),
+}
+```
+
+> 由于显而易见的限制，`QUIC`中一个数据流传输的数据长度不可能超过`2^62-1`
+
+> 服务器和客户端之间的应用数据（`QUIC`上层的数据）主要就是通过`STREAM`帧搭载
+>
+> `STREAM`中有可选的`Offset`和`Length`域。`STREAM`一共占用`8`个`Type`（`0b00001xxx`），其中`Type`的低3bit依次为`OFF LEN FIN`，置位时分别表示`Offset`域存在，`Length`域存在，以及数据流的结束
+>
+> `FIN`为`1`时，数据流最终传输的数据长度为该帧中`Offset + Length`
+>
+> `Offset`表示该帧搭载的数据在当前数据流累计数据中的偏移。如果`OFF`为`0`，那么`Offset`不存在，为`0`，可以表示该帧搭载了**数据流的开头**或**表示数据流的结束**
+>
+> `Length`表示之后`Stream Data`的长度。如果`LEN`为`0`，那么`Length`不存在，`Length`之后原本需要搭载数据的`Stream Data`需要自动延伸至满足数据包大小要求；此时`Offset`的值可能为该数据流中下一个帧在数据流中的偏移
+>
+> `Stream Data`搭载了该数据流的数据
+
+**MAX_DATA帧**
+
+```
+MAX_DATA Frame {
+  Type (i) = 0x10,
+  Maximum Data (i),
+}
+```
+
+> 全局流控制即所有数据流的总和。发送方发送数据时必须保证符合最大数据限制，否则接收方会立即终止连接（`FLOW_CONTROL_ERROR`）
+
+**MAX_STREAM_DATA帧**
+
+```
+MAX_STREAM_DATA Frame {
+  Type (i) = 0x11,
+  Stream ID (i),
+  Maximum Stream Data (i),
+}
+```
+
+> 该帧只能在对应数据流处于`Recv`状态时发送。如果一个数据流是`receive-only`的，如果接收到对方发来对应该数据流的`MAX_STREAM_DATA`，说明对方的数据流配置存在错误，需要立即终止连接（`STREAM_STATE_ERROR`）。如果`MAX_STREAM_DATA`对应数据流仅仅初始化还未创建，需要触发错误（`STREAM_STATE_ERROR`）
+>
+> 类似的，如果接收到的数据超出该数据流的限制，接收方需要关闭连接并触发`FLOW_CONTROL_ERROR`
+>
+> 通常接收数据的计数和溢出检测需要依赖`Largest Received`（和`ACK`帧中的`Largest Acknowledged`有点类似，区别是该变量在内存中维护。一个数据流的收发双方都需要分别维护这样的一个变量）
+
+**MAX_STREAMS帧**
+
+```
+MAX_STREAMS Frame {
+  Type (i) = 0x12..0x13,
+  Maximum Streams (i),
+}
+```
+
+> 指定**当前连接**生命周期中允许的**累计**数据流数量。`Type`为`0x12`指定**双向数据流**数量，`0x13`指定**单向数据流**数量
+>
+> 通常认为一个连接的生命周期内指定数据流数量不能超过`2^60`。如果超过，接收方触发`FRAME_ENCODING_ERROR`
+>
+> 流控制机制可能在数据传输的过程中更新`MAX_STREAMS`限制。但是最大数据流数量不能减小，否则难以决定抛弃哪些数据流
+
+**DATA_BLOCKED帧**
+
+```
+DATA_BLOCKED Frame {
+  Type (i) = 0x14,
+  Maximum Data (i),
+}
+```
+
+> `Maximum Data`表示当前引起阻塞的全局数据量限制
+
+**STREAM_DATA_BLOCKED帧**
+
+```
+STREAM_DATA_BLOCKED Frame {
+  Type (i) = 0x15,
+  Stream ID (i),
+  Maximum Stream Data (i),
+}
+```
+
+> `Stream ID`为指定流ID。如果一个数据流是`send-only`的，却接收到了对应的`STREAM_DATA_BLOCKED`，说明对方的数据流配置存在错误，需要立即终止连接（`STREAM_STATE_ERROR`）
+
+**STREAMS_BLOCKED帧**
+
+```
+STREAMS_BLOCKED Frame {
+  Type (i) = 0x16..0x17,
+  Maximum Streams (i),
+}
+```
+
+> `Type`为`0x16`用于**双向数据流**，`0x17`用于**单向数据流**。`Maximum Streams`为当前引发限制的值，不可能超过`2^60`
+
+**NEW_CONNECTION_ID帧**
+
+```
+NEW_CONNECTION_ID Frame {
+  Type (i) = 0x18,
+  Sequence Number (i),
+  Retire Prior To (i),
+  Length (8),
+  Connection ID (8..160),
+  Stateless Reset Token (128),
+}
+```
+
+> 通信时双方的`Connection ID`都需要通过协商才能确定，**双方都会向对方提供自己可用的**`Connection ID`，作为对方发送数据包时的`Destination Connection ID`
+>
+> 由于`NEW_CONNECTION_ID`的存在，如果一台主机想要更改连接ID，它无需再进行一次完整的握手。`NEW_CONNECTION_ID`用于`Connection Migration`功能中，这可能发生在网络IP更改（这在移动端经常发生）或主动的网路切换时，可以防止被潜在的监视者跟踪
+
+> `Sequence Number`为新指定连接ID的序号（`QUIC`中每个连接ID都有对应的序号，用于检测ID的更新）
+>
+> `Retire Prior To`取的是一个`Sequence Number`值，表示淘汰**小于等于**该`Sequence Number`的`Connection ID`
+>
+> `Length`长`1`字节，表示`Connection ID`的长度，可以取`1`到`20`
+>
+> `Stateless Reset Token`表示该`Connection ID`对应的`Reset Token`
+
+> `QUIC`中由于0长度`Destination Connection ID`的存在，**本机**在使用0长度`Connection ID`时不能发送`NEW_CONNECTION_ID`，否则需要触发`PROTOCOL_VIOLATION`
+>
+> 同一个新`Connection ID`由于丢包超时等原因可能被发送多次，如果这些`NEW_CONNECTION_ID`帧中`Sequence Number`或`Stateless Reset Token`不同，也可以触发`PROTOCOL_VIOLATION`
+
+**RETIRE_CONNECTION_ID帧**
+
+```
+RETIRE_CONNECTION_ID Frame {
+  Type (i) = 0x19,
+  Sequence Number (i),
+}
+```
+
+> `RETIRE_CONNECTION_ID`是一个请求，淘汰的是对方的连接ID；而`NEW_CONNECTION_ID`只是一个通知，淘汰的是自己的ID并让对方知晓。ID的淘汰最终取决于`NEW_CONNECTION_ID`，由ID提供方决定
+>
+> 连接ID的更新可能直接由提供方发送`NEW_CONNECTION_ID`实现，这是**命令**形式。也可以由对方发送`RETIRE_CONNECTION_ID`请求，提供方回复`NEW_CONNECTION_ID`实现，这是**请求-响应**形式
+
+> `Sequence Number`指定的是淘汰的**单个**连接ID对应序号，不能和当前数据包的`Destination Connection ID`相等，否则接收方触发`PROTOCOL_VIOLATION`错误
+
+> 和前文类似的，如果对方此时使用0长度的`Connection ID`，那么本机就不能发送`RETIRE_CONNECTION_ID`请求
+
+> 由于数据包传输乱序的存在，本机接收到的`NEW_CONNECTION_ID`新ID的序号有可能已经淘汰，此时接收方需要主动发送一个`RETIRE_CONNECTION_ID`来请求对方淘汰该连接ID
+
+**PATH_CHALLENGE帧**
+
+```
+PATH_CHALLENGE Frame {
+  Type (i) = 0x1a,
+  Data (64),
+}
+```
+
+> 测试对方是否可达，或用于连接迁移时验证网络通畅
+
+> `Data`是`8`字节任意数据
+
+**PATH_RESPONSE帧**
+
+```
+PATH_RESPONSE Frame {
+  Type (i) = 0x1b,
+  Data (64),
+}
+```
+
+> 接收到`PATH_CHALLENGE`一方必须使用`PATH_RESPONSE`进行回复，其中的`Data`需要和先前`PATH_CHALLENGE`的相同
+
+**CONNECTION_CLOSE帧**
+
+```
+CONNECTION_CLOSE Frame {
+  Type (i) = 0x1c..0x1d,
+  Error Code (i),
+  [Frame Type (i)],
+  Reason Phrase Length (i),
+  Reason Phrase (..),
+}
+```
+
+> `Type`为`0x1c`时仅仅终止传输层的`QUIC`，而`0x1d`支持向上层应用递交`Error Code`（应用层的`Error Code`和`QUIC`的错误码不同，由应用层定义）
+>
+> `0x1d`类型的`CONNECTION_CLOSE`只能用于`0-RTT`或`1-RTT`数据包；而如果在握手过程中想要关闭连接，可以在`Handshake`或`Initial`数据包中发送`0x1c`类型的`CONNECTION_CLOSE`（`Error Code`为`APPLICATION_ERROR`）
+
+> 一个`QUIC`连接关闭时，先前未显式关闭的数据流也随之关闭
+>
+> `Error Code`各取值的定义见后一小节
+>
+> `Frame Type`只有`Type`为`0x1c`的数据帧才有，表示触发错误的数据帧类型。如果类型未知那么`Frame Type`为`0`
+>
+> `Reason Phrase Length`表示后面`Reason Phrase`的长度。如果不想提供详细信息那么可以为`0`
+>
+> `Reason Phrase`是一个UTF-8编码的字符串，提供导致连接关闭的提示性信息
+
+**HANDSHAKE_DONE帧**
+
+```
+HANDSHAKE_DONE Frame {
+  Type (i) = 0x1e,
+}
+```
+
+> `HANDSHAKE_DONE`只能由服务器发送
+
+### 5.6.7 错误码
+
+`QUIC`中错误码全称`Application Protocol Error Code`，它会在`RESET_STREAM` `STOP_SENDING`或`CONNECTION_CLOSE`中出现
+
+## 5.7 QUIC-TLS
+
+默认情况下`QUIC`使用`TLS1.3`
 
 ## 6 应用层
 
@@ -2744,6 +3391,12 @@ magnet:?xt=urn:btih:8402E328F819AADD68A333A75729DE890F8...
 ### 6.1.5 HTTP/2
 
 ### 6.1.6 HTTP/3
+
+### 6.1.7 Token
+
+### 6.1.8 Session
+
+### 6.1.9 Cookie
 
 ## 6.2 HTTPS
 

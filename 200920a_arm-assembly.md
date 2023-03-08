@@ -16,78 +16,97 @@ ARMv7-M体系结构笔记[传送门](201020a_stm32.md)
 
 随着00年代中后期从苹果开始的智能手机大爆发，ARM逐渐统治了手机领域。ARMv7是ARM历史上具有革命性的一代（ARMv8是第一代64位架构，同样是划时代的），也是这一代开始ARM将产品线分为A、R、M三大系列。在工业控制领域ST推出了基于Cortex-M系列核心的STM32。也是从这里开始32位MCU得到了推广，并最终由ARM的Cortex-M系列统治了32位MCU领域。现在ARM处理器是全世界出货量最多的处理器，它已经渗透到我们生活的各个角落，从超级计算机，军事设备，工控设备，到汽车，消费电子，玩具中都可以见到它的存在
 
-如今ARM已经推出了ARMv9，作为ARMv8的小幅改进，并且部分新产品中已经取消了32位应用的兼容支持。即便如此，老旧的32位ARMv7处理器依然凭借成熟的生态以及足够的性能维持强大的生命力，在工控以及低端数码领域继续生存。许多厂商依然在推出基于32位ARMv7-A处理器的新产品，例如Allwinner等，ST也开始涉及SoC领域，推出了STM32MP1系列，这些产品大部分都是基于Cortex-A7设计
+如今ARM已经推出了ARMv9，作为ARMv8的小幅改进，并且部分新IP中已经取消了AArch32的兼容支持。即便如此，老旧的32位ARMv7处理器依然凭借成熟的生态以及足够的性能维持强大的生命力，在车规，工控以及低端数码领域继续生存。许多厂商，包括国际大厂，依然在推出基于32位ARMv7-A处理器的新产品，例如ST推出的STM32MP1系列，全志的R328等
 
 ## 0 常见SoC厂商与产品
 
-有可玩性的SoC
+从普通爱好者角度，能找到资料，适合折腾的ARM SoC
 
-**国内**
+**中国厂商**
 
-+ Allwinner 全志科技（珠海）（主打低端）
-    + ~~山寨之王，马甲遍地~~，价格相对友好，性能一般，适合DIY入门级Linux开发板。官方不开放手册，许多手册和资料由第三方泄露
-    + 新论坛 https://bbs.aw-ol.com/
+御三家
+
++ Allwinner 全志科技（珠海）
+    + ~~山寨之王，马甲遍地~~，价格相对友好，目前产品性能一般，但是有许多异构（例如ARM+RISCV+xtensa DSP的产品）以及集成DRAM的产品，适合DIY入门级Linux开发板。官方不支持开源，由第三方泄露了大部分资料，部分产品无需NDA。软件坑比较多，产品线变更较为频繁。尽量不要使用冷门型号
+    + 开发者论坛 https://bbs.aw-ol.com/
     + sunxi wiki https://linux-sunxi.org/Main_Page
     + 部分新产品文档 https://gitee.com/aw-sunxi/awesome-sunxi
     + RISCV产品省略
-    + T113-s3 (2xA7 with 128MB DDR3, eLQFP128)
-    + R328/528-s3 (2xA7 with 128MB DDR3)
-    + A133 (4xA53)
-    + R818 (4xA53)
-    + F1C100/200s (ARM9 with DDR)
-    + H616 (4xA53)
+    + T113-s3/T113-s4/R328/R528-s3 (2xA7 with 128MB DDR3, T113-s3为eLQFP128, 22nm)
+    + R329 (2xA53 with 64/128MB DDR3)
+    + R128 (RISCV+xtensa DSP+ARM with 8/16MB DRAM and WIFI/Bluetooth, QFN)
+    + A523/R828/MR828/T527 (8xA55, new product 2023, 22nm)
+    + R923 (4xA73+4xA53, new product 2023/2024, 12nm)
+    + A736/T736 (2xA76+6xA55, new product 2023/2024, 12nm)
+    + A737/T737 (2xA78+6xA55, new product 2023/2024, 12nm)
+    + A40i/T3 (4xA7, SATA embedded, 40nm)
+    + A33/R16 (4xA7, 28nm)
+    + H3 (4xA7, 40nm)
     + V3s (1xA7 with 64MB DDR2, eLQFP128)
+    + F1C100/200s (1xARM9 with DDR)
+    + A133/R818 (4xA53。sun50i系列为减小芯片Die size，内部AMBA数据总线只有32位宽，带宽不足容易遇到性能瓶颈，甚至跑不满千兆以太网)
+    + H616/H618 (4xA53, 28nm)
     + V833 (1xA7)
     + V853 (1xA7+1xRISCV)
     + R11 (1xA7)
-    + H3 (4xA7)
-    + H6 (4xA53)
-+ Rockchip 瑞芯微（福州）（主打中高端）
-    + ~~资料开放程度相对某志较高~~，高端产品线性能较强，也有许多高性价比主力产品。许多手册也是泄露得来。未来中高端Linux开源硬件首选
+    + H6 (4xA53, 28nm)
++ Rockchip 瑞芯微（福州）
+    + ~~官方资料开放程度相对某志较高~~，高端产品线性能较强，也有许多高性价比主力产品。部分未开放完整版手册由泄露得来。未来中高端ARM开源硬件首选，但是新产品软件支持欠佳（RK3568/RK3399已经有良好主线支持。RK3588主线化也在进行中）
     + wiki https://opensource.rock-chips.com/wiki_Main_Page
-    + RK3588 (4xA76+4xA55)
-    + RK3568 (4xA55)
-    + RK3566 (4xA55)
-    + RK3399 (2xA72+4xA53)
-    + RK3328 (4xA53)
-    + RK3308 (4xA35)
-    + RK1808 (2xA35)
-    + RK3288 (4xA17)
-+ Amlogic 晶晨半导体（上海）（主打中高端）
-    + ~~由于运营商机顶盒以及某讯而闻名天下的S905~~
-    + A311D2 (4xA73+4xA53)
-    + A311D (4xA73+2xA53)
-    + S922X (4xA73+2xA53)
-    + S905Y2 (4xA53)
-    + S905 (4xA53)
-    + S905X (4xA53)
-    + S905X3/D3 (4xA55)
-
-**国际**
+    + RK3588/RK3588S (4xA76+4xA55, 8nm)
+    + RK3568 (4xA55, 22nm)
+    + RK3566 (4xA55, 22nm)
+    + RK3528 (4xA53, new product 2023)
+    + RK3399 (2xA72+4xA53, 28nm)
+    + RK3328 (4xA53, 28nm)
+    + RK3308 (4xA35, 28nm)
+    + RK1808 (2xA35, 28nm)
+    + RK3288 (4xA17, 28nm)
++ Amlogic 晶晨半导体（上海）
+    + ~~由于运营商机顶盒以及某讯N1盒子而闻名天下的S905~~。第三方泄露手册可到odroid，radxa，banana-pi等开发板官网查找。官方做过主线
+    + A311D2 (4xA73+4xA53, 12nm)
+    + A311D (4xA73+2xA53, 12nm)
+    + S922X (4xA73+2xA53, 12nm)
+    + S928X (1xA76+4xA55, new product 2023, 12nm)
+    + S905X4 (4xA55, 12nm)
+    + S905X3/D3 (4xA55, 12nm)
+    + S905X2/S905Y2 (4xA53, 12nm)
+    + S905D/S905L/S905X (4xA53, 28nm)
++ Nuvoton 新唐科技（台湾）
+    + MA35D1 (2xA35, 首款产品)
+    
+**国际厂商**
 
 + ST 意法半导体
-    + 文档齐全
+    + 文档开放
     + STM32MP1
 + NXP 恩智浦半导体
-    + 文档齐全
+    + 文档开放
     + i.MX Series
-+ AMD Xilinx 赛灵思
-    + FPGA+ARM混合。文档齐全
-    + ZYNQ-7000
-+ Qualcomm 高通
-    + MSM8916(Snapdragon 410)/APQ8016 https://github.com/msm8916-mainline https://wiki.postmarketos.org/wiki/MSM8916_Mainlining
 + TI 德州仪器
-    + 文档齐全
+    + 文档开放（需要注册）
     + Sitara AMxxxx
-+ Nvidia 英伟达
-    + 注册成为开发者就可以下载Jetson系列平台的SoC手册
++ Renesas 瑞萨半导体
+    + 文档开放（需要注册）
+    + RZ MPU
 + Microchip 微芯半导体
     + ATSAMA5
++ AMD Xilinx 赛灵思
+    + FPGA+ARM混合。文档开放
+    + ZYNQ-7000
++ Qualcomm 高通
+    + https://wiki.postmarketos.org/wiki/Mainlining
+    + MSM8916 (Snapdragon 410)/APQ8016 https://github.com/msm8916-mainline 
+    + MSM8939 (Snapdragon 615/616)
+    + SDM845 (Snapdragon 845)
++ Nvidia 英伟达
+    + 文档开放（需要注册）
 + Samsung 三星半导体
+    + 大部分原有产品已停产。不推荐
 
-> 其他绝大部分SoC（尤其是手机SoC）没有开放的手册（产品策略不同，这些SoC厂商通常直接和客户签订NDA，发放资料并安排员工指导）
->
-> **因为博通不开放的缘故，树莓派也不是开源硬件**，它只适合软件应用，不适合真正的硬件工程师。这些产品不在考虑范围内
+> 国际大厂ST，NXP，TI，Renesas的SoC通常性能一般，并且价格较高，但是文档开放，软件支持更好，稳定性优，更适合工业或车规产品。而除手机、平板外的消费电子、广告屏等基本由中国厂商主导
+
+> 树莓派使用的是博通定制的SoC，博通芯片手册严格保密。树莓派定位主要作为普通PC使用，不开放原理图，**不是开源硬件**。这些类型的产品不在考虑范围内
 
 
 ## 1 简介
@@ -126,7 +145,7 @@ MPCore，单个Cluster结构
 >
 > Cortex-A9使用AMBA3 AXI连接到L2缓存。L2不属于Cortex-A9的组成部分，但是几乎所有的SoC都会配备有L2
 >
-> 其他MPCore处理器除核心外，组成结构基本类似。ARM经常会推出两款拥有相近特性的MPCore处理器用于组成big.LITTLE大小核架构，ARMv7中使用Cortex-A7和Cortex-A15组成大小核。而ARMv8常见的有Cortex-A53+Cortex-A53组合，Cortex-A53+Cortex-A57组合，Cortex-A53+Cortex-A72组合，Cortex-A55+Cortex-A76组合，Cortex-A55+Cortex-A77组合等
+> 其他MPCore处理器除核心外，组成结构基本类似。ARM会推出拥有相近指令特性但能耗特性不同的MPCore处理器来组成big.LITTLE大小核。ARMv7中使用Cortex-A7和Cortex-A15组成大小核。而ARMv8常见的有Cortex-A53（高频）+Cortex-A53（低频）组合，Cortex-A53+Cortex-A57组合，Cortex-A53+Cortex-A72组合，Cortex-A55+Cortex-A76组合，Cortex-A55+Cortex-A77组合等
 
 ## 1.4 其他关键特性
 
@@ -138,7 +157,7 @@ TLB快表
 
 大小端模式支持
 
-可配置虚拟页面大小：4KB，64KB，1MB，16MB
+页面可配置大小：4KB，64KB，1MB，16MB
 
 TrustZone安全扩展
 
@@ -146,7 +165,7 @@ TrustZone安全扩展
 
 可选的VFP浮点扩展，NEON SIMD扩展
 
-> 许多ARMv7-A处理器中，旧有的Jazelle以及ThumbEE支持是可选的。有些SoC厂商选择不配备这些扩展
+> 许多ARMv7-A处理器中，旧有的Jazelle以及ThumbEE支持是可选的。有些SoC厂商会选择不配备这些扩展
 
 
 ## 2 工作模式与寄存器
