@@ -17,7 +17,7 @@
         + [**3.1.4**](#314-以太网设施二层交换机switch) 以太网设施：二层交换机Switch
         + [**3.1.5**](#315-csmacd) CSMA/CD
     + [**3.2**](#32-atm-asynchronous-transfer-mode) ATM Asynchronous-Transfer-Mode
-    + [**3.3**](#33-avian-carriers草) Avian Carriers（草）
+    + [**3.3**](#33-avian-carriers) Avian Carriers
 + [**4**](#4-网络层) 网络层
     + [**4.1**](#41-ipv4) IPv4
         + [**4.1.1**](#411-格式) 格式
@@ -68,12 +68,14 @@
         + [**5.5.7**](#557-tls13) TLS1.3
     + [**5.6**](#56-quic) QUIC
         + [**5.6.1**](#561-简介) 简介
-        + [**5.6.2**](#562-关键功能) 关键功能
-        + [**5.6.3**](#563-quic通信原理) QUIC通信原理
-        + [**5.6.4**](#564-quic数据包长数据头) QUIC数据包：长数据头
-        + [**5.6.5**](#565-quic数据包短数据头) QUIC数据包：短数据头
-        + [**5.6.6**](#566-quic数据包帧) QUIC数据包：帧
-        + [**5.6.7**](#567-错误码) 错误码
+        + [**5.6.2**](#562-quic数据包长数据头) QUIC数据包：长数据头
+        + [**5.6.3**](#563-quic数据包短数据头) QUIC数据包：短数据头
+        + [**5.6.4**](#564-quic数据包帧) QUIC数据包：帧
+        + [**5.6.5**](#565-错误码) 错误码
+        + [**5.6.6**](#566-数据流id) 数据流ID
+        + [**5.6.7**](#567-数据流状态机) 数据流状态机
+        + [**5.6.8**](#568-数据流控制) 数据流控制
+        + [**5.6.9**](#569-quic连接) QUIC连接
     + [**5.7**](#57-quic-tls) QUIC-TLS
 + [**6**](#6-应用层) 应用层
     + [**6.1**](#61-http) HTTP
@@ -196,7 +198,7 @@ TCP/IP(DoD/ARPANet)是事实上的网络分层标准，分为5层（一说4层�
 >
 > 多个邻近家庭/用户的网络一般通过分光器共享，分光器再向上连接运营商的OLT设备，这样就形成了多个ONT终端连接一个OLT的PON网络结构。这导致了上下行通信的不对称，从用户角度看下行使用广播的方式，而上行为了解决冲突问题使用TDMA时分复用
 >
-> 光纤的主要优点是材料成本低，抗干扰能力强，距离远。事实上光信号在光纤中的传导速度要慢于电信号在铜丝中的传导速度，而实际应用中各级路由器以及交换机带来的处理延迟才是更主要的影响因素
+> 光纤的主要优点是材料成本低，抗干扰能力强，距离远。事实上光信号在光纤中的传导速度要慢于电信号在铜丝中的传导速度。实际应用中各级路由器以及交换机带来的处理延迟才是更主要的影响因素
 
 ### 3.1.2 以太网帧格式
 
@@ -321,7 +323,7 @@ ATM数据包格式如下
 
 ATM基于虚拟线路的设计导致其较为混乱，资源分配效率低，且带宽分配缺乏灵活性。最终其大部分普通应用被以太网替代
 
-## 3.3 Avian Carriers（草）
+## 3.3 Avian Carriers
 
 ```
 🖥  <--------  🕊✉️  <--------  🖥
@@ -335,8 +337,6 @@ RFC2549 IP over Avian Carriers with Quality of Service
 
 RFC6214 Adaptation of RFC 1149 for IPv6
 
-> 不是很好用。更高级的方法是使用装满硬盘的卡车（不要小看卡车的带宽）
->
 > ~~WWIII以后也许会用上，但那时候就不是搭载IP了~~
 
 ![](images/221112a064.jpg)
@@ -1700,7 +1700,7 @@ http://pkg.freebsd.org/FreeBSD:13:aarch64/release_1/packagesite.txz
 
 常见`Code`定义如下
 
-| `Code` | 作用 |
+| Code | 作用 |
 | :-: | :-: |
 | `0` | `No route to destination`，路由表内没有合适的网关，通常产生于未配置默认网关的路由/主机 |
 | `1` | `Communication with destination administratively prohibited`，访问禁止，通常产生于防火墙等 |
@@ -2401,7 +2401,7 @@ Certificate:
 
 ### 5.5.7 TLS1.3
 
-见下一小节`QUIC`
+见`QUIC-TLS`
 
 
 ## 5.6 QUIC
@@ -2410,17 +2410,21 @@ Certificate:
 
 https://www.chromium.org/quic/
 
-`QUIC`（发音同quick，`Quick UDP Internet Connection`）由Google开发，最初是作为`TCP TLS HTTP/2`应用体系的替代品提升用户体验（通常`QUIC`使用`TLS 1.3`），主要用于新一代`HTTP/3`协议栈。现在主流浏览器都已支持`QUIC`
+`QUIC`（发音同quick，`Quick UDP Internet Connection`）是面向未来应用的协议，最初由Google开发，用于新一代`HTTP/3`协议栈，作为`TCP TLS HTTP/2`应用体系的替代品提升用户体验（通常`QUIC`使用`TLS 1.3`）。现在主流浏览器都已支持`QUIC`
 
 ### 5.6.1 简介
 
 `QUIC`是有状态协议，需要建立连接。`QUIC`中拥塞控制（Congestion Control）算法可以像模块一样更换，且和`TCP`一样可以缓冲数据，保证数据的顺序。也可以支持`UDP`一样的无保证传输
 
-由于在操作系统中集成`QUIC`并不方便，为了快速推广，`QUIC`实际上在应用层实现，传输层走`UDP`（之所以叫`User Datagram Protocol`，就是方便用户在这个基础上开发其他协议）。虽然`QUIC`是传输层协议，但是`QUIC`实际上包含了以往`HTTP`应用体系中传输层和应用层的部分功能。下图截自Wikipedia
+`QUIC`是一种建立于`UDP`之上的传输层协议（之所以叫`User Datagram Protocol`，就是方便用户在这个基础上开发其他协议）。目前`QUIC`有多种实现且集成于各应用中。未来`QUIC`可能会作为可调用的系统库出现，可能集成到内核中，但是这需要大量的工作（包括接口的标准化，`QUIC`没有定义软件接口。`TCP`同样如此，最终还是由`Berkeley/POSIX sockets`统一了接口），可能耗费很多年时间
+
+虽然`QUIC`是传输层协议，但是`QUIC`实际上包含了以往`HTTP`应用体系中传输层和应用层的部分功能。下图截自Wikipedia
 
 ![](images/221112a064.png)
 
 为解决`TCP`的队头阻塞问题，`QUIC`引入了**数据流**（Stream）的概念，一个`QUIC`连接可以有**多个并行**的**数据流**。通常一个`QUIC`数据包会携带有**多个数据流**的数据，这些帧称为**流帧**（Stream Frame），每个流帧都标记有其所属流的ID（Stream ID）。`QUIC`数据包正是由**数据头**（Header）和**帧**（Frame）构成（还有其他类型的帧，例如`CRYPTO Frame`）
+
+一个`UDP`数据包**可能包含多个**`QUIC`数据包
 
 现在的网页通常包含许多独立的资源，不同的资源可以通过一个连接中不同的**数据流**进行传输，例如一张图片丢包不会导致另一张图片无法加载。原先这部分工作是由`HTTP/2`负责的
 
@@ -2429,127 +2433,7 @@ https://www.chromium.org/quic/
 > 由于`QUIC`基于`UDP`，它在未得到广泛应用之前部分网络设施的配置对它的处理方式不太友好。这会限制`QUIC`的性能发挥
 
 
-### 5.6.2 关键功能
-
-**数据流收发状态机**
-
-`QUIC`中**数据流**发送方和接收方的状态机分别如下
-
-```
-            o
-            | Create Stream (Sending)
-            | Peer Creates Bidirectional Stream
-            v
-        +-------+
-        | Ready | Send RESET_STREAM
-        |       |-----------------------.
-        +-------+                       |
-            |                           |
-            | Send STREAM /             |
-            |      STREAM_DATA_BLOCKED  |
-            v                           |
-        +-------+                       |
-        | Send  | Send RESET_STREAM     |
-        |       |---------------------->|
-        +-------+                       |
-            |                           |
-            | Send STREAM + FIN         |
-            v                           v
-        +-------+                   +-------+
-        | Data  | Send RESET_STREAM | Reset |
-        | Sent  |------------------>| Sent  |
-        +-------+                   +-------+
-            |                           |
-            | Recv All ACKs             | Recv ACK
-            v                           v
-        +-------+                   +-------+
-        | Data  |                   | Reset |
-        | Recvd |                   | Recvd |
-        +-------+                   +-------+
-        Figure 2: States for Sending Parts of Streams
-
-
-
-            o
-            | Recv STREAM / STREAM_DATA_BLOCKED / RESET_STREAM
-            | Create Bidirectional Stream (Sending)
-            | Recv MAX_STREAM_DATA / STOP_SENDING (Bidirectional)
-            | Create Higher-Numbered Stream
-            v
-        +-------+
-        | Recv  | Recv RESET_STREAM
-        |       |-----------------------.
-        +-------+                       |
-            |                           |
-            | Recv STREAM + FIN         |
-            v                           |
-        +-------+                       |
-        | Size  | Recv RESET_STREAM     |
-        | Known |---------------------->|
-        +-------+                       |
-            |                           |
-            | Recv All Data             |
-            v                           v
-        +-------+ Recv RESET_STREAM +-------+
-        | Data  |--- (optional) --->| Reset |
-        | Recvd |  Recv All Data    | Recvd |
-        +-------+<-- (optional) ----+-------+
-            |                           |
-            | App Read All Data         | App Read Reset
-            v                           v
-        +-------+                   +-------+
-        | Data  |                   | Reset |
-        | Read  |                   | Read  |
-        +-------+                   +-------+
-        Figure 3: States for Receiving Parts of Streams
-```
-
-> 一个`QUIC`连接中，数据流分为**单向**（Unidirectional）和**双向**（Bidirectional）两种。单向流双方各只需一个状态机，而双向流双方各需要**一对**发送状态机和接收状态机
->
-> 每个流帧的`Stream ID`采用可变长编码，可取值`0`到`2^62-1`，ID的LSB为`0`表示客户端（请求方）发出，为`1`表示服务端（被请求方）发出；2ndLSB为`0`表示双向流，为`1`表示单向流
->
-> 每一个**数据流**中，**发送方**只能发送`STREAM STREAM_DATA_BLOCKED RESET_STREAM`共3种Frame，而**接收方**只能回复`MAX_STREAM_DATA STOP_SENDING`共2种Frame（其中`STREAM_DATA_BLOCKED`用于**发送方**向**接收方**表示已经停止数据传输，而`MAX_STREAM_DATA`用于**接收方**向**发送方**表示一个数据流允许接收数据的最大数量。此外还有`MAX_DATA`，但是不属于数据流Frame）
-
-**数据流控制**
-
-由于`QUIC`使用并行数据流的形式，所以流控制相较`TCP`要更复杂，需要分别从**单个数据流**以及**单个连接**（也就是全局）进行流控制，分别为`Stream flow control`和`Connection flow control`
-
-> 在`QUIC`握手时，通信双方会对所有数据流的接纳容量进行协商。后续如果需要更改为更大的接纳容量，需要通过以下方式进行通知：
->
-> **单个数据流**中接收方使用`MAX_STREAM_DATA`帧来表明对应流的接纳容量，内容为byte offset
->
-> **单个连接**中通信一方使用`MAX_DATA`帧来表明所有流的接纳容量
-
-> **单个数据流**和**单个连接**中如果有任意一个超出接纳限制（即发送方未检测到接收缓冲满），接收方需要立刻关闭连接，并触发`FLOW_CONTROL_ERROR`错误
->
-> 相对应的，如果发送方由于流控制算法导致单个数据流或单个连接发生阻塞，那么分别需要发送`STREAM_DATA_BLOCKED`和`DATA_BLOCKED`帧来向接收方表明这种情况。这种情况下接收方需要根据`RTT`自动发送`MAX_STREAM_DATA`或`MAX_DATA`来增大缓冲区，使得发送方不至于被阻塞（原理和`TCP`的窗口调节机制相同）
->
-> 但是当接收方收到`STREAM_DATA_BLOCKED`或`DATA_BLOCKED`时，往往意味着此时再增大缓冲已经晚了。所以接收方需要根据实际情况，主动提前增大接收缓冲并告知发送方
-
-此外还需要控制一个连接中数据流的数量（Concurrency），类似地：
-
-> `QUIC`握手时通信双方就会告知对方自己能同时接收数据流的最大数量。后续如果需要增加，需要通过`MAX_STREAMS`帧告知
->
-> 只有Stream ID小于`(MAX_STREAMS << 2) + first_stream_id_of_type`的数据流才被允许（也就是说`MAX_STREAMS`不能大于`2^60`）
->
-> 如果接收方发现ID大于其设定，需要触发`STREAM_LIMIT_ERROR`错误。如果发送方由于限制无法建立新的数据流，那么需要发送`STREAMS_BLOCKED`帧
-
-**连接状态**
-
-每个`QUIC`连接都拥有自己的**连接ID**（Connection ID），这些ID需要通过一些安全的手段生成。`QUIC`通过多ID的方式迷惑潜在的跟踪方，加大跟踪难度。`QUIC`规定ID不能包含有利于跟踪方**判定同一连接的信息**，也就是说**一个连接ID最多只能使用一次**
-
-现在移动设备越来越多，`QUIC`的连接ID也可以使得设备在改变IP地址、UDP端口时，数据包不会被传输到错误的位置，并且可以通过一些巧妙的机制将数据迁移到新的路径（ID长度可以为0，但是多个0长度ID使用同一IP/Port时会导致连接迁移失败）
-
-> 通常拥有长数据头（见[5.6.4](#564-quic数据包)）的`QUIC`数据包会在数据头中包含源ID和目标ID，而拥有短数据头的`QUIC`数据包只会在数据头中包含目标ID
-
-
-### 5.6.3 QUIC通信原理
-
-**握手**
-
-`QUIC`支持`0-RTT`和`1-RTT`两种连接建立方式
-
-### 5.6.4 QUIC数据包：长数据头
+### 5.6.2 QUIC数据包：长数据头
 
 > `QUIC`数据包主要由`Header`和`Frame`构成。`QUIC`处于不同状态下时（例如建立连接时、连接建立成功后），数据包会有不同程度的加密保护
 >
@@ -2759,7 +2643,7 @@ Retry Packet {
 | `Retry Integrity Tag` | 见QUIC-TLS |
 
 
-### 5.6.5 QUIC数据包：短数据头
+### 5.6.3 QUIC数据包：短数据头
 
 在`QUIC`版本协商以及`1-RTT`密钥交换完成后就会使用短数据头数据包。短数据头格式通用，如下
 
@@ -2806,7 +2690,7 @@ Retry Packet {
 > 通过以上操作，我们简单画图便可知，**取一个方向的数据包**，只要匹配最近的一对`0`和`1`，这个时间间隔大致就是`RTT`。实际应用中会使用更复杂的算法根据`Spin Bit`来评估网络性能
 
 
-### 5.6.6 QUIC数据包：帧
+### 5.6.4 QUIC数据包：帧
 
 `QUIC`数据包中`Packet Payload`由帧`Frame`构成。帧的类型有许多，使用`1`字节的`Type`指示其类型，以下先列表后依次讲解
 
@@ -2815,7 +2699,7 @@ Retry Packet {
 | `PADDING` | `0x00` | 占位符 |
 | `PING` | `0x01` | 用于测试对方是否仍然可达，可以用于保持连接防止连接超时。接收方只需回复`ACK`即可 |
 | `ACK` | `0x02 0x03` | 接收方向发送方表示数据包已经成功接收并处理（仅限于有`Packet Number`的） |
-| `RESET_STREAM` | `0x04` | 用于终止一个指定的数据流 |
+| `RESET_STREAM` | `0x04` | 通常由发送方发送，用于重置一个指定的数据流（**在双向数据流中只能重置一个方向的数据流**） |
 | `STOP_SENDING` | `0x05` | 用于主动向发送方表示停止发送数据，当前接收方无法接收数据 |
 | `CRYPTO` | `0x06` | 用于搭载加密握手信息 |
 | `NEW_TOKEN` | `0x07` | 由服务器发送往客户端的一个Token，供之后使用 |
@@ -2922,11 +2806,13 @@ RESET_STREAM Frame {
 }
 ```
 
-> `RESET_STREAM`通常由数据发送方发送，此后发送方将不会继续重传对应数据流的数据。而接收方在接收到该帧后需要将对应数据流已经接收到的数据全部丢弃
+> `RESET_STREAM`由数据发送方发送，此后发送方将不会继续重传对应数据流的数据。而接收方在接收到该帧后需要将对应数据流已经接收到的数据全部丢弃
+>
+> **双向数据流中该帧只能重置由发送方到接收方的单向数据流**，反方向的数据流不受影响
 
 > `Stream ID`指定想要终止的数据流ID
 >
-> `Error Code`为错误码，指明发生重置的原因，见[5.6.7](#567-错误码)
+> `Error Code`为错误码，指明发生重置的原因，见[5.6.5](#565-错误码)
 >
 > `Final Size`表示该数据流到重置为止传输的字节数
 
@@ -2940,7 +2826,7 @@ STOP_SENDING Frame {
 }
 ```
 
-> `STOP_SENDING`通常由数据接收方在一个数据流处于`Recv`或`Size Known`状态下发送，见[5.6.2](#562-关键功能)
+> `STOP_SENDING`通常由数据接收方在一个数据流处于`Recv`或`Size Known`状态下发送，要求停止发送，通常是因为不再想要该数据流已经接收到的数据
 
 **CRYPTO帧**
 
@@ -2995,9 +2881,9 @@ STREAM Frame {
 >
 > `STREAM`中有可选的`Offset`和`Length`域。`STREAM`一共占用`8`个`Type`（`0b00001xxx`），其中`Type`的低3bit依次为`OFF LEN FIN`，置位时分别表示`Offset`域存在，`Length`域存在，以及数据流的结束
 >
-> `FIN`为`1`时，数据流最终传输的数据长度为该帧中`Offset + Length`
+> `FIN`为`1`时，数据流最终传输的数据长度为该帧中`Offset + Length + 1`
 >
-> `Offset`表示该帧搭载的数据在当前数据流累计数据中的偏移。如果`OFF`为`0`，那么`Offset`不存在，为`0`，可以表示该帧搭载了**数据流的开头**或**表示数据流的结束**
+> `Offset`从`0`开始算，表示该帧搭载的数据在当前数据流累计数据中的偏移。如果`OFF`为`0`，那么`Offset`不存在，为`0`，可以表示该帧搭载了**数据流的开头**或**表示数据流的结束**
 >
 > `Length`表示之后`Stream Data`的长度。如果`LEN`为`0`，那么`Length`不存在，`Length`之后原本需要搭载数据的`Stream Data`需要自动延伸至满足数据包大小要求；此时`Offset`的值可能为该数据流中下一个帧在数据流中的偏移
 >
@@ -3039,9 +2925,9 @@ MAX_STREAMS Frame {
 }
 ```
 
-> 指定**当前连接**生命周期中允许的**累计**数据流数量。`Type`为`0x12`指定**双向数据流**数量，`0x13`指定**单向数据流**数量
+> 指定**当前连接**生命周期中允许的**累计**数据流数量。`Type`为`0x12`指定**双向数据流**数量，`0x13`指定**单向数据流**数量。由于`QUIC`中有4种数据流，`MAX_STREAMS`表示的是一种数据流不能超过的数量
 >
-> 通常认为一个连接的生命周期内指定数据流数量不能超过`2^60`。如果超过，接收方触发`FRAME_ENCODING_ERROR`
+> 通常认为一个连接的生命周期内单一数据流数量不能超过`2^60`。如果超过，接收方触发`FRAME_ENCODING_ERROR`
 >
 > 流控制机制可能在数据传输的过程中更新`MAX_STREAMS`限制。但是最大数据流数量不能减小，否则难以决定抛弃哪些数据流
 
@@ -3187,13 +3073,231 @@ HANDSHAKE_DONE Frame {
 
 > `HANDSHAKE_DONE`只能由服务器发送
 
-### 5.6.7 错误码
 
-`QUIC`中错误码全称`Application Protocol Error Code`，它会在`RESET_STREAM` `STOP_SENDING`或`CONNECTION_CLOSE`中出现
+### 5.6.5 错误码
+
+`QUIC`中错误码有两种：一种是`Transport Error Codes`，它用于`0x1c`类型的`CONNECTION_CLOSE`中，只表示`QUIC`传输层的错误。另一种是`Application Protocol Error Codes`，它用于`RESET_STREAM` `STOP_SENDING`或`0x1d`类型的`CONNECTION_CLOSE`中，可以向上层应用提供错误信息
+
+`Transport Error Codes`为62位无符号整数，定义如下
+
+| 名称 | 值 | 定义 |
+| :-: | :-: | :-: |
+| `NO_ERROR` | `0x00` | 连接正常关闭，没有错误 |
+| `INTERNAL_ERROR` | `0x01` | 其他内部错误 |
+| `CONNECTION_REFUSED` | `0x02` | 服务器拒绝连接 |
+| `FLOW_CONTROL_ERROR` | `0x03` | 流控制错误，超出了`MAX_DATA`或`MAX_STREAM_DATA`限制 |
+| `STREAM_LIMIT_ERROR` | `0x04` | 超出了`MAX_STREAMS`限制 |
+| `STREAM_STATE_ERROR` | `0x05` | 收到了数据流在指定状态下不可能接收到的对应数据帧。例如前文中收到了对应本机`receive-only`数据流或初始化数据流的`MAX_STREAM_DATA`；或收到了对应本机`send-only`数据流的`STREAM_DATA_BLOCKED` |
+| `FINAL_SIZE_ERROR` | `0x06` | 最终的流数据统计发现错误。只会在接收到`STREAM`帧或`RESET_STREAM`帧后触发。`RESET_STREAM`会携带一个`Final Size`，而`STREAM`如果`FIN`置位同样可以计算出最终接收到的数据字节数，多发生在丢包严重时。例如（1）数据流在确定`Final Size`后接收到了超出该数量的数据（2）最终计算`Final Size`时发现数据超出（3）`Final Size`确定后又接收到同一数据流的`Final Size`，并且与已有的不相符 |
+| `FRAME_ENCODING_ERROR` | `0x07` | 帧格式错误（例如未知类型帧，或`ACK`帧中`Range`过多等） |
+| `TRANSPORT_PARAMETER_ERROR` | `0x08` | 握手时提供的参数错误，包括非法参数，无效参数等 |
+| `CONNECTION_ID_LIMIT_ERROR` | `0x09` | 对方提供的连接ID过多，超出了`active_connection_id_limit` |
+| `PROTOCOL_VIOLATION` | `0x0a` | 其他各类未归类的特殊错误 |
+| `INVALID_TOKEN` | `0x0b` | 客户端发来的`Initial`中`Token`无效 |
+| `APPLICATION_ERROR` | `0x0c` | 表示上层应用决定了关闭连接 |
+| `CRYPTO_BUFFER_EXCEEDED` | `0x0d` | `CRYPTO`帧过大，超出接收缓存 |
+| `KEY_UPDATE_ERROR` | `0x0e` | 更新密钥时发生错误 |
+| `AEAD_LIMIT_REACHED` | `0x0f` | 达到`AEAD`算法限制（`AEAD`即`Authenticated Encryption with Associated Data`，起加密、签名与验证的作用） |
+| `NO_VIABLE_PATH` | `0x10` | 主机判定网路不支持`QUIC`。很少出现，除非网络MTU过小 |
+| `CRYPTO_ERROR` | `0x0100-0x01ff` | 加密握手（`TLS`握手）失败，一共有256个可用值 |
+
+
+### 5.6.6 数据流ID
+
+之前已经提到过一个`QUIC`连接中可以有多个并行的数据流，每一个搭载上层数据的`STREAM`帧都会包含**一个**`Stream ID`。一个`QUIC`数据包可以同时包含多个数据流的`STREAM`帧，而一个`UDP`数据包可能包含多个`QUIC`数据包。一个数据流可能需要多次传输才能传输完成
+
+**数据流的创建**
+
+双方连接建立后，一个数据流**直接通过发送数据包创建**。该数据包通常为短数据头类型，`STREAM`帧中包含的`Stream ID`就是新流ID。`STREAM`帧可以表示创建数据流，搭载数据，或终结一个数据流（`FIN`为`1`）
+
+**流ID表示的数据流类型**
+
+`QUIC`数据流分为**单向**（Unidirectional）和**双向**（Bidirectional）两种。单向数据流只能从数据流的**发起方**发往**接收方**；而双向数据流支持双向传输（即双方收发时，使用同一个`Stream ID`）
+
+`QUIC`中数据流ID采用[前文所述](#562-quic数据包长数据头)的变长编码，不同的数据流**必须**采用不同的流ID，可取值`0`到`2^62-1`。ID的LSB为`0`表示该数据流由客户端发起并创建，为`1`表示服务端发起；2ndLSB为`0`表示双向流，为`1`表示单向流。定义如下
+
+```
+    +======+==================================+
+    | Bits | Stream Type                      |
+    +======+==================================+
+    | 0x00 | Client-Initiated, Bidirectional  |
+    +------+----------------------------------+
+    | 0x01 | Server-Initiated, Bidirectional  |
+    +------+----------------------------------+
+    | 0x02 | Client-Initiated, Unidirectional |
+    +------+----------------------------------+
+    | 0x03 | Server-Initiated, Unidirectional |
+    +------+----------------------------------+
+
+            Table 1: Stream ID Types
+```
+
+> 同一类型数据流ID按先后顺序严格递增。例如服务器发起的双向流ID为`0x01`，那么服务器发起的下一个双向流的ID为`0x05`。如果数据包传输发生了**乱序**，例如`0x09`先于`0x05`到达，那么此时`0x05`数据流其实也已经开启了
+
+> `STREAM`帧中会包含其搭载数据的`Offset`和`Length`。一个数据流在传输过程中同一处`Offset`的数据可能会被传输多次，但接收方不得更改已经接收过的数据，只能更新新到的数据
+
+**API实现功能**
+
+`QUIC`要求API至少实现以下数据流功能：
+
+数据流发送：写数据，并可检查数据是否已发送；终结数据流，发送`FIN`置位的`STREAM`；数据流重置，发送`RESET_STREAM`
+
+数据流接收：读数据；停止读数据，发送`STOP_SENDING`
+
+
+### 5.6.7 数据流状态机
+
+```
+            o
+            | Create Stream (Sending)
+            | Peer Creates Bidirectional Stream
+            v
+        +-------+
+        | Ready | Send RESET_STREAM
+        |       |-----------------------.
+        +-------+                       |
+            |                           |
+            | Send STREAM /             |
+            |      STREAM_DATA_BLOCKED  |
+            v                           |
+        +-------+                       |
+        | Send  | Send RESET_STREAM     |
+        |       |---------------------->|
+        +-------+                       |
+            |                           |
+            | Send STREAM + FIN         |
+            v                           v
+        +-------+                   +-------+
+        | Data  | Send RESET_STREAM | Reset |
+        | Sent  |------------------>| Sent  |
+        +-------+                   +-------+
+            |                           |
+            | Recv All ACKs             | Recv ACK
+            v                           v
+        +-------+                   +-------+
+        | Data  |                   | Reset |
+        | Recvd |                   | Recvd |
+        +-------+                   +-------+
+        Figure 2: States for Sending Parts of Streams
+
+
+
+            o
+            | Recv STREAM / STREAM_DATA_BLOCKED / RESET_STREAM
+            | Create Bidirectional Stream (Sending)
+            | Recv MAX_STREAM_DATA / STOP_SENDING (Bidirectional)
+            | Create Higher-Numbered Stream
+            v
+        +-------+
+        | Recv  | Recv RESET_STREAM
+        |       |-----------------------.
+        +-------+                       |
+            |                           |
+            | Recv STREAM + FIN         |
+            v                           |
+        +-------+                       |
+        | Size  | Recv RESET_STREAM     |
+        | Known |---------------------->|
+        +-------+                       |
+            |                           |
+            | Recv All Data             |
+            v                           v
+        +-------+ Recv RESET_STREAM +-------+
+        | Data  |--- (optional) --->| Reset |
+        | Recvd |  Recv All Data    | Recvd |
+        +-------+<-- (optional) ----+-------+
+            |                           |
+            | App Read All Data         | App Read Reset
+            v                           v
+        +-------+                   +-------+
+        | Data  |                   | Reset |
+        | Read  |                   | Read  |
+        +-------+                   +-------+
+        Figure 3: States for Receiving Parts of Streams
+```
+
+> 单向流双方各只需一个状态机，而双向流双方各需要**一对**发送状态机和接收状态机
+
+> 在一个**数据流**的传输中，**发送方**能发送`STREAM STREAM_DATA_BLOCKED RESET_STREAM`共3种数据流相关的Frame，这些帧的定义见[5.6.4](#564-quic数据包帧)。在结束状态下（`Data Recvd`和`Reset Recvd`）不得发送这些数据包。在`Reset Sent`状态下不得发送`STREAM`和`STREAM_DATA_BLOCKED`
+>
+> **接收方**能回复`MAX_STREAM_DATA STOP_SENDING`2种Frame。其中`MAX_STREAM_DATA`只能在`Recv`状态下发送，而`STOP_SENDING`通常只在`Recv`或`Size Known`状态下发送。发送`STOP_SENDING`时通常意味着接收方不再想要该数据流中接收到的数据，这种情况下发送方如果处于`Send`或`Ready`状态下就**必须回复**`RESET_STREAM`，其中包含了先前`STOP_SENDING`中的错误码
+
+> 对于接收方来说，一个数据流中传输的数据总和在`Size Known`或`Reset Recvd`状态下就已经知道了。不管最终数据流是以`STREAM`帧还是`RESET_STREAM`帧结束的，如果最终对比发现数据包表示的数据量和实际接收到的数据量不同，接收方需要发送`FINAL_SIZE_ERROR`错误（通常伴随着连接的关闭，因此`FINAL_SIZE_ERROR`通常搭载于`CONNECTION_CLOSE`帧）。这是`QUIC`的安全特性之一，用于防范`off-by-one`攻击
+
+以下为收发双方在各状态下的系统状态表
+
+```
+      +===================+=======================+=================+
+      | Sending Part      | Receiving Part        | Composite State |
+      +===================+=======================+=================+
+      | No Stream / Ready | No Stream / Recv (*1) | idle            |
+      +-------------------+-----------------------+-----------------+
+      | Ready / Send /    | Recv / Size Known     | open            |
+      | Data Sent         |                       |                 |
+      +-------------------+-----------------------+-----------------+
+      | Ready / Send /    | Data Recvd / Data     | half-closed     |
+      | Data Sent         | Read                  | (remote)        |
+      +-------------------+-----------------------+-----------------+
+      | Ready / Send /    | Reset Recvd / Reset   | half-closed     |
+      | Data Sent         | Read                  | (remote)        |
+      +-------------------+-----------------------+-----------------+
+      | Data Recvd        | Recv / Size Known     | half-closed     |
+      |                   |                       | (local)         |
+      +-------------------+-----------------------+-----------------+
+      | Reset Sent /      | Recv / Size Known     | half-closed     |
+      | Reset Recvd       |                       | (local)         |
+      +-------------------+-----------------------+-----------------+
+      | Reset Sent /      | Data Recvd / Data     | closed          |
+      | Reset Recvd       | Read                  |                 |
+      +-------------------+-----------------------+-----------------+
+      | Reset Sent /      | Reset Recvd / Reset   | closed          |
+      | Reset Recvd       | Read                  |                 |
+      +-------------------+-----------------------+-----------------+
+      | Data Recvd        | Data Recvd / Data     | closed          |
+      |                   | Read                  |                 |
+      +-------------------+-----------------------+-----------------+
+      | Data Recvd        | Reset Recvd / Reset   | closed          |
+      |                   | Read                  |                 |
+      +-------------------+-----------------------+-----------------+
+```
+
+
+### 5.6.8 数据流控制
+
+`QUIC`使用并行数据流的形式，流控制相较`TCP`要更复杂，需要分别从**单个数据流**以及**单个连接**（也就是全局）进行流控制，分别为`Stream flow control`和`Connection flow control`
+
+> 在`QUIC`握手时，通信双方会对所有数据流的接纳容量进行协商（`transport parameters`）。后续如果需要更改为更大的接纳容量，需要通过以下方式进行通知：
+>
+> **单个数据流**中接收方使用`MAX_STREAM_DATA`帧来表明对应流的接纳容量，该帧包含了最大的byte offset
+>
+> **单个连接**中通信一方使用`MAX_DATA`帧来表明所有流的接纳容量
+>
+> **单个数据流**和**单个连接**中如果有任意一个超出接纳限制（可能是发送方未检测到接收缓冲满或乱序、丢包等原因），接收方需要立刻关闭连接，并触发`FLOW_CONTROL_ERROR`错误
+
+> 相对应的，如果发送方由于流控制算法导致**单个数据流**或**连接**发生阻塞，那么需要发送`STREAM_DATA_BLOCKED`和`DATA_BLOCKED`帧来向接收方表明这种情况。这种情况下接收方需要根据`RTT`自动发送`MAX_STREAM_DATA`或`MAX_DATA`表示增大接收容量，使得发送方不至于被阻塞（原理和`TCP`的窗口调节机制相同）
+>
+> 但是当接收方收到`STREAM_DATA_BLOCKED`或`DATA_BLOCKED`时，往往意味着此时再增大缓冲已经晚了。所以接收方需要根据实际情况，主动提前增大接收缓冲并告知发送方
+
+此外还需要控制一个连接中数据流的数量，类似地：
+
+> `QUIC`握手时通信双方就会通过`transport parameters`告知对方自己的最大**累计**数据流数量
+>
+> 而在数据传输时允许的**累计**数据流数量通过`MAX_STREAMS`帧规定。由于`Stream ID`的最低两位表示**本数据流类型**，`MAX_STREAMS`表示的是每个数据流类型中的最大**累计**数据流数量。只有`Stream ID`小于`(max_streams << 2) + first_stream_id_of_type`的数据流才被允许（也就是说`max_streams`不能大于`2^60`）
+>
+> 如果接收方发现累计数据流数量大于其设定，需要触发`STREAM_LIMIT_ERROR`错误。如果发送方由于限制无法建立新的数据流，那么需要发送`STREAMS_BLOCKED`帧
+
+注意
+
+> `CRYPTO`帧不参与`QUIC`的流控制机制
+
+
+### 5.6.9 QUIC连接
+
+**连接ID**
+
+
 
 ## 5.7 QUIC-TLS
-
-默认情况下`QUIC`使用`TLS1.3`
 
 ## 6 应用层
 
