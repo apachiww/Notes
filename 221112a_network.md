@@ -1788,7 +1788,7 @@ http://pkg.freebsd.org/FreeBSD:13:aarch64/release_1/packagesite.txz
 
 ## 5.5 TLS
 
-参考RFC5246 RFC8446
+参考RFC5246
 
 其他参考文章
 
@@ -1804,7 +1804,7 @@ https://www.cnblogs.com/xiaxveliang/p/13183175.html
 
 旧有的加解密、哈希算法正在不断被破解并被安全性更高的新方法替代，所以`TLS`的发展相比其他基础协议是相当快的
 
-本文基于`TLS 1.2`进行讲解
+本章基于`TLS 1.2`进行讲解
 
 > 额外阅读：[扩展欧几里德算法](https://oi-wiki.org/math/number-theory/gcd/#%E6%89%A9%E5%B1%95%E6%AC%A7%E5%87%A0%E9%87%8C%E5%BE%97%E7%AE%97%E6%B3%95)
 
@@ -1951,6 +1951,12 @@ RFC5246的描述如下所示，其中带`*`的是可选的信息。一个箭头�
 > `TCP`连接建立以后就立刻开始了`TLS`握手，客户端发送`Client Hello`，如下。可以看到该**记录协议**数据包的层次，其中包含了前文所述的各项内容
 
 ![](images/221112a039.png)
+
+> 这里补充说明一下`TLS`中的参数`Extension`格式
+
+![](images/221112a066.png)
+
+> 每一个扩展参数都由`2`字节的类型，`2`字节的长度以及后续的实际数据构成。例如上图中`0x0023`表示参数为`session_ticket`，后面的`0x0000`表示长度为`0`，没有搭载数据。紧接下来就是`renegotiation_info`（类型`65281 = 0xff01`，长度`1`）
 
 > 服务器回复的`Server Hello`格式如下，其中约定了使用的算法等各项基本参数
 
@@ -2314,6 +2320,14 @@ Certificate:
 openssl x509 -in server.crt -outform der -out server.der
 ```
 
+**Linux系统中的证书**
+
+内置的根证书位于`/etc/ssl/certs`，也是`x509`格式，但是使用`xxxxxxxx.0`的文件名格式，是一个哈希值，可以通过以下命令生成
+
+```
+openssl x509 -inform der -subject_hash_old -in cert.der | head -1
+```
+
 **Chromium中的证书**
 
 Chromium中根证书在`Settings -> Privacy and security -> Security -> Manage Certificates -> Authorities`。我们随意打开一个根证书如下，可以看到一些基本信息
@@ -2401,7 +2415,7 @@ Certificate:
 
 ### 5.5.7 TLS1.3
 
-见`QUIC-TLS`
+见[QUIC-TLS](#57-quic-tls)
 
 
 ## 5.6 QUIC
@@ -2410,7 +2424,11 @@ Certificate:
 
 https://www.chromium.org/quic/
 
-`QUIC`（发音同quick，`Quick UDP Internet Connection`）是面向未来应用的协议，最初由Google开发，用于新一代`HTTP/3`协议栈，作为`TCP TLS HTTP/2`应用体系的替代品提升用户体验（通常`QUIC`使用`TLS 1.3`）。现在主流浏览器都已支持`QUIC`
+[UCLA - A Quick Look at QUIC](src/221112a01/UnderstandQUIC.pdf)
+
+> 学习`QUIC`之前建议先尝试一下Wireshark抓包
+
+`QUIC`（发音同quick，`Quick UDP Internet Connection`）是面向未来应用的协议，最初由Google开发，用于新一代`HTTP/3`协议栈，作为`TCP TLS HTTP/2`应用体系的替代品提升用户体验（`QUIC`可能结合`TLS 1.2`或`1.3`版本使用）。现在主流浏览器都已支持`QUIC`
 
 ### 5.6.1 简介
 
@@ -2428,7 +2446,7 @@ https://www.chromium.org/quic/
 
 现在的网页通常包含许多独立的资源，不同的资源可以通过一个连接中不同的**数据流**进行传输，例如一张图片丢包不会导致另一张图片无法加载。原先这部分工作是由`HTTP/2`负责的
 
-> `QUIC`相比`TCP TLS`的方案可以更快的建立一个安全连接（`0-RTT`或`1-RTT`）。和以往的协议栈不同，`QUIC`调用了`TLS 1.3`的功能并直接和上层应用交互，而不像往常的协议栈中`HTTP`直接依赖于`TLS`运行
+> `QUIC`相比`TCP TLS`的方案可以更快的建立一个安全连接（`0-RTT`或`1-RTT`）。和以往的协议栈不同，`QUIC`调用了`TLS`的功能并直接和上层应用交互，而不像往常的协议栈中`HTTP`直接依赖于`TLS`运行
 >
 > 由于`QUIC`基于`UDP`，它在未得到广泛应用之前部分网络设施的配置对它的处理方式不太友好。这会限制`QUIC`的性能发挥
 
@@ -2477,7 +2495,7 @@ Version Negotiation Packet {
 | :-: | :-: |
 | `Header Form` | 恒为`1`表示长数据头 |
 | `Unused` | 可以设置为任意值。通常最高位可以置`1`（`0x40`）以和其他非`QUIC`协议共存（RFC7983） |
-| `Version` | 全`0` |
+| `Version` | 必须全`0` |
 | `Destination Connection ID Length` | 接收端的连接ID长度`Byte`，最大`255` |
 | `Destination Connection ID` | 接收端的连接ID，等于先前客户端发来数据包的`Source Connection ID` |
 | `Source Connection ID Length` | 发送端的连接ID长度`Byte`，最大`255` |
@@ -2525,6 +2543,8 @@ Initial Packet {
 | `Length` | 该数据包后续剩余字节数（`Packet Number`和`Packet Payload`）。采用可变长编码 |
 | `Packet Number` | 数据包序号，长度对应上面的`Packet Number Length` |
 | `Packet Payload` | 搭载了一些帧 |
+
+> 当前`QUIC`版本为`0x00000001`
 
 **0-RTT**
 
@@ -2689,6 +2709,18 @@ Retry Packet {
 >
 > 通过以上操作，我们简单画图便可知，**取一个方向的数据包**，只要匹配最近的一对`0`和`1`，这个时间间隔大致就是`RTT`。实际应用中会使用更复杂的算法根据`Spin Bit`来评估网络性能
 
+**Stateless Reset**
+
+`Stateless Reset`数据包是一种特殊的数据包，它的结构如下，末尾包含了`16`字节的`Stateless Reset Token`，而`Unpredictable Bits`中包含的是无意义的随机数据
+
+```
+Stateless Reset {
+  Fixed Bits (2) = 1,
+  Unpredictable Bits (38..),
+  Stateless Reset Token (128),
+}
+```
+
 
 ### 5.6.4 QUIC数据包：帧
 
@@ -2710,8 +2742,8 @@ Retry Packet {
 | `DATA_BLOCKED` | `0x14` | **全局**流控制，发送方主动通知接收方想要发送更多数据，但被`MAX_DATA`限制，希望调整参数 |
 | `STREAM_DATA_BLOCKED` | `0x15` | **单个数据流**流控制，发送方通知由于`MAX_STREAM_DATA`指定数据流被限制 |
 | `STREAMS_BLOCKED` | `0x16 0x17` | **流数量**控制，发送方通知接收方由于`MAX_STREAMS`限制无法新建数据流 |
-| `NEW_CONNECTION_ID` | `0x18` | 用于声明本机的新连接ID |
-| `RETIRE_CONNECTION_ID` | `0x19` | **本机**主动请求**对方**淘汰**对方**提供的连接ID（本机发送数据包的`Destination Connection ID`） |
+| `NEW_CONNECTION_ID` | `0x18` | 用于声明本机的新连接ID（连接ID缩写为CID） |
+| `RETIRE_CONNECTION_ID` | `0x19` | **本机**主动请求**对方**淘汰**对方**提供的CID（本机发送数据包的`Destination Connection ID`） |
 | `PATH_CHALLENGE` | `0x1a` | 用于测试网路是否连通（在连接迁移`Connection Migration`中也会用到） |
 | `PATH_RESPONSE` | `0x1b` | 用于回复`PATH_CHALLENGE` |
 | `CONNECTION_CLOSE` | `0x1c 0x1d` | 连接关闭 |
@@ -2843,9 +2875,9 @@ CRYPTO Frame {
 >
 > `Offset`表示当前`CRYPTO`帧搭载的数据在整个加密握手数据流中的偏移
 >
-> `Length`表示搭载加密数据的长度
+> `Length`表示搭载数据的长度
 >
-> `Crypto Data`为加密握手数据
+> `Crypto Data`为握手加密相关数据
 
 > 不同的加密阶段会使用单独的数据流进行握手信息的传输。这些单独的数据流的`Offset`都从`0`开始
 
@@ -2978,21 +3010,21 @@ NEW_CONNECTION_ID Frame {
 }
 ```
 
-> 通信时双方的`Connection ID`都需要通过协商才能确定，**双方都会向对方提供自己可用的**`Connection ID`，作为对方发送数据包时的`Destination Connection ID`
+> 通信时双方的CID都需要通过协商才能确定，**双方都会向对方提供自己可用的**CID，作为对方发送数据包时的`Destination Connection ID`
 >
-> 由于`NEW_CONNECTION_ID`的存在，如果一台主机想要更改连接ID，它无需再进行一次完整的握手。`NEW_CONNECTION_ID`用于`Connection Migration`功能中，这可能发生在网络IP更改（这在移动端经常发生）或主动的网路切换时，可以防止被潜在的监视者跟踪
+> 由于`NEW_CONNECTION_ID`的存在，如果一台主机想要更改CID，它无需再进行一次完整的握手。`NEW_CONNECTION_ID`用于`Connection Migration`功能中，这可能发生在网络IP更改（这在移动端经常发生）或主动的网路切换时，可以防止被潜在的监视者跟踪
 
-> `Sequence Number`为新指定连接ID的序号（`QUIC`中每个连接ID都有对应的序号，用于检测ID的更新）
+> `Sequence Number`为新指定CID的序号（`QUIC`中每个连接ID都有对应的序号，用于检测CID的更新）
 >
-> `Retire Prior To`取的是一个`Sequence Number`值，表示淘汰**小于等于**该`Sequence Number`的`Connection ID`
+> `Retire Prior To`取的是一个`Sequence Number`值，表示淘汰**小于等于**该`Sequence Number`的CID
 >
-> `Length`长`1`字节，表示`Connection ID`的长度，可以取`1`到`20`
+> `Length`长`1`字节，表示CID的长度，可以取`1`到`20`
 >
-> `Stateless Reset Token`表示该`Connection ID`对应的`Reset Token`
+> `Stateless Reset Token`表示该CID对应的`Reset Token`
 
-> `QUIC`中由于0长度`Destination Connection ID`的存在，**本机**在使用0长度`Connection ID`时不能发送`NEW_CONNECTION_ID`，否则需要触发`PROTOCOL_VIOLATION`
+> `QUIC`中由于0长度`Destination Connection ID`的存在，**本机**在使用0长度CID时不能发送`NEW_CONNECTION_ID`，否则触发`PROTOCOL_VIOLATION`
 >
-> 同一个新`Connection ID`由于丢包超时等原因可能被发送多次，如果这些`NEW_CONNECTION_ID`帧中`Sequence Number`或`Stateless Reset Token`不同，也可以触发`PROTOCOL_VIOLATION`
+> 同一个新CID由于丢包超时等原因可能被发送多次，如果这些`NEW_CONNECTION_ID`帧中`Sequence Number`或`Stateless Reset Token`不同，也可以触发`PROTOCOL_VIOLATION`
 
 **RETIRE_CONNECTION_ID帧**
 
@@ -3003,15 +3035,13 @@ RETIRE_CONNECTION_ID Frame {
 }
 ```
 
-> `RETIRE_CONNECTION_ID`是一个请求，淘汰的是对方的连接ID；而`NEW_CONNECTION_ID`只是一个通知，淘汰的是自己的ID并让对方知晓。ID的淘汰最终取决于`NEW_CONNECTION_ID`，由ID提供方决定
->
-> 连接ID的更新可能直接由提供方发送`NEW_CONNECTION_ID`实现，这是**命令**形式。也可以由对方发送`RETIRE_CONNECTION_ID`请求，提供方回复`NEW_CONNECTION_ID`实现，这是**请求-响应**形式
+> 关于`QUIC`中连接更新淘汰的机制可以见[5.6.9](#569-quic连接)
 
-> `Sequence Number`指定的是淘汰的**单个**连接ID对应序号，不能和当前数据包的`Destination Connection ID`相等，否则接收方触发`PROTOCOL_VIOLATION`错误
+> `Sequence Number`指定的是淘汰的**单个**CID对应序号，不能和当前数据包的`Destination Connection ID`相等，否则接收方触发`PROTOCOL_VIOLATION`错误
 
-> 和前文类似的，如果对方此时使用0长度的`Connection ID`，那么本机就不能发送`RETIRE_CONNECTION_ID`请求
+> 和前文类似的，如果对方此时使用0长度的CID，那么本机就不能发送`RETIRE_CONNECTION_ID`请求
 
-> 由于数据包传输乱序的存在，本机接收到的`NEW_CONNECTION_ID`新ID的序号有可能已经淘汰，此时接收方需要主动发送一个`RETIRE_CONNECTION_ID`来请求对方淘汰该连接ID
+> 由于数据包传输乱序的存在，本机接收到的`NEW_CONNECTION_ID`新CID的序号有可能已经淘汰，此时接收方需要主动发送一个`RETIRE_CONNECTION_ID`来请求对方淘汰该CID
 
 **PATH_CHALLENGE帧**
 
@@ -3138,7 +3168,7 @@ HANDSHAKE_DONE Frame {
 
 **API实现功能**
 
-`QUIC`要求API至少实现以下数据流功能：
+`QUIC`要求API至少实现以下**数据流**功能：
 
 数据流发送：写数据，并可检查数据是否已发送；终结数据流，发送`FIN`置位的`STREAM`；数据流重置，发送`RESET_STREAM`
 
@@ -3293,11 +3323,171 @@ HANDSHAKE_DONE Frame {
 
 ### 5.6.9 QUIC连接
 
+建立一个`QUIC`连接首先需要进行握手，使用`TLS`协商公共对称密钥等安全传输必要的参数，并协商上层应用。同时，`QUIC`中引入了`0-RTT`传输机制，使用`0-RTT`数据包可以在未进行握手或握手未完成时就进行数据的传输（利用之前连接中缓存的加密密钥等参数）。这种机制适当牺牲安全性，提高了网络应用的响应性能，而传统的`TCP TLS`协议栈只能在繁杂的握手完成以后开始数据的传输
+
+> 一个`UDP`端口需要同时支持许多个`QUIC`连接，一个`UDP`数据包可以搭载多个`QUIC`数据包。而一个`QUIC`连接可以有多个连接ID，一个连接ID可以同时用于传输许多个并行数据流
+
 **连接ID**
 
+`QUIC`中使用连接ID（CID）来标识一个连接，一个连接可以有多个CID。由于`UDP`是无状态协议，`UDP`的同一个端口可以用于不同的逻辑数据连接，但是在系统层面使用同一个socket。`QUIC`的CID相当于在端口机制上又加了一层，用于区分不同的连接。同时由于移动设备会频繁更改IP地址，网路会随之更改，此时服务器发送数据的目标IP也必须随之更改，`QUIC`中的CID可以为连接的迁移提供支持，防止数据被发送到错误的地方
+
+每一个CID还对应一个序号[见前](#564-quic数据包帧)（`NEW_CONNECTION_ID`和`RETIRE_CONNECTION_ID`），发放CID时对应的序号以`1`递增
+
+通信双方会通过`NEW_CONNECTION_ID`帧互相提供可用的CID，发送方**必须使用**接收方提供的CID作为目标ID。同时为了防范潜在的监视行为，`QUIC`使用了多CID的方法来提高跟踪难度，同时在双方的通信过程中**绝对禁止**两个不同的连接使用相同的CID
+
+> 回顾：`QUIC`的[长数据头](#562-quic数据包长数据头)中包含了目标连接ID和源连接ID；而[短数据头](#563-quic数据包短数据头)通常只包含了目标连接ID
+
+由服务器发往客户端的`Version Negotiation`数据包会使用客户端提供的CID，用于确认网络可达，同时服务器可以向客户端证明该数据包是针对客户端请求的回复
+
+CID长度可以为`0`。但是同为`0`长度CID的连接**不允许**用于同一IP和端口
+
+**连接ID的分配**
+
+在连接建立时，初始的CID包含在握手过程中长数据头的`Source Connection ID`中，该CID对应序号为`0`（服务器的`transport parameter`中有`preferred_address`参数时除外，从`1`开始）。之后的CID分配使用`NEW_CONNECTION_ID`以及`RETIRE_CONNECTION_ID`帧处理，每个新CID序号`+1`。所有已经分配但还未Retire的CID都是**active**的，在此期间接收方必须接收携带该CID的数据包
+
+**本机**对于**对方**提供的可用的CID数量是有限制的。本机在`transport parameter`中可以包含`active_connection_id_limit`表明本地允许维护的CID数量，对方不能提供超过该数量的CID。如果对方的`NEW_CONNECTION_ID`超出了本机的限制，本机必须**关闭连接**，错误码`CONNECTION_ID_LIMIT_ERROR`
+
+发起连接迁移时，本机也需要确保提供给对方的CID充足
+
+使用`0`长度ID时在后续通信中无法再分配新CID
+
+**连接ID的消耗与淘汰**
+
+`QUIC`中的CID可能会在任何时候更改，并且不再使用时需要及时淘汰
+
+`QUIC`的CID都需要**本机**向对方提供，通信双方（客户端和服务器）各自需要接收并维护对方提供的CID，并作为发送数据包时的`Destination Connection ID`使用
+
+CID的更新淘汰**有两种机制**，通信双方都可以导致CID的更新，分别由CID**提供方**发起或CID**维护方**发起。两种机制都会使用`NEW_CONNECTION_ID`或`RETIRE_CONNECTION_ID`
+
+> 当CID的**提供方**想要更新CID时，它会主动向对方（即维护方）发送一个`NEW_CONNECTION_ID`，其中包含了一个相比之前增大的`Retire Prior To`值，表示淘汰到该序号为止的所有CID。此时对方接收到`NEW_CONNECTION_ID`后发现`Retire Prior To`增大，**必须**依次使用`RETIRE_CONNECTION_ID`进行回复，并将所有指定CID淘汰。发起CID更新操作的**提供方**在接收到相应`RETIRE_CONNECTION_ID`前应该接收刚刚淘汰CID的数据包，而不是丢弃。而维护方在将新CID加入到可用CID之前**必须先进行淘汰操作**，防止CID超出本机限制发生`CONNECTION_ID_LIMIT_ERROR`，或导致无CID可用
+>
+> 在这种CID更新机制下，CID提供方需要保证一次更新的CID数量不会太多，否则对方需要回复的`RETIRE_CONNECTION_ID`就会过多。此外，在上一个`NEW_CONNECTION_ID`中被更新的CID未得到`RETIRE_CONNECTION_ID`回复之前，本机**不允许**在发送新的`NEW_CONNECTION_ID`
+
+> 相反的，当CID的**维护方**想要更新CID时，它会向CID提供方发送一个`RETIRE_CONNECTION_ID`表示希望淘汰指定的CID。此时对方必须使用`NEW_CONNECTION_ID`回复进行CID的更新操作，并淘汰到指定CID为止的所有CID
+
+**数据包和连接的匹配**
+
+一台主机接收到`QUIC`数据包后，需要根据CID将其与已有的连接匹配之后才能进一步处理。此外对于服务器来说也可能是一个新连接的建立
+
+> `QUIC`中可以使用`0`长度CID，即仅仅基于来源IP和Port来建立一个连接。在接收到`0`长度CID的数据包以后主机可以根据源IP和Port来匹配一个连接。但是`0`长度CID连接有较多缺陷，尽量避免使用
+
+> 对于客户端来说，如果接收到的数据包无法和任何一个已有的连接匹配（例如丢包等原因导致两边连接状态不一致，对方未及时销毁连接），本机需要丢弃这些数据包，同时回复一个`Stateless Reset`数据包（[见前](#563-quic数据包短数据头)），对方接收到`Stateless Reset`后需要立即销毁对应连接
+>
+> 数据包乱序可能导致本机接收到后续数据包时密钥还没计算出来。遇到这种数据包通常直接丢弃或缓存
+>
+> 接收到的数据包中如果`QUIC`版本和当前设定不一致也必须丢弃
+
+> 长数据头中包含了版本`Version`
+>
+> 对于服务器来说，如果不支持客户端发来的`Initial`数据包中包含的版本，无法区分版本，服务器需要发送一个`Version Negotiation`来协商版本
+>
+> 如果对方（客户端）发来的`Initial`包符合要求，服务器需要使用`Handshake`继续握手过程
+>
+> 如果服务器想要立即关闭连接，需要发送一个包含`CONNECTION_CLOSE`帧以及`CONNECTION_REFUSED`错误码的`Initial`数据包
+>
+> 服务器接收到客户端发来的`0-RTT`以后可以进行缓存。在服务器没有对客户端的请求进行回应（`Handshake`）之前客户端不得发送`Handshake`包
+
+**API实现功能**
+
+`QUIC`要求API至少实现以下**数据流**功能：
+
+客户端：打开连接并进行握手；提供`0-RTT`相关功能；知晓`0-RTT`数据包是否被成功接收
+
+服务器：监听端口，检测新连接；提供`0-RTT`相关功能；通知客户端`0-RTT`是否成功接收
+
+共通的功能：在`transport parameter`中配置流控制参数；判断握手状态；使用`PING Frame`或要求发送数据的方法防止超时连接关闭；使用`CONNECTION_CLOSE`关闭连接
+
+
+### 5.6.10 版本协商
+
+服务器对于会初始化`QUIC`连接的数据包可能会回复一个`Version Negotiation`[数据包](#562-quic数据包长数据头)
+
+> 一个`QUIC`连接由客户端发送`Initial`数据包发起；`Initial`数据包中会有`QUIC`的版本号`Version`以及作为`Payload`的帧。各个`QUIC`版本要求的最小数据包大小可能不同，客户端需要取不同版本之间的最大值。客户端如果支持多个`QUIC`版本，它需要在`Initial`数据包中添加`PADDING Frame`来满足要求
+
+服务器对于客户端发来的`Initial`数据包，如果发现自己不支持客户端使用的`QUIC`版本，服务器必须发送`Version Negotiation`数据包，向客户端提供可用的`QUIC`版本列表。客户端收到后绝对不得使用`Version Negotiation`进行回复
+
+在客户端的`Initial`数据包到来之前，服务器可能先接收到了`0-RTT`数据包，此时无需发送`Version Negotiation`，可以等到收到`Initial`数据包以后再发送。在此期间的`0-RTT`数据包先缓存
+
+> 当前版本中，如果客户端收到的`Version Negotiation`数据包包含了当前使用的版本，或者已经成功处理了先前的`Version Negotiation`，客户端应当忽略该`Version Negotiation`数据包。
+>
+> 在其余情况下，客户端必须停止当前的连接，并更换版本重新发送连接请求
+
+
+### 5.6.11 QUIC握手
+
+`QUIC`握手同样是我们最为感兴趣的过程。`QUIC`握手相比`TCP TLS`来说所需RTT少很多
+
+`QUIC`中`CRYPTO`可能用于多个独立的数据包序列空间，各自使用独立的`Offset`
+
+`QUIC`握手至少需要以下内容：
+
+> 1. 双方密钥交换，验证身份（客户端可以不验证）。每个连接使用的密钥不同
+>
+> 2. 交换`transport parameters`
+>
+> 3. 确定应用协议（使用`ALPN`，`Application-Layer Protocol Negotiation`）
+
+**握手过程总述**
+
+简化的`QUIC`握手过程如下，**重点**
+
+```
+Client                                               Server
+
+Initial (CRYPTO)
+0-RTT (*)              ---------->
+                                           Initial (CRYPTO)
+                                         Handshake (CRYPTO)
+                       <----------                1-RTT (*)
+Handshake (CRYPTO)
+1-RTT (*)              ---------->
+                       <----------   1-RTT (HANDSHAKE_DONE)
+
+1-RTT                  <=========>                    1-RTT
+Figure 4: Simplified QUIC Handshake
+```
+
+抓包如下，这里`QUIC`握手使用1.5个RTT就完成。手动标黑的就是三个握手数据包，依次对应上图中客户端发送的`Initial`（`TLS`的`Client Hello`），服务器发送的`Initial`和`Handshake`（搭载于同一个`UDP`数据包。`Initial`为`TLS`的`Server Hello`）以及最终客户端回复`Handshake`
+
+> `Initial`数据包中`CRYPTO`帧中都是明文
+
+![](images/221112a069.png)
+
+> 标`(*)`的是不一定会有的数据包
+>
+> 首先由客户端发起请求，发送的是`Initial`数据包，同时如果使能了`0-RTT`可能会有额外的`0-RTT`数据包（使用另外的`UDP`搭载，独立的数据包序号空间）。`Initial`会包含多个`CRYPTO`帧以及多个`PING`帧，没有先后顺序。通过Wireshark抓包如下
+
+![](images/221112a067.png)
+
+> 所有的`CRYPTO`按顺序拼接以后才会得到完整的`CRYPTO`，其内含数据格式全部由`TLS`定义（明文的`Client Hello`），具体需要见下一章。`TLS`除握手类型、长度、版本、会话ID、随机数、加密套件等基本参数以外，还包含了许多必要的扩展（`TLS Extensions`，格式和[前文所述](#552-tls-handshake)相同），尤其是`TLS`的`transport parameters`扩展中会明文搭载许多关键参数。如下是`CRYPTO`中包含的部分内容
+
+![](images/221112a068.png)
+
+> 之后服务器回复的`UDP`数据包中会有两个长数据头类型的`QUIC`数据包，分别为`Initial`（明文的`Server Hello`）以及`Handshake`。其中`Handshake`中的数据全部加密，所以显示为黄色
+
+![](images/221112a070.png)
+
+> 服务器回复的`Initial`中只有很少的一些扩展
+
+![](images/221112a071.png)
+
+> 最终客户端发送的`Handshake`中数据同样全部加密
+
+![](images/221112a072.png)
+
+> `0-RTT`只会由客户端在未接收到服务器响应时发送，之后一律使用`1-RTT`。`1-RTT`数据包在握手的不同阶段有不同程度的保护。在握手过程结束以后（即服务器接收到客户端的`Handshake`以后）才是正式的数据传输，全部使用`1-RTT`搭载加密数据
+
+
+### 5.6.12 地址验证
+
+### 5.6.13 连接迁移
+
+### 5.6.14 连接终止
 
 
 ## 5.7 QUIC-TLS
+
+参考RFC9001 RFC8446
 
 ## 6 应用层
 
