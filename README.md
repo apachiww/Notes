@@ -85,6 +85,7 @@
 | [221019a](221019a_bsd-impl.md) | FreeBSD设计与实现 | 0% |
 | [221112a](221112a_network.md) | 计算机网络 | 80% |
 | [221116a](221116a_wacom.md) | Wacom数位板手动配置 | 100% |
+| [230323a](230323a_ncnn.md) | NCNN框架 | 0% |
 
 ![](images/000000a001.png)
 
