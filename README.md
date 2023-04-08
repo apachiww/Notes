@@ -64,7 +64,7 @@
 | [210501a](210501a_famitracker.md) | 计算机音乐，编曲作曲，（爵士）和声，FamiTracker，经典计算机音乐集成电路解析 | 0% |
 | [210515a](210515a_go.md) | Go | 0% |
 | [210515b](210515b_python.md) | Python | 0% |
-| [210515c](210515c_nginx.md) | Nginx/Apache Web服务原理以及部署 | 0% |
+| [210515c](210515c_nginx.md) | Nginx/Apache/H2O Web服务原理以及部署 | 0% |
 | [210524a](210524a_8051.md) | 8051单片机开发 | 80% |
 | [210625a](210625a_uefi.md) | UEFI开发 | 10% |
 | [210702a](210702a_avr.md) | AVR单片机开发 | 50% |
