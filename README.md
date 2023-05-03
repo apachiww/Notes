@@ -4,9 +4,11 @@
 
 > 个人学习归纳，备忘
 >
-> 自行式学习，涉及面比较广，偏底层，随时可能咕。~~所以不保证理解正确，经常开坑不填，并且有很多是流水账~~
->
 > Learning is a lifelong deal. 长期慢更
+
+<p style="color: transparent" title="lol">
+兴趣驱动的自行式学习，涉及面较广。随时可能咕，不保证理解正确，经常开坑不填，并且有很多是流水账
+</p>
 
 ## 快速传送门
 
@@ -33,7 +35,7 @@
 > `./index-gen.awk note.md`
 
 | No. | Content | Completeness |
-| :-: | :-: | :-: |
+| :- | :- | :-: |
 | [200908a](200908a_sdram.md) | 计算机存储：SDRAM | 100% |
 | [200908b](200908b_qemu-arm.md) | LFS并使用QEMU运行Linux（ARMv7）| 100% |
 | [200920a](200920a_arm-assembly.md) | ARMv7-A ARMv8-A体系结构，内存架构 | 10% |
@@ -86,10 +88,11 @@
 | [221112a](221112a_network.md) | 计算机网络 | 80% |
 | [221116a](221116a_wacom.md) | Wacom数位板手动配置 | 100% |
 | [230323a](230323a_ncnn.md) | NCNN框架 | 0% |
+| [230410a](230410a_kali.md) | Kali Linux的容器部署 |  |
 
 ![](images/000000a001.png)
 
-## 参考书收藏列表
+## 参考书收藏
 
 1. 《数字逻辑基础与Verilog设计（第2版）》，Stephen Brown，Zvonko Vrannesic著，机械工业出版社
 2. 《Linux命令行与Shell脚本编程大全（第3版）》，Richard Blum，Christine Bresnahan著，人民邮电出版社
@@ -122,6 +125,8 @@
 29. 《Compilers: Principles, Techniques and Tools (Second Edition)》，Alfred V. Aho，Monica S. Lam，Ravi Sethi，Jeffrey D. Ullman著
 30. 《OpenSSL Cookbook (Second Edition)》，Ivan Ristić著
 31. 《HTTP权威指南》，David Gourley，Brian Totty著
+32. 《Linux/UNIX系统编程手册》，Michael Kerrisk著
+33. 《深入理解Linux内核》，Daniel P. Bovet，Marco Cesati著
 
 ## Recipe
 
