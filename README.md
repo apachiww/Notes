@@ -1,14 +1,8 @@
 # 笔记
 
-![](images/000000a027.jpg)
-
 > 个人学习归纳，备忘
 >
 > Learning is a lifelong deal. 长期慢更
-
-<p style="color: transparent" title="lol">
-兴趣驱动的自行式学习，涉及面较广。随时可能咕，不保证理解正确，经常开坑不填，并且有很多是流水账
-</p>
 
 ## 快速传送门
 
@@ -89,8 +83,6 @@
 | [221116a](221116a_wacom.md) | Wacom数位板手动配置 | 100% |
 | [230323a](230323a_ncnn.md) | NCNN框架 | 0% |
 | [230410a](230410a_kali.md) | Kali Linux的容器部署 |  |
-
-![](images/000000a001.png)
 
 ## 参考书收藏
 
