@@ -10,7 +10,6 @@
 | :- |
 | [ARMv7-M指令集](201020a_stm32.md#16-isa详解指令集) |
 | [ELF文件格式解析，程序链接与运行原理](220429a_compiler.md#1-elf文件结构) |
-| [设备树](210731b_usb.md#7-补充设备树) |
 | [USB通信](210731b_usb.md) |
 | [Haskell函数式编程](210409a_haskell.md) |
 | [Intel hex文件格式](220429a_compiler.md#31-intel-hex文件格式) |
@@ -41,7 +40,7 @@
 | [201020a](201020a_stm32.md) | ARMv7-M体系结构以及STM32单片机开发 | 70% |
 | [201219a](201219a_shell.md) | Linux命令行以及Shell脚本，Awk字符串处理 | 100% |
 | [201219b](201219b_makefile.md) | Makefile的用法，基于cmake和GNU make | 90% |
-| [201220a](201220a_mcu-ide.md) | 类Unix下的通用MCU开发环境 | 10% |
+| [201220a](201220a_mcu-ide.md) | MCU开发环境构建 | 10% |
 | [201220b](201220b_crack.md) | 密码爆破 | 0% |
 | [201220c](201220c_metasploit.md) | Metasploit渗透测试 | 0% |
 | [201225a](201225a_ssd.md) | 计算机存储：固态硬盘工作原理与优化方法 | 100% |
@@ -66,7 +65,7 @@
 | [210702a](210702a_avr.md) | AVR单片机开发 | 50% |
 | [210729a](210729a_ai.md) | 机器学习，深度学习 | 0% |
 | [210731a](210731a_llvm.md) | 编译原理与LLVM | 0% |
-| [210731b](210731b_usb.md) | USB协议，应用以及驱动开发 | 30% |
+| [210731b](210731b_usb.md) | USB协议 | 30% |
 | [210808a](210808a_lcd.md) | LCD驱动 | 50% |
 | [210811a](210811a_sata.md) | 计算机常用存储设备接口协议 | 0% |
 | [210904a](210904a_algo.md) | 算法 | 0% |
@@ -82,7 +81,10 @@
 | [221112a](221112a_network.md) | 计算机网络 | 80% |
 | [221116a](221116a_wacom.md) | Wacom数位板手动配置 | 100% |
 | [230323a](230323a_ncnn.md) | NCNN框架 | 0% |
-| [230410a](230410a_kali.md) | Kali Linux的容器部署 |  |
+| [230411a](230411a_unix-programming.md) | Linux/Unix系统编程 | 0% |
+| [230513a](230513a_texlive.md) | Texlive安装与使用 | 0% |
+| [230526a](230526a_driver.md) | Linux驱动开发，设备树 | 0% |
+| [230709a](230709a_container.md) | Linux容器LXD，Docker，K8s的使用 | 30% |
 
 ## 参考书收藏
 
@@ -122,13 +124,13 @@
 
 ## Recipe
 
-🍥 C CPP Rust Haskell Java Go Ruby Python Lua TypeScript JavaScript
+🍥 C CPP Rust Java Go Haskell Ruby Python Lua TypeScript JavaScript
 
 🍜 CSS HTML5
 
 🍡 Verilog
 
-🍇 Shell Awk
+🍇 Shell Awk Tcl
 
 🍐 Makefile
 
@@ -142,4 +144,4 @@
 
 🍋 ARM AVR 8051 FPGA
 
-🍍 ArchLinux Slackware FreeBSD Tribblix FreeRTOS RT-Thread
+🍍 ArchLinux AlpineLinux Slackware FreeBSD Tribblix FreeRTOS RT-Thread

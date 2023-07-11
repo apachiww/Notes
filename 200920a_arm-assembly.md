@@ -37,11 +37,12 @@ ARMv7-M体系结构笔记[传送门](201020a_stm32.md)
     + V3s (1xA7 with 64MB DDR2, eLQFP128)
     + F1C100/200s (1xARM9 with DDR)
     + 以下是未来会出的高端型号（仅供参考）
-    + A523/A527/T527/MR527 (8xA55+1xRISCV(E906), sun55i new product 2023, 22nm)
-    + R923 (4xA73+4xA53, sun60i new product 2023/2024, 12nm)
-    + A736/T736 (2xA76+6xA55, new product 2023/2024, 12nm)
-    + A737/T737 (2xA78+6xA55, new product, 12nm)
-    + 以下是sun50i系列。尽管为64位ARMv8，为减小芯片Die size，sun50i内部AMBA数据总线只有32位宽，带宽不足容易遇到性能瓶颈
+    + A523/A527/T523/T527/MR527/R828 (8xA55+1xRISCV(E906), sun55i new product 2023, 22nm)
+    + A513 (4xA55, new product 2023/2024, 22nm)
+    + R923 (4xA73+4xA53+1xRISCV(E906), sun60i new product 2023/2024, 12nm)
+    + A736/T736 (2xA76+6xA55, IMG BXM, new product 2023/2024, 12nm)
+    + A737/T737 (2xA78+6xA55, IMG BXM, 12nm)
+    + 以下是sun50i系列。尽管为64位ARMv8，为减小芯片Die size，sun50i内部AMBA数据总线只有32位宽。带宽不足容易遇到性能瓶颈
     + A133/R818 (4xA53, 28nm)
     + H616/H618 (4xA53, H618使用DDR4, 28nm)
     + R329 (2xA53 with 64/128MB DDR3)
@@ -52,12 +53,12 @@ ARMv7-M体系结构笔记[传送门](201020a_stm32.md)
     + RK3566/RK3568/RK3568B2 (4xA55+1xRISCV(RV32IMC), 22nm)
     + RK3562 (4xA53, new product 2023)
     + RK3528 (4xA53, new product 2023)（RK3528对标全志sun50i系列定位，可能砍总线）
-    + RK3399 (2xA72+4xA53, 28nm)
+    + RK3399 (2xA72+4xA53+2xM0, 28nm)
     + RK3328 (4xA53, 28nm)
     + RK3326/PX30 (4xA35, 28nm)
     + RK3308 (4xA35, 28nm)
     + RK1808 (2xA35, 28nm)
-    + RV1126 (4xA7, 28nm)
+    + RV1126 (4xA7+1xRISCV(RV32IMC), 28nm)
     + RK3288 (4xA17, 28nm)
 + Amlogic 晶晨半导体（上海）
     + ~~由于运营商机顶盒以及某讯N1盒子而闻名天下的S905~~。第三方泄露手册可到odroid，radxa，banana-pi等开发板官网查找。官方做过主线
