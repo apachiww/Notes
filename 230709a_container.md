@@ -1,6 +1,44 @@
 # Linux容器的使用
 
-# 1 LXC
+## 目录
+
++ [**1**](#1-lxc) LXC
+    + [**1.1**](#11-安装与配置) 安装与配置
+    + [**1.2**](#12-下载镜像) 下载镜像
+    + [**1.3**](#13-创建并启动容器) 创建并启动容器
+    + [**1.4**](#14-基本操作) 基本操作
+        + [**1.4.1**](#141-shell的使用) shell的使用
+        + [**1.4.2**](#142-文件传输) 文件传输
+        + [**1.4.3**](#143-挂载容器目录) 挂载容器目录
+    + [**1.5**](#15-配置容器) 配置容器
+        + [**1.5.1**](#151-常用配置) 常用配置
+        + [**1.5.2**](#152-使用配置文件) 使用配置文件
+    + [**1.6**](#16-镜像导入导出) 镜像导入导出
+    + [**1.7**](#17-容器快照) 容器快照
+        + [**1.7.1**](#171-创建和恢复) 创建和恢复
+        + [**1.7.2**](#172-定时快照) 定时快照
+    + [**1.8**](#18-特权容器) 特权容器
+    + [**1.9**](#19-设备) 设备
+        + [**1.9.1**](#191-添加与删除) 添加与删除
+        + [**1.9.2**](#192-设备类型) 设备类型
+    + [**1.10**](#110-存储管理) 存储管理
+        + [**1.10.1**](#1101-一些基本概念) 一些基本概念
+        + [**1.10.2**](#1102-创建存储池) 创建存储池
+        + [**1.10.3**](#1103-使用存储池) 使用存储池
+        + [**1.10.4**](#1104-创建存储卷) 创建存储卷
+        + [**1.10.5**](#1105-使用存储卷) 使用存储卷
+        + [**1.10.6**](#1106-存储卷用于备份) 存储卷用于备份
+        + [**1.10.7**](#1107-备份存储卷) 备份存储卷
+    + [**1.11**](#111-网络管理) 网络管理
+        + [**1.11.1**](#1111-容器网络接口) 容器网络接口
+        + [**1.11.2**](#1112-查看与配置) 查看与配置
+        + [**1.11.3**](#1113-使用网桥) 使用网桥
+        + [**1.11.4**](#1114-使用独占物理网卡) 使用独占物理网卡
+        + [**1.11.5**](#1115-和宿主机共用网卡和mac) 和宿主机共用网卡和MAC
++ [**2**](#2-docker) Docker
++ [**3**](#3-kubernetes) Kubernetes
+
+## 1 LXC
 
 ArchLinux下，基于LXD
 
@@ -167,7 +205,7 @@ lxc image alias delete img-01
 lxc exec arch-01 passwd
 ```
 
-> 使用`lxc exec`直接以`root`身份执行命令
+> 使用`lxc exec`直接以`root`身份执行命令，实际使用时可以在执行的命令前加上`--`以支持命令参数的传递，例如在容器内执行`free -h`，使用`lxc exec arch-01 -- free -h`
 
 查看一下当前已创建容器的运行状态
 
@@ -273,7 +311,7 @@ lxc file mount arch-01/home ./lxc-mnt
 
 ### 1.5.1 常用配置
 
-容器所有的配置选项（不限于安全选项）可以通过`lxc config set arch-01 ...`的形式进行设置，通过`lxc config show arch-01 --expanded`查看，也可以`lxc config edit arch-01`编辑所有选项
+容器所有的配置选项（不限于安全选项）可以通过`lxc config set arch-01 key=value`的形式进行设置，通过`lxc config show arch-01 --expanded`查看，也可以`lxc config edit arch-01`编辑所有选项
 
 > 除了容器可以配置，`lxd`服务器本身也有配置选项，命令格式为`lxc config set key value`
 
@@ -307,6 +345,8 @@ lxc config set arch-01 limits.cpu.allowance=50%
 
 创建多个容器实例时如果需要的配置相同，手动配置会过于繁琐，这时候就可以创建并使用`profile`，`profile`为yaml格式。一个容器实例可以加载多个`profile`，其中后面的`profile`中设置的值可以覆盖前面的`profile`
 
+> 每个容器都有自己的配置。配置文件只是作为一个默认的配置背景，单个容器的不通用配置还是要使用`lxc config set`设置
+
 列出当前可用的`profile`
 
 ```shell
@@ -338,7 +378,7 @@ used_by:
 - /1.0/instances/arch-01
 ```
 
-> 有关容器实例的配置选项都放在`config: {}`中，而设备相关都位于`devices:`
+> 有关容器实例的配置选项都放在`config:`中，而设备相关都位于`devices:`
 
 创建一个新的`profile`，这里是`arch-common`
 
@@ -346,7 +386,7 @@ used_by:
 lxc profile create arch-common
 ```
 
-可以单个设置容器实例的变量，或设备的变量
+可以设置容器实例的变量，或设备的变量
 
 ```shell
 lxc profile set arch-common key1=value1 key2=value2
@@ -475,7 +515,7 @@ lxc config set arch-01 snapshots.schedule=@midnight # @hourly每小时，@daily�
 
 ## 1.8 特权容器
 
-前面创建的容器都是非特权容器，通常具有更高的安全性。无特殊需求应尽量使用非特权容器。特权容器的`root`就相当于宿主机的`root`
+前面创建的容器都是非特权容器，通常具有更高的安全性。**无特殊需求应使用非特权容器**。特权容器的`root`就相当于宿主机的`root`
 
 ```shell
 lxc config set arch-01 security.privileged=true
@@ -487,16 +527,31 @@ lxc config set arch-01 security.privileged=true
 
 | ID | 名称 | 描述 |
 | :- | :- | :- |
-| 0 | `none` |  |
+| 0 | `none` | dummy device |
 | 1 | `nic` | 网络接口 |
-| 2 | `disk` | 存储 |
+| 2 | `disk` | 存储设备 |
 | 3 | `unix-char` | UNIX字符设备 |
 | 4 | `unix-block` | UNIX块设备 |
 | 5 | `usb` | USB设备 |
-| 6 | `gpu` | 显卡 |
+| 6 | `gpu` | 显卡，计算卡 |
 | 7 | `infiniband` | 光纤高速互联设备，常见于集群 |
 | 8 | `unix-hotplug` | UNIX热插拔设备 |
 | 9 | `tpm` | TPM安全模块 |
+
+为支持最基本的POSIX，`lxd`为容器提供了以下标准设备。其余设备都需要配置
+
+```shell
+/dev/null
+/dev/zero
+/dev/full
+/dev/console
+/dev/tty
+/dev/random
+/dev/urandom
+/dev/net/tun
+/dev/fuse
+lo
+```
 
 ### 1.9.1 添加与删除
 
@@ -506,7 +561,7 @@ lxc config set arch-01 security.privileged=true
 lxc config device add instance_name device_name device_type key1=value1 key2=value2
 ```
 
-示例，将宿主机的`/home/username/opt`挂载到`arch-01`的`/opt`，在容器内`ls /opt`可以看到内容
+示例，将宿主机的`/home/username/opt`映射到容器`arch-01`的`/opt`，在容器内`ls /opt`可以看到内容
 
 ```shell
 lxc config device add arch-01 opt-dir disk source=/home/username/opt path=/opt
@@ -534,14 +589,545 @@ lxc config device remove arch-01 opt-dir
 
 **none**
 
-如果使用了`profile`，它可能会带入我们不想要的设备。添加一个类型为`none`同名设备即可覆盖
+Dummy device。如果使用了`profile`，它可能会带入我们不想要的设备。`add`添加一个类型为`none`同名设备即可覆盖
 
-## 1.10 存储池管理
+**nic**
+
+见[1.11](#111-网络管理)
+
+**disk**
+
+添加一个[存储卷](#1105-使用存储卷)到容器的`/data`
+
+```shell
+lxc config device add arch-01 home-dir disk pool=pool0 source=myvol path=/data
+```
+
+最简单的映射一个宿主机路径到容器内
+
+```shell
+lxc config device add arch-01 home-dir disk source=/home/username path=/home/host-home
+```
+
+**unix-char**
+
+添加`/dev/ttyUSB0`
+
+```shell
+lxc config device add arch-01 usbtty unix-char source=/dev/ttyUSB0 path=/dev/ttyUSB2 required=false
+```
+
+> `required`设置为`false`时容器启动无需该设备，使能热插拔，设备插入宿主机时会自动分配到容器
+
+**unix-block**
+
+添加u盘`/dev/sdb`
+
+```shell
+lxc config device add arch-01 usbflash unix-block source=/dev/sdb path=/dev/sdc required=false
+```
+
+**usb**
+
+`usb`只适用于`libusb`的非高性能设备，不适用于需要内核驱动模块的设备，这些设备需要使用`unix-hotplug`或`unix-char`形式添加
+
+```shell
+lxc config device add arch-01 usbdev0 usb productid=120d vendorid=04b4 required=false
+```
+
+**gpu**
+
+常用于分配计算卡
+
+直接独占物理显卡，通常只需指定`pci`地址即可
+
+```shell
+lxc config device add arch-01 gpu0 gpu gputype=physical pci=0000:04:00.0
+lxc config device add arch-01 gpu1 gpu gputype=physical pci=0000:3c:00.0
+```
+
+使用nvidia的MIG（Multi-Instance GPU）技术（需要Ampere及以上架构），需要提前创建一个MIG容器（在创建容器时指定`nvidia.runtime=true`）
+
+```shell
+lxc config device add arch-01 gpu0 gpu gputype=mig mig.uuid=74c6a31a-fde5-5c61-973b-70e12346c202 pci=0000:04:00.0
+```
+
+**infiniband**
+
+服务器集群的光纤高速互联设备，简称IB（概念层级和以太网同等，但是IB设备可以处理更高层的网络协议，主要走DMA，占用CPU资源少）
+
+独占模式
+
+```shell
+lxc config device add arch-01 ib0 infiniband nictype=physical parent=ibp4s0
+```
+
+> 可以通过`hwaddr`变量指定MAC地址
+
+siriov模式
+
+```shell
+lxc config device add arch-01 ib0 infiniband nictype=sriov parent=ibp4s0
+```
+
+**unix-hotplug**
+
+```shell
+lxc config device add arch-01 usbdev0 unix-hotplug productid=120d vendorid=04b4 required=false
+```
+
+## 1.10 存储管理
+
+列出当前的存储池，有我们创建的默认的`pool0`
+
+```shell
+lxc storage list
+```
+
+查看`pool0`的配置以及使用状况
+
+```shell
+lxc storage show pool0
+lxc storage info pool0
+```
+
+初始化时我们创建的`pool0`默认位于`/var/lib/lxd/storage-pools/pool0`，为`dir`目录类型，使用的就是主机的文件系统，而不是像虚拟磁盘一样要经过两层文件系统。例如`arch-01`的完整根目录就位于`pool0`下的`arch-01/rootfs`
+
+### 1.10.1 一些基本概念
+
+存储池`storage pool`需要存储和容器、虚拟机实例相关的数据，例如实例的根目录，由实例创建的镜像，快照等。这些内容放在存储池下不同的目录中，例如容器实例以及根文件系统通常位于`containers`，虚拟机实例位于`virtual-machines`，它们的快照分别位于`*-snapshots`，在这些目录下创建的内容称为`storage volumes`存储卷，**存储池存放了存储卷**。用户可以自己创建存储卷，位于存储池下的`custom`目录中
+
+`storage buckets`使用Amazon的S3（Simple Storage Service）协议
+
+每一个存储池都有一个驱动，`lxd`下可用的驱动类型如下
+
+| 驱动 | 说明 |
+| :- | :- |
+| `dir` | 直接指定一个宿主机目录，使用宿主机的文件系统 |
+| `btrfs` | `btrfs`格式的磁盘，虚拟磁盘或挂载点 |
+| `lvm` |  |
+| `zfs` | `zfs`格式的磁盘，虚拟磁盘或已有的`zpool` |
+| `ceph` | 网络存储 |
+| `cephfs` | 网络存储 |
+| `cdphobject` | 网络存储 |
+
+### 1.10.2 创建存储池
+
+配置存储池使用`lxc storage set pool1 key value`格式，或直接`lxc storage edit pool1`编辑配置文件
+
+**dir**共用宿主机目录
+
+创建一个新的`pool1`，查看`/home/username/pool1`下会出现`pool0`下一样的目录
+
+```shell
+lxc storage create pool1 dir source=/home/username/pool1
+```
+
+删除`pool1`
+
+```shell
+lxc storage delete pool1
+```
+
+**btrfs**
+
+创建一个`btrfs`磁盘文件（loop-backed），磁盘文件位于`/var/lib/lxd/disks`
+
+```shell
+lxc storage create pool1 btrfs
+```
+
+或使用已挂载的`btrfs`磁盘
+
+```shell
+lxc storage create pool2 btrfs source=/home/username/mnt
+```
+
+或使用未挂载`btrfs`分区
+
+```shell
+lxc storage create pool3 btrfs source=/dev/sda4
+```
+
+**zfs**
+
+创建一个`zfs`磁盘文件，`zpool`名称为`myzpool`
+
+```shell
+lxc storage create pool1 zfs zfs.pool_name=myzpool
+```
+
+或使用已有的`zpool`，或`zpool`的一个`dataset`
+
+```shell
+lxc storage create pool2 zfs source=myzpool
+lxc storage create pool3 zfs source=myzpool/slice0
+```
+
+或使用`zfs`分区，同时新建一个`zpool`名称为`myzpool1`
+
+```shell
+lxc storage create pool4 zfs source=/dev/sda5 zfs.pool_name=myzpool1
+```
+
+**lvm**
+
+loop-backed
+
+```shell
+lxc storage create pool1 lvm
+```
+
+或使用已有`lvm`组`myvg`
+
+```shell
+lxc storage create pool2 lvm source=myvg
+```
+
+或使用组`myvg`内的`mypool`
+
+```shell
+lxc storage create pool3 lvm source=myvg lvm.thinpool_name=mypool
+```
+
+或创建一个组
+
+```shell
+lxc storage create pool4 lvm source=/dev/sda6 lvm.vg_name=myvg
+```
+
+**ceph**
+
+`lxd`支持`ceph` `cephfs` `cephobject`，这里不再示例
+
+### 1.10.3 使用存储池
+
+可以在创建实例时指定存储池，不指定默认使用我们创建的`pool0`
+
+```shell
+lxc launch local:arch-img arch-02 --storage pool1
+```
+
+也可以先在`myprofile`配置文件中设置，再使用该配置文件
+
+```shell
+lxc profile device add myprofile root disk path=/ pool=pool1
+lxc launch local:arch-img arch-02 --profile myprofile
+```
+
+将实例`arch-01`从存储池`pool0`移动到`pool1`
+
+```shell
+lxc move arch-01 --storage pool1
+```
+
+### 1.10.4 创建存储卷
+
+使用以下命令列出存储池`pool0`下的卷
+
+```shell
+lxc storage volume list pool0
+```
+
+查看用户卷`myvol`的信息
+
+```shell
+lxc storage volume show pool0 custom/myvol
+lxc storage volume info pool0 custom/myvol
+```
+
+存储卷主要分为3类，一类是`container`或`virtual-machine`，一类是`image`，一类是`custom`。其中使用`lxc`命令创建实例时会自动创建`container`或`virtual-machine`类型的存储卷，该实例的文件系统就放置于该存储卷中；`image`无需关注；而`custom`是用户自己创建的卷，用途由用户决定，可以存放备份等
+
+存储卷中可以存放`filesystem` `block`或`iso`类型的内容。其中`filesystem`是最常用的，它可以是一个目录，也可以是一个磁盘文件等；`block`为虚拟磁盘，只能用于虚拟机；`iso`为光盘文件
+
+通过以下命令在`pool1`创建一个`custom`存储卷`myvol`，有需要可以在末尾添加上变量配置，例如在`dir`类型的存储池中，可以设置`size snapshots.expiry snapshots.pattern snapshots.schedule`等变量
+
+```shell
+lxc storage volume create pool1 myvol --type=filesystem key=value
+```
+
+可以通过以下命令配置`pool0`下的存储卷`myvol`，设置`myvol`大小`4GiB`。还可以进行其他配置
+
+```shell
+lxc storage volume set pool0 custom/myvol size=4GiB
+```
+
+可以设置一个存储池中创建新卷时的默认配置
+
+```shell
+lxc storage set pool0 volume.size 16GiB
+```
+
+### 1.10.5 使用存储卷
+
+可以将我们自己创建的存储卷作为一个`disk`设备添加到一个实例，下例将`pool1`中的`myfsvol`（类型`filesystem`）挂到`arch-02`的`/data`
+
+```shell
+lxc storage volume attach pool1 myfsvol arch-02 /data
+```
+
+通过`lxc config show`可以看到分配的卷
+
+```shell
+lxc config show arch-02
+```
+
+卸载
+
+```shell
+lxc storage volume detach pool1 myfsvol arch-02
+```
+
+可以指定设备名例如`testfs0`
+
+```shell
+lxc storage volume attach pool1 myfsvol arch-02 testfs0 /data
+lxc storage volume detach pool1 myfsvol arch-02 testfs0
+```
+
+上述命令本质还是将一个卷作为一个`disk`设备添加到容器实例
+
+```shell
+lxc config device add arch-02 testfs0 disk pool=pool0 source=myfsvol path=/data
+```
+
+> 还可以通过配置`limits.read limits.write limits.max`达到读写限速的目的
+
+删除`pool0`下的卷`myvol`
+
+```shell
+lxc storage volume delete pool0 myvol
+```
+
+可以在不同的存储池之间拷贝用户创建的存储卷
+
+```shell
+lxc storage volume copy pool0/myvol pool1/myvol-cp
+```
+
+> 如果该卷有快照，可以加上`--volume-only`避免复制快照
+
+移动或重命名
+
+```shell
+lxc storage volume move pool0/myvol pool1/myvol-mv
+```
+
+如果想要移动的不是`custom`而是容器实例`arch-01`，从`pool0`到`pool1`
+
+```shell
+lxc stop arch-01
+lxc move arch-01 --storage pool1
+```
+
+也可以在不同的`lxd`服务器之间拷贝或移动
+
+```shell
+lxc storage volume copy local:pool0/myvol <target_remote>:pool0/newvol
+```
+
+### 1.10.6 存储卷用于备份
+
+在`pool0`创建一个存储卷`backupvol`并用于备份与镜像
+
+```shell
+lxc config set storage.backups_volume pool0/backupvol
+lxc config set storage.images_volume pool0/backupvol
+```
+
+### 1.10.7 备份存储卷
+
+存储卷可以通过快照，导出等方法备份
+
+**快照**
+
+为`pool0`中的`myvol`卷创建一个快照`snapvol`
+
+```shell
+lxc storage volume snapshot pool0 myvol snapvol
+```
+
+恢复快照
+
+```shell
+lxc storage volume restore pool0 myvol snapvol
+```
+
+可以将快照恢复到其他地方
+
+```shell
+lxc storage volume copy pool0/myvol/snapvol pool1/testvol
+```
+
+删除快照
+
+```shell
+lxc storage volume delete pool0 myvol/snapvol
+```
+
+查看`myvol`的快照信息
+
+```shell
+lxc storage volume info pool0 myvol
+```
+
+显示`snapvol`信息
+
+```shell
+lxc storage volume show pool0 myvol/snapvol
+```
+
+可以编辑一个快照的配置
+
+```shell
+lxc storage volume edit pool0 myvol/snapvol
+```
+
+设置定时快照
+
+```shell
+lxc storage volume set pool0 myvol snapshots.schedule=@daily
+```
+
+**导出**
+
+```shell
+lxc storage volume export pool0 myvol ./myvol-bk.tar.gz
+```
+
+从文件恢复
+
+```shell
+lxc storage volume import pool0 ./myvol-bk.tar.gz myvol
+```
 
 ## 1.11 网络管理
 
-# 2 Docker
+在初始化过程中我们创建了一个网桥`lxdbr0`，相当于我们的宿主机担当一个NAT网关（路由），容器实例通过虚拟以太网接口连接到该网关。这是最简单的配置。`lxdbr0`只有在`lxd`守护进程启动以后该才会创建，并且每启动一个容器实例时，`lxd`都会在宿主机以及容器内新建**一对**虚拟以太网接口（使用`ip link`查看）来互联，就像一个网络内多台主机连接到一个路由器。此时这些容器之间加上宿主机都可以互相ping通（因为宿主机就是路由），同时宿主机将容器访问外网的流量向有Internet连接的物理端口转发。而宿主机上层网络内的主机无法访问容器
 
-# 3 Kubernetes
+### 1.11.1 容器网络接口
 
-又称K8s
+以下示例中，我们向容器`arch-01`添加一个新的接口`eth1`，连接到我们在宿主机创建的网桥`br0`
+
+```shell
+lxc config device add arch-01 eth1 nic nictype=bridged parent=br0
+```
+
+> 在`lxd`中，网络设备又称为NIC（Network Interface Controllers）。`lxd`可以向**容器**添加基于（宿主机的）`nic`或`network`网络设备建立的**网络接口**，其中`nic`为宿主机上不受`lxd`管辖的网络设备，而`network`是可以通过`lxc network`命令管辖的设备。基于宿主机`nic`设备创建的**容器内接口**需要使用`nictype`声明，而基于`network`设备概念和操作不同，见后文
+>
+> 上述示例中容器的`eth1`是基于宿主机网络设备`br0`创建的一个接口。`eth1`类型为`bridged`，它所关联的网桥`br0`是我们在主机自己创建的，所以使用`nictype`声明
+
+常用的接口如下
+
+> `lxd`建议使用`network`网络设备，方便操作。在没有分布式多主机的应用下，`bridged`接口已经足够。而`ovn`可以用于私有云
+
+| 接口 | 适用宿主机设备 | 适用宿主机设备类型 | 解释 |
+| :- | :- | :- | :- |
+| `bridged` | `bridge`网桥 | `nictype` `network` | 基于宿主机已有的网桥创建一对虚拟以太网接口，将容器连接到该网桥 |
+| `ovn` | `ovn`网络 | `network` | 基于已有的ovn网络创建一对虚拟网络接口，将容器连接到该ovn网络 |
+| `physical` | `physical`物理网卡 | `nictype` `network` | 直接把宿主机的网卡分配给容器，宿主机不可再使用该网卡 |
+| `macvlan` | `macvlan` | `nictype` `network` | 基于宿主机已有的网络设备新建一个设备，但是使用不同的MAC |
+| `sriov` | `sriov` | `nictype` `network` | 需要物理设备支持SR-IOV |
+| `ipvlan` | `ipvlan` | `nictype` | 基于宿主机已有的网络设备新建一个设备，使用相同的MAC，不同的IP |
+| `p2p` | `p2p` | `nictype` | 仅仅创建一对虚拟接口 |
+| `routed` | `routed` | `nictype` |  |
+
+### 1.11.2 查看与配置
+
+可以在宿主机上创建一个`network`给容器使用，宿主机上使用`lxd`可创建并管理的设备类型有`bridge ovn physical macvlan sriov`
+
+查看宿主机上已经有的网络设备，通常会显示物理网卡以及我们在初始化时创建的`lxdbr0`
+
+```shell
+lxc network list
+```
+
+查看`lxdbr0`的配置以及运行状态
+
+```shell
+lxc network show lxdbr0
+lxc network info lxdbr0
+```
+
+可以手动编辑`lxdbr0`的配置
+
+```shell
+lxc network edit lxdbr0
+```
+
+也可以通过以下命令进行单个变量的设置与重置
+
+```shell
+lxc network set lxdbr0 key=value
+lxc network unset lxdbr0 key
+```
+
+### 1.11.3 使用网桥
+
+示例，使用`lxc`创建一个新网桥`mybr0`，默认在`lxd`下这个网桥会通过`dnsmasq`为连接的容器实例提供DHCP，DNS服务以及IPv6相关的功能支持等
+
+```shell
+lxc network create mybr0 --type=bridge ipv4.address=.../24 ipv4.nat="true" ipv6.address=.../64 ipv6.nat="true" 
+```
+
+> 其余可以设置的变量有`bridge.hwaddr`宿主机端MAC地址，`ipv4.dhcp`是否开启DHCP，`ipv4.firewall`防火墙设置等
+
+接下来将容器`arch-02`连接到该网桥
+
+```shell
+lxc network attach mybr0 arch-02 eth0
+```
+
+使用前述的方法也可以，需要使用`network`声明而不是`nictype`，无需声明类型为`bridged`
+
+```shell
+lxc config device add arch-02 eth0 nic network=mybr0
+```
+
+重命名`mybr0`为`lxdbr1`
+
+```shell
+lxc network rename mybr0 lxdbr1
+```
+
+删除`lxdbr1`
+
+```shell
+lxc network delete lxdbr1
+```
+
+### 1.11.4 使用独占物理网卡
+
+物理网卡通常无法由`lxd`管理，需要通过以下命令添加
+
+```shell
+lxc config device add arch-01 eth1 nic nictype=physical parent=enp1s0
+```
+
+此时`enp1s0`从宿主机消失，想要恢复通过以下命令
+
+```shell
+lxc config device remove arch-01 eth1
+```
+
+### 1.11.5 和宿主机共用网卡和MAC
+
+首先创建一个`macvlan`，名称为`lxd-macvlan0`
+
+```shell
+lxc network create lxd-macvlan0 --type=macvlan parent=enp1s0
+```
+
+将其添加到容器`arch-01`
+
+```shell
+lxc network attach lxd-macvlan0 arch-01 eth1
+```
+
+> 由于`lxd`对于容器虚拟网卡的自动ip配置仅限于`eth0`，所以需要额外配置。这里不再讲述
+
+## 2 Docker
+
+## 3 Kubernetes
+
+K8s
