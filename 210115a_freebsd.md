@@ -18,6 +18,32 @@
 
 [FreshPorts](https://www.freshports.org/)
 
+## 目录
+
++ [**1**](#1-下载镜像) 下载镜像
++ [**2**](#2-基本安装) 基本安装
+    + [**2.1**](#21-磁盘分区) 磁盘分区
+    + [**2.2**](#22-启动引导) 启动引导
+        + [**2.2.1**](#221-单系统引导) 单系统引导
+        + [**2.2.2**](#222-双系统多系统引导) 双系统/多系统引导
+    + [**2.3**](#23-个人设置偏好参考不代表建议的选择) 个人设置偏好参考（不代表建议的选择）
++ [**3**](#3-安装后杂项) 安装后杂项
+    + [**3.1**](#31-改镜像源) 改镜像源
+    + [**3.2**](#32-安装图形界面) 安装图形界面
+        + [**3.2.1**](#321-安装显卡驱动) 安装显卡驱动
+        + [**3.2.2**](#322-安装x) 安装X
+        + [**3.2.3**](#323-安装中文字体) 安装中文字体
+        + [**3.2.4**](#324-安装dewm以及配置) 安装DE/WM以及配置
+        + [**3.2.5**](#325-图标) 图标
+    + [**3.3**](#33-禁用蜂鸣器) 禁用蜂鸣器
+    + [**3.4**](#34-网络配置无线网卡驱动) 网络配置，无线网卡驱动
+    + [**3.5**](#35-声音配置声卡驱动) 声音配置，声卡驱动
+    + [**3.6**](#36-输入法) 输入法
+    + [**3.7**](#37-添加ext文件系统支持) 添加ext文件系统支持
++ [**4**](#4-jails玩耍简记) jails玩耍简记
++ [**5**](#5-zfs使用简记) ZFS使用简记
++ [**6**](#6-服务管理) 服务管理
+
 ## 平台配置
 
 > CPU：Intel Celeron J3160(4) @ 1.6GHz
@@ -101,13 +127,13 @@ swapon /dev/ada0p3
 
 附：个人fstab参考。内存小所以分了swap
 
-> ```
-> /dev/ada0p3       /         ufs       rw              0 1
-> /dev/ada1p3       none      swap      sw              0 0
-> /dev/ada1p5       /var      ufs       rw              0 2
-> /dev/ada1p8       /home     ufs       rw              0 2
-> tmpfs             /tmp      tmpfs     rw,mode=1777    0 0
-> ```
+```
+/dev/ada0p3       /         ufs       rw              0 1
+/dev/ada1p3       none      swap      sw              0 0
+/dev/ada1p5       /var      ufs       rw              0 2
+/dev/ada1p8       /home     ufs       rw              0 2
+tmpfs             /tmp      tmpfs     rw,mode=1777    0 0
+```
 
 最后挂载分区到`/mnt`，如果想要将其他分区挂载到`/home`，就要创建目录挂载，以下为例
 
@@ -439,7 +465,7 @@ pkg install mixertui
 pkg install zh-fcitx zh-fcitx-configtool zh-fcitx-libpinyin ja-fcitx-mozc fcitx-m17n
 ```
 
-如果使用的是`sh`，那么编辑`.shrc`如下，添加几行设置环境变量。`csh`使用`setenv`
+如果使用的是`sh`，那么编辑`.shrc`如下，添加几行设置环境变量（更加建议在`~/.xinitrc`中添加这些变量）。`csh`使用`setenv`
 
 ```shell
 # fcitx env setup
@@ -476,8 +502,12 @@ mount -t ext2fs -o ro /dev/adaXpX /mnt
 
 ## 4 jails玩耍简记
 
+`jails`可以算较早出现的容器技术（2000年），为FreeBSD特有功能，且至今仍得到广泛应用。后来Linux端的`lxc`在2008年才诞生，`docker`2013年诞生。`kubernetes`（常说的K8s）于2017年开始流行
 
 ## 5 ZFS使用简记
 
+见[210130a](210130a_install-notice.md#22-存储与文件系统)
 
 ## 6 服务管理
+
+见[210130a](210130a_install-notice.md#23-服务)

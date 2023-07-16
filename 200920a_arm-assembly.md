@@ -79,6 +79,14 @@ ARMv7-M体系结构笔记[传送门](201020a_stm32.md)
 
 [Whycan](https://whycan.com/index.html)
 
+Datasheet & TRM 仓库
+
+[Allwinner](https://github.com/DeciHD/allwinner_docs)
+
+[Rockchip](https://github.com/DeciHD/rockchip_docs)
+
+[Amlogic](https://github.com/DeciHD/amlogic_docs)
+
 **国际厂商**
 
 + ST 意法半导体
