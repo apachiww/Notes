@@ -1,6 +1,8 @@
 # 笔记
 
-> 个人学习归纳，备忘
+~~My ADHD notes~~
+
+> 个人学习归纳，备忘。不保证质量，完成度和准确性
 >
 > Learning is a lifelong deal. 长期慢更
 

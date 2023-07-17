@@ -664,7 +664,7 @@ lxc config device add arch-01 ib0 infiniband nictype=physical parent=ibp4s0
 
 > 可以通过`hwaddr`变量指定MAC地址
 
-siriov模式
+sriov模式
 
 ```shell
 lxc config device add arch-01 ib0 infiniband nictype=sriov parent=ibp4s0
@@ -1127,6 +1127,19 @@ lxc network attach lxd-macvlan0 arch-01 eth1
 > 由于`lxd`对于容器虚拟网卡的自动ip配置仅限于`eth0`，所以需要额外配置。这里不再讲述
 
 ## 2 Docker
+
+## 2.1 安装与配置
+
+```shell
+sudo pacman -S docker
+```
+
+如果已经安装了`lxd`，可能需要先向`DOCKER-USER`添加两条`iptables`防火墙规则，防止`lxd`无法联网。`docker`默认将全局的`FORWARD`设置为`DROP`
+
+```shell
+iptables -I DOCKER-USER -i lxdbr0 -o interface -j ACCEPT
+iptables -I DOCKER-USER -o lxdbr0 -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+```
 
 ## 3 Kubernetes
 
