@@ -46,21 +46,17 @@
 | [201220b](201220b_crack.md) | 密码爆破 | 0% |
 | [201220c](201220c_metasploit.md) | Metasploit渗透测试 | 0% |
 | [201225a](201225a_ssd.md) | 计算机存储：固态硬盘工作原理与优化方法 | 100% |
-| [201229a](201229a_ror.md) | Ruby，Ruby On Rails Web开发 | 0% |
 | [201230a](201230a_cryptography.md) | 加密算法，密码学 | 0% |
 | [210108a](210108a_autocad.md) | AutoCAD基本操作 | 100% |
 | [210110a](210110a_computer-arch.md) | 计算机体系结构以及处理器的设计 | 1% |
 | [210111a](210111a_qt.md) | Qt应用开发 | 0% |
 | [210115a](210115a_freebsd.md) | FreeBSD日常使用 | 80% |
 | [210130a](210130a_install-notice.md) | 各种类Unix的管理维护以及安全优化 | 1% |
-| [210216a](210216a_rust.md) | Rust | 0% |
 | [210316a](210316a_computer-graphics.md) | 计算机图形学算法，Vulkan，OpenGL（GLSL） | 0% |
 | [210317a](210317a_parallel.md) | 并行计算，C++11线程库 | 0% |
 | [210320a](210320a_3drebuild.md) | 卫星遥感 | 100% |
 | [210409a](210409a_haskell.md) | 函数式编程，Haskell | 30% |
 | [210501a](210501a_famitracker.md) | 计算机音乐，编曲作曲，（爵士）和声，FamiTracker，经典计算机音乐集成电路解析 | 0% |
-| [210515a](210515a_go.md) | Go | 0% |
-| [210515b](210515b_python.md) | Python | 0% |
 | [210515c](210515c_nginx.md) | Nginx/Apache/H2O Web服务原理以及部署 | 0% |
 | [210524a](210524a_8051.md) | 8051单片机开发 | 80% |
 | [210625a](210625a_uefi.md) | UEFI开发 | 10% |
@@ -70,7 +66,6 @@
 | [210731b](210731b_usb.md) | USB协议 | 30% |
 | [210808a](210808a_lcd.md) | LCD驱动 | 50% |
 | [210811a](210811a_sata.md) | 计算机常用存储设备接口协议 | 0% |
-| [210904a](210904a_algo.md) | 算法 | 0% |
 | [210904b](210904b_power.md) | 开关电源，DC-DC | 2% |
 | [211017a](211017a_analog.md) | 模电，无线电 | 0% |
 | [211119a](211119a_rpipico.md) | 树莓派Pico笔记 | 0% |
@@ -87,6 +82,7 @@
 | [230513a](230513a_texlive.md) | Texlive安装与使用 | 0% |
 | [230526a](230526a_driver.md) | Linux驱动开发，设备树 | 0% |
 | [230709a](230709a_container.md) | Linux容器LXD，Docker，K8s的使用 | 30% |
+| [230719a](230719a_js.md) | MEVN全栈，Node.js，Vue.js | 0% |
 
 ## 参考书收藏
 

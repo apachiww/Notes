@@ -36,6 +36,17 @@
         + [**1.11.4**](#1114-使用独占物理网卡) 使用独占物理网卡
         + [**1.11.5**](#1115-和宿主机共用网卡和mac) 和宿主机共用网卡和MAC
 + [**2**](#2-docker) Docker
+    + [**2.1**](#21-安装与配置) 安装与配置
+    + [**2.2**](#22-简单应用示例) 简单应用示例
+        + [**2.2.1**](#221-创建应用镜像) 创建应用镜像
+        + [**2.2.2**](#222-dockerhub上传) DockerHub上传
+        + [**2.2.3**](#223-使用卷) 使用卷
+        + [**2.2.4**](#224-bind-mount) Bind mount
+        + [**2.2.5**](#225-多容器应用) 多容器应用
+        + [**2.2.6**](#226-compose示例) Compose示例
+        + [**2.2.7**](#227-镜像构建优化) 镜像构建优化
+    + [**2.3**](#23-存储) 存储
+    + [**2.4**](#24-网络) 网络
 + [**3**](#3-kubernetes) Kubernetes
 
 ## 1 LXC
@@ -1128,6 +1139,10 @@ lxc network attach lxd-macvlan0 arch-01 eth1
 
 ## 2 Docker
 
+`docker`和`lxd`具有不同的定位，`lxd`主要用于整个操作系统的模拟，`lxd`的容器除内核和宿主机共用外都是独立的，拥有自己的init并可以管理服务，功能和虚拟机类似；而`docker`更多是为单个应用提供运行环境，主要是解决应用的缓存，配置，环境统一性等问题，其主要关注点在文件系统和进程的隔离上，多个应用通常需要使用多个`docker`容器
+
+由于以上差别，`lxd`更多用于共享的（GPU）超算集群，而`docker`更多用于部署互联网服务
+
 ## 2.1 安装与配置
 
 ```shell
@@ -1137,9 +1152,412 @@ sudo pacman -S docker
 如果已经安装了`lxd`，可能需要先向`DOCKER-USER`添加两条`iptables`防火墙规则，防止`lxd`无法联网。`docker`默认将全局的`FORWARD`设置为`DROP`
 
 ```shell
-iptables -I DOCKER-USER -i lxdbr0 -o interface -j ACCEPT
+iptables -I DOCKER-USER -i lxdbr0 -o eth0 -j ACCEPT
 iptables -I DOCKER-USER -o lxdbr0 -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
 ```
+
+启动`docker`
+
+```shell
+sudo systemctl start docker
+```
+
+查看`docker`信息，此时普通用户需要`sudo`
+
+```shell
+sudo docker info
+```
+
+将想要使用`docker`的用户添加到`docker`组后登出，重新登录，并重启`docker`服务
+
+```shell
+su
+usermod -a -G docker your-username
+```
+
+> 和`lxd`类似的，`docker`也是client-server软件，我们使用的`docker`命令行就是一个客户端，而我们通过`systemctl`启动的就是服务器。`docker`服务器重启或停止时所有容器实例都会重启或停止
+
+和`lxd`一样，`docker`也只需使能`docker.socket`的自启动即可，用户运行`docker`客户端命令时`docker`服务器会自动触发启动
+
+```shell
+sudo systemctl enable docker.socket
+sudo systemctl disable docker
+sudo systemctl disable containerd
+```
+
+`docker`的配置文件放置于`/etc/docker/daemon.json`
+
+```shell
+sudo mkdir /etc/docker
+sudo touch /etc/docker/daemon.json
+sudo vim /etc/docker/daemon.json
+```
+
+配置如下，配置`log driver`，限制日志文件大小和数量，单个不超过`2m`字节，文件数不超过`5`个
+
+```json
+{
+    "log-driver": "json-file",
+    "log-opts": {
+        "max-size": "2m",
+        "max-file": "5"
+    }
+}
+```
+
+之后重启`docker`服务
+
+## 2.2 简单应用示例
+
+### 2.2.1 创建应用镜像
+
+应用打包就是将应用打包到一个`docker`镜像中，之后就可以基于该镜像启动容器实例运行服务
+
+`docker`基于`Dockerfile`的描述构建这个镜像
+
+基于`docker`官网的示例，我们尝试一个Node.js应用
+
+```shell
+git clone https://github.com/docker/getting-started.git
+```
+
+我们进入到仓库的`app`目录，创建一个`Dockerfile`
+
+```shell
+cd app
+touch Dockerfile
+```
+
+```
+# syntax=docker/dockerfile:1
+
+FROM node:18-alpine
+WORKDIR /app
+COPY . .
+RUN yarn install --production
+CMD ["node", "src/index.js"]
+EXPOSE 3000
+```
+
+> 在`Dockerfile`中，我们指定想要使用`node:18-alpine`镜像，这是一个基于AlpineLinux的带有Node.js执行环境的容器镜像。下载解压镜像后将`/app`的内容放到容器中，并使用`yarn`依照`/app/package.json`安装依赖。`CMD`指定的是基于该镜像启动容器后需要执行的命令，这里是启动`node`。
+
+构建镜像
+
+```shell
+docker build --platform linux/amd64 -t getting-started .
+```
+
+> `-t`指定的是此次构建镜像的名称（标签）。`.`指示`docker`在当前目录寻找`Dockerfile`
+
+启动镜像，创建容器实例
+
+```shell
+docker run -dp 127.0.0.1:3000:3000 getting-started
+```
+
+> 我们启动了刚刚创建的镜像`getting-started`。由于之前在`Dockerfile`中指定服务运行在`3000`端口，所以需要使用`-p`参数将该端口映射到主机的`127.0.0.1:3000`，后面的`3000`就代表容器端口。`-d`表示`--detach`，让容器运行在后台
+
+查看当前正在运行的容器实例，以及对应的镜像
+
+```shell
+docker ps
+```
+
+```
+CONTAINER ID   IMAGE             COMMAND                  CREATED         STATUS         PORTS                      NAMES
+5628843613f3   getting-started   "docker-entrypoint.s…"   4 minutes ago   Up 4 minutes   127.0.0.1:3000->3000/tcp   boring_euclid
+```
+
+> 如果不通过`--names`参数指定名称，`docker`会随机进行命名，格式为形容词+`_`+名词，上例中为`boring_euclid`
+
+停止运行中的容器实例
+
+```shell
+docker stop 5628843613f3
+```
+
+> 这里也可以使用`boring_euclid`指代该容器。`stop`结束以后的容器不能通过`docker ps`看到，需要通过`docker ps -a`查看，此时它还未被删除，并可以通过`start`再次启动
+
+删除容器实例
+
+```shell
+docker rm 5628843613f3
+```
+
+### 2.2.2 DockerHub上传
+
+注册账号，并创建一个`getting-started`仓库
+
+使用注册时的用户名在本地登陆DockerHub
+
+```shell
+docker login -u your-username
+```
+
+为`getting-started`创建一个`tag`
+
+```shell
+docker tag getting-started your-username/getting-started:latest
+```
+
+> 结尾不显式指明`tag`默认就是`latest`。这里显式指明为`latest`
+
+### 2.2.3 使用卷
+
+在`docker`中，卷（`volume`）用于持久化存储，并在多个容器实例之间共享
+
+创建卷`test-db`
+
+```shell
+docker volume create test-db
+```
+
+查看卷的信息
+
+```shell
+docker volume inspect test-db
+```
+
+```
+[
+    {
+        "CreatedAt": "2023-07-19T17:51:48+01:00",
+        "Driver": "local",
+        "Labels": null,
+        "Mountpoint": "/var/lib/docker/volumes/test-db/_data",
+        "Name": "test-db",
+        "Options": null,
+        "Scope": "local"
+    }
+]
+```
+
+> 上述信息指出了该卷在宿主机的路径，在容器中创建的文件都可以在该目录下查找到。可以多个容器同时使用该卷
+
+删除并重新创建实例，挂载实例到容器的`/mnt/test-db`
+
+```shell
+docker rm -f 5628843613f3
+docker run -dp 127.0.0.1:3000:3000 --mount type=volume,src=test-db,target=/mnt/test-db getting-started
+```
+
+### 2.2.4 Bind mount
+
+`docker`的Bind mount主要用于和宿主机共享文件系统，可以将宿主机上的目录映射到容器里面使用。在应用开发时可以很方便的实现应用的自动重载和部署，而无需每次重新构建镜像
+
+挂载`/home/username/repo`到容器下的`/src`
+
+```shell
+docker run -it --mount type=bind,src=/home/username/repo,target=/src getting-started
+```
+
+自动部署应用
+
+```shell
+docker run -dp 127.0.0.1:3000:3000 \
+>   -w /app --mount type=bind,src=/home/username/repo,target=/app \
+>   node:18-alpine \
+>   sh -c "yarn install && yarn run dev"
+```
+
+> `-w`参数指定后面的shell指定执行的目录，为容器的`/app`，同时又将宿主机的`/home/username/repo`映射到这里。这里的自动部署基于`nodemon`实现，工程的`package.json`中指定了`dev`为`nodemon src/index.js`，`yarn run dev`后`nodemon`就会启动，并且在后续我们对源文件进行更改后会自动重启我们开发的应用
+
+### 2.2.5 多容器应用
+
+由于`docker`设计的初衷就是隔离运行环境，所以如果想要部署其他服务例如`mysql`，就只能运行在另外单独的容器中。应用程序和数据库服务器之间通过网络进行通信
+
+查看当前`docker`已经有的网络
+
+```shell
+docker network ls
+```
+
+```
+NETWORK ID     NAME      DRIVER    SCOPE
+xxxxxxxxxxxx   bridge    bridge    local
+xxxxxxxxxxxx   host      host      local
+xxxxxxxxxxxx   none      null      local
+```
+
+为了让多个容器通信，首先我们创建一个网络`app-net`，默认类型为`bridge`网桥。创建后该网桥也可以通过`ip link`命令看到
+
+```shell
+docker network create app-net
+```
+
+创建一个`mysql`容器实例并加入到该网桥
+
+```shell
+docker run -d \
+> --network app-net --network-alias mysql \
+> --name sql-test \
+> -v todo-mysql-data:/var/lib/mysql \
+> -e MYSQL_ROOT_PASSWORD=secret \
+> -e MYSQL_DATABASE=app-test \
+> mysql
+```
+
+> 在我们没有事先创建卷的情况下，`docker`会自动帮我们创建，例如上例中的`todo-mysql-data`。这里的`--network-alias`指定访问主机名，作用类似于在网络内提供了指定主机的DNS或使用了NetBIOS，这样访问数据库就无需知道容器的IP地址了
+>
+> 和`lxd`类似的，`docker`在有容器实例连接到网桥以后也会创建虚拟以太网接口，此时`ip link`可以看到多出来的`vethxxxxx`接口
+>
+> `docker`建议在实际应用中不要使用上述方法指定MySQL的密码，使用`docker compose`
+
+我们此时就可以尝试一下使用容器的`mysql`命令
+
+```shell
+docker exec -it sql-test mysql -u root -p
+```
+
+此后将其他容器连接到该网络就可以访问数据库
+
+例如，我们使用一个工具容器`nicolaka/netshoot`来测试
+
+```shell
+docker run -it --network app-net nicolaka/netshoot
+```
+
+启动后运行以下命令请求一下`mysql`主机名，可以得到`mysql`容器的IP
+
+```shell
+dig mysql
+```
+
+重新创建并启动应用容器，使用以下命令，部署后的应用就会使用该数据库
+
+```shell
+docker run -dp 127.0.0.1:3000:3000 \
+   -w /app -v "$(pwd):/app" \
+   --network todo-app \
+   -e MYSQL_HOST=mysql \
+   -e MYSQL_USER=root \
+   -e MYSQL_PASSWORD=secret \
+   -e MYSQL_DB=todos \
+   node:18-alpine \
+   sh -c "yarn install && yarn run dev"
+```
+
+### 2.2.6 Compose示例
+
+`docker`中Compose用于描述单、多容器应用，方便应用的快速部署，启动和停止，以及在不同机器间的迁移，是常用工具
+
+`compose`需要通过以下命令安装
+
+```shell
+sudo pacman -S docker-compose
+```
+
+之后便可以使用`docker compose`命令
+
+```shell
+docker compose version
+```
+
+在我们之前克隆下来的`getting-started/app`中，创建一个`docker-compose.yml`，这就是描述文件，在实际应用中它随仓库一起参与`git`的版本控制
+
+```yml
+services:
+  app:
+    image: node:18-alpine
+    command: sh -c "yarn install && yarn run dev"
+    ports:
+      - 127.0.0.1:3000:3000
+    working_dir: /app
+    volumes:
+      - ./:/app
+    environment:
+      MYSQL_HOST: mysql
+      MYSQL_USER: root
+      MYSQL_PASSWORD: secret
+      MYSQL_DB: todos
+  mysql:
+    image: mysql
+    volumes:
+      - todo-mysql-data:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: secret
+      MYSQL_DATABASE: todos
+volumes:
+  todo-mysql-data:
+```
+
+> 上述配置中，我们在`services`中分别描述了`app`以及`mysql`两个服务（服务可以取任何名字）以及对应的参数，这和我们使用命令行时传递的参数基本类似
+
+直接在当前目录下执行以下命令启动该应用（事先删除之前的容器。该命令会依照`docker-compose.yml`，创建容器`app-app-1`和`app-mysql-1`，网桥`app_default`，以及卷`app_todo-mysql-data`）
+
+```shell
+docker compose up -d
+```
+
+此时可以查看日志，或显示指定服务的日志
+
+```shell
+docker compose logs -f
+docker compose logs -f mysql
+```
+
+停止，依然在该目录下执行
+
+```shell
+docker compose down
+```
+
+此时容器实例以及网桥都会删除，但保留卷。如果想删除卷需要加`--volumes`参数
+
+```shell
+docker compose down --volumes
+```
+
+### 2.2.7 镜像构建优化
+
+仅适用于使用`yarn`的Node.js应用
+
+使用`docker image`的`history`功能可以看到每次执行镜像构建时的操作以及新增的文件大小，可以看到构建操作依照`Dockerfile`中的顺序执行
+
+```shell
+docker image history getting-started
+```
+
+这是之前的`Dockerfile`
+
+```
+# syntax=docker/dockerfile:1
+FROM node:18-alpine
+WORKDIR /app
+COPY . .
+RUN yarn install --production
+CMD ["node", "src/index.js"]
+```
+
+> 以上`Dockerfile`存在一个问题，只要我们对工程文件进行了更改（例如更改了`src/static/index.html`），这点小小的更改会导致`yarn`重新执行一遍依赖的安装，速度很慢。为解决这个问题，我们需要在`COPY . .`之前就执行`yarn`
+
+对`Dockerfile`作以下更改，在`yarn`执行之前先将`package.json yarn.lock`复制到容器中，保证`yarn`不会因为工程文件的更改而重新安装一遍依赖，同时依赖更改时可以检测出`package.json`的改动并自动安装
+
+```
+# syntax=docker/dockerfile:1
+FROM node:18-alpine
+WORKDIR /app
+COPY package.json yarn.lock ./
+RUN yarn install --production
+COPY . .
+CMD ["node", "src/index.js"]
+```
+
+同时在同目录下创建一个`.dockerignore`，防止`yarn`的包缓存目录`node_modules/`被重复复制
+
+```
+node_modules
+```
+
+构建镜像，工程更改时构建速度会快很多
+
+```shell
+docker build -t getting-started .
+```
+
+## 2.3 存储
+
+## 2.4 网络
 
 ## 3 Kubernetes
 

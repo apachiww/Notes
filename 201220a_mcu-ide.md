@@ -1,183 +1,344 @@
-# MCU开发环境DIY
+# MCU开发环境搭建与使用
 
-支持的MCU：8051，STM8，AVR，ARM
+基于开源工具，适用于Linux
 
+Tier 1 : 8051，STM8，AVR，ARM，RISC-V
 
-## 工具链下载
+Tier 2 : PIC，DS390，HC08，Z80
 
-8051，STM8使用[SDCC](http://sdcc.sourceforge.net/)
+## 目录
 
-AVR使用[GCC](https://www.microchip.com/en-us/tools-resources/develop/microchip-studio/gcc-compilers)
+## 1 方案一：二进制安装
 
-ARM使用[GCC](https://launchpad.net/gcc-arm-embedded)
+AVR工具链：[avr-gcc](https://www.microchip.com/en-us/tools-resources/develop/microchip-studio/gcc-compilers#) | [使用说明](https://gcc.gnu.org/wiki/avr-gcc)
 
+SDCC工具链：[sdcc](https://sdcc.sourceforge.net/) | [使用说明](https://sdcc.sourceforge.net/doc/sdccman.pdf)
 
-## 1 环境搭建
+ARMv7-M工具链：[arm-none-eabi-gcc](https://developer.arm.com/downloads/-/arm-gnu-toolchain-downloads) Atmel Build: [arm-none-eabi-gcc](https://www.microchip.com/en-us/tools-resources/develop/microchip-studio/gcc-compilers#)
 
+## 1.1 AVR
 
+## 1.2 SDCC
 
-### 1.2 工具链部署
+## 1.3 ARM
 
-### 1.2.1 安装make
+## 2 方案二：从源码编译
 
-安装`cmake`和`make`，有需要的话安装`git`
+适用于当前平台没有提供二进制包的情况，尤其在一些ARM或RISC-V单板机上开发时
 
-**Windows**
+环境：
 
-通过MSYS2安装
+ArchLinux amd64 kernel 6.3.2
 
-```shell
-pacman -S cmake make
-```
+gcc 13.1.1
 
-**ArchLinux**
+glibc 2.37
 
-```shell
-pacman -S cmake make
-```
+gnu make 4.4.1
 
-**FreeBSD**
+采用不污染系统目录的部署方式
 
-```shell
-pkg install cmake gmake make
-```
+## 2.1 AVR
 
+参考 https://www.nongnu.org/avr-libc/user-manual/install_tools.html
 
-### 1.2.2 8051工具链
+所有文件安装于`/home/username/local/toolchain-avr`
 
-使用[SDCC](http://sdcc.sourceforge.net/)，官方[手册](http://sdcc.sourceforge.net/doc/sdccman.pdf)
+### 2.1.1 下载
 
-SDCC是一个适用于8051，PIC，STM8等经典MCU的工具集
+| 文件 | 版本 | 说明 |
+| :- | :- | :- |
+| [gcc](https://ftp.gnu.org/gnu/gcc/) | 7.5.0 |  |
+| [binutils](https://ftp.gnu.org/gnu/binutils/) | 2.40 | 可以使用和gcc相近时间的版本 |
+| [avr-libc](https://download.savannah.gnu.org/releases/avr-libc/) | 2.1.0 | 同时下载文档 |
+| [avrdude](https://github.com/avrdudes/avrdude/releases) | 7.0.0 | 同时下载文档 |
 
-一般的Linux发行版也可以通过官方仓库安装，但是可能版本较老
+| 可选文件 | 版本 | 说明 |
+| :- | :- | :- |
+| [gdb](https://ftp.gnu.org/gnu/gdb/) | 8.3.1 | 只能搭配模拟器使用，可以使用和gcc相近时间的版本 |
+| [simulavr](https://git.savannah.nongnu.org/git/simulavr.git) | 1.1.0 | AVR模拟器，使用`git`克隆到本地后回退版本，同时下载文档 |
 
-SDCC的调试器`sdcdb`目前还处于非常不完备的状态，基本无法使用，可以使用[VM8051](https://github.com/lukbettale/VM8051)，pdf版使用[说明](src/201220a01/VM8051Guide.pdf)
+### 2.1.2 编译与安装
 
-**VM8051安装**
-
-```shell
-git clone https://github.com/lukbettale/VM8051.git
-cd VM8051
-make && make install
-```
-
-**Windows**
-
-[下载](https://sourceforge.net/projects/sdcc/files/sdcc-win64/)页面
-
-安装完成后，允许SDCC自动配置环境变量
-
-此时启动`bash`，输入`sdcc`，正常情况下会有输出
-
-
-**ArchLinux**
+创建AVR工具链家目录，以及源码目录，将下载的软件包全部放到`src`
 
 ```shell
-pacman -S sdcc
+mkdir ~/local/toolchain-avr
+cd ~/local/toolchain-avr
+mkdir src
 ```
 
-**FreeBSD**
+配置变量：
 
 ```shell
-pkg install sdcc
+PREFIX=/home/username/local/toolchain-avr
+export PREFIX
+PATH=$PATH:$PREFIX/bin
+export PATH
 ```
 
-
-### 1.2.3 ARM（Cortex-M）工具链
-
-可以直接通过官方仓库安装，使用GNU或LLVM工具链（**建议使用GNU工具链**，目前OpenOCD对GDB支持较好，LLDB未知）
-
-**Windows**
-
-`Win+R`，打开`bash`
+编译安装`binutils`
 
 ```shell
-pacman -S mingw-w64-x86_64-arm-none-eabi-toolchain
+cd binutils-2.40
+mkdir _build
+cd _build
+../configure --prefix=$PREFIX --target=avr --disable-nls
+make
+make install
 ```
 
-安装了包含`arm-none-eabi-gdb`在内的工具
-
-**ArchLinux**
+编译安装`avr-gcc`
 
 ```shell
-pacman -S arm-none-eabi-gcc arm-none-eabi-binutils arm-none-eabi-gdb
+cd gcc-7.5.0
+mkdir _build
+cd _build
+../configure --prefix=$PREFIX --target=avr --enable-languages=c,c++ --disable-nls --disable-libssp --with-dwarf2
+make
+make install
 ```
 
-**FreeBSD**
-
-官方仓库只有`arm-none-eabi-gcc`，可以使用`llvm`工具链作为替代（目前最新的Keil AC6已经转向`llvm`），或者下载`arm-none-eabi`编译安装
+编译安装`avr-libc`
 
 ```shell
-pkg install llvm
+cd avr-libc-2.1.0
+./configure --prefix=$PREFIX --build=`./config.guess` --host=avr --with-debug-info=DEBUG_INFO
+make
+make install
 ```
 
-
-### 1.2.4 OpenOCD
-
-OpenOCD是一个开源的调试服务器，会连接调试器（比如ST-LINK）驱动并负责接受`arm-none-eabi-gdb`的连接与调试。**建议安装最新版**
-
-[官网](http://openocd.org)
-
-[GNU toolchains](https://gnutoolchains.com/arm-eabi/openocd/)
-
-[参考文档](http://openocd.org/documentation/)
-
-**Windows**
-
-MSYS2官方库有OpenOCD软件包，这里还是使用传统方法安装
-
-OpenOCD Windows [下载](https://www.gnutoolchains.com/arm-eabi/openocd/)
-
-假设解压到`D:\OpenOCD`下，需要添加`D:\OpenOCD\bin`到`Path`
-
-**ArchLinux**
+编译安装`avrdude`
 
 ```shell
-pacman -S openocd
+cd avrdude-7.0
+mkdir _build
+cd _build
+../configure --prefix=$PREFIX
+make
+make install
 ```
 
-**FreeBSD**
+编译安装`gdb`
 
-目前只有10版
+可能先需要在包管理器安装`boost`
 
 ```shell
-pkg install openocd
+cd gdb-8.3.1
+mkdir _build
+cd _build
+../configure --prefix=$PREFIX --target=avr
+make
+make install
 ```
 
+编译安装`simulavr`
 
-### 1.3 硬件驱动
+首先回退到`release-1.1.0`
 
-### 1.3.1 串口
+```shell
+cd simulavr
+git reset release-1.1.0
+```
 
-Windows下常用串口VCP驱动
+```shell
+make build
+cmake --build build --target progdoc
+cmake --build build --target install
+cd build/install/usr/
+cp -r * $PREFIX/
+```
 
-CH340 [南京沁恒](http://www.wch.cn/products/CH340.html)
+所有编译安装过程完成后，`/home/username/local/toolchain-avr`应当有如下目录
 
-CP2102 [Silicon Labs](https://www.silabs.com/developers/usb-to-uart-bridge-vcp-drivers)
+```
+avr  bin  etc  include  lib  libexec  share  src
+```
 
-FT232 [FTDI](https://ftdichip.com/drivers/vcp-drivers/)
+### 2.1.3 配置
 
 
-### 1.3.2 调试器（Linker）驱动
 
-如果是在Linux或者FreeBSD下，各种调试器在安装完OpenOCD之后应该就已经可以直接用了，而Windows下调试器驱动需要手动安装
+### 2.1.4 添加MCU支持
 
-CMSIS-DAP（开源） [ARM](https://www.keil.com/support/man/docs/dapdebug/dapdebug_introduction.htm)Keil官方 
+[atpack](http://packs.download.atmel.com/)（选择MCU型号，下载后直接`unzip`解压）
 
-CMSIS-DAP [Github1](https://github.com/RadioOperator/STM32F103C8T6_CMSIS-DAP_SWO)，[Github2](https://github.com/wuxx/nanoDAP)，需要自己编译烧录
+## 2.2 SDCC
 
-ST-Link [ST](https://www.st.com/zh/development-tools/stsw-link009.html#get-software)
+SDCC可以支持8051，STM8，PIC，Z80等架构
 
-J-Link [SEGGER](https://www.segger.com/downloads/jlink/#J-LinkSoftwareAndDocumentationPack)
+所有文件安装于`/home/username/local/toolchain-sdcc`
 
-[OpenOCD](https://gnutoolchains.com/arm-eabi/openocd/)也有以上部分调试器驱动，可以直接使用里面的驱动
+### 2.2.1 下载
 
+| 文件 | 版本 | 说明 |
+| :- | :- | :- |
+| [sdcc](https://sourceforge.net/projects/sdcc/files/sdcc/) | 4.2.0 | 同时下载文档 |
+
+| 可选文件 | 版本 | 说明 |
+| :- | :- | :- |
+| [gputils](https://sourceforge.net/projects/gputils/files/gputils/) | 1.5.2 | 提供PIC单片机支持，同时下载文档 |
+| [gpsim](https://sourceforge.net/projects/gpsim/files/gpsim/) | 0.31.0 | PIC模拟器，同时下载文档 |
+
+### 2.2.2 编译与安装
+
+创建SDCC工具链家目录，以及源码目录，将下载的软件包全部放到`src`
+
+```shell
+mkdir ~/local/toolchain-sdcc
+cd ~/local/toolchain-sdcc
+mkdir src
+```
+
+配置变量：
+
+```shell
+PREFIX=/home/username/local/toolchain-sdcc
+export PREFIX
+PATH=$PATH:$PREFIX/bin
+export PATH
+```
+
+编译安装`sdcc`（无PIC14/PIC16支持，不安装`gputils`）
+
+```shell
+cd sdcc-4.2.0
+mkdir _build
+cd _build
+../configure --prefix=$PREFIX --disable-pic14-port --disable-pic16-port
+make
+make install
+```
+
+如果想要PIC14/PIC16支持需要先安装`gputils`和`gpsim`，在编译`sdcc`前首先进行如下操作。之后配置`sdcc`时去除`--disable-pic14-port --disable-pic16-port`参数
+
+```shell
+cd gputils-1.5.2
+mkdir _build
+cd _build
+../configure --prefix=$PREFIX
+make
+make install
+```
+
+```shell
+cd gpsim-0.31.0
+./configure --prefix=$PREFIX
+make
+make install
+```
+
+所有编译安装过程完成后，`/home/username/local/toolchain-sdcc`应当有如下目录
+
+```
+bin  include  lib  share  src
+```
+
+### 2.2.3 配置
+
+
+
+## 2.3 ARM
+
+~~`arm-none-eabi-gcc`工具链，基于Linaro ABE构建系统~~
+
+~~参考 https://developer.arm.com/downloads/-/arm-gnu-toolchain-downloads Release Note~~
+
+~~ABE构建系统 https://wiki-archive.linaro.org/ABE~~
+
+`arm-none-eabi-gcc`工具链
+
+参考ArchLinux的PKGBUILD，需要依照依赖关系按序构建、安装各软件包
+
+[arm-none-eabi-gcc](https://gitlab.archlinux.org/archlinux/packaging/packages/arm-none-eabi-gcc)
+
+[arm-none-eabi-binutils](https://gitlab.archlinux.org/archlinux/packaging/packages/arm-none-eabi-binutils)
+
+[arm-none-eabi-newlib](https://gitlab.archlinux.org/archlinux/packaging/packages/arm-none-eabi-newlib)
+
+[arm-none-eabi-gdb](https://gitlab.archlinux.org/archlinux/packaging/packages/arm-none-eabi-gdb)
+
+所有文件安装于`/home/username/local/toolchain-arm`
+
+依赖关系
+
+```
+arm-none-eabi-gcc
+    arm-none-eabi-binutils(run)
+    libisl(run)（注意gdb安装完以后回来处理一下）
+        gmp(run)
+    libmpc(run)
+        mpfr(run)
+            gmp(run)
+    arm-none-eabi-newlib(make optional)
+    gmp(make)
+    mpfr(make)
+arm-none-eabi-gdb
+    expat
+    guile
+    libelf
+    mpfr
+    ncurses
+    python
+    xz
+    readline
+    texinfo
+    boost
+```
+
+> 虽然ABE已经过时，这里还是不得不吐槽一下Linaro。如果看过ABE脚本的源码，你会感叹一个本可以很简单的构建工具是如何因为混乱的设计，质量低下的代码，成为垃圾堆的。尽管基于shell的设计确实导致了一些局限性，但是这不是滥用函数嵌套和全局变量，写死判断的原因。ABE似乎从一开始就没有合理安排设计，却尝试自动处理太多的事情，导致开发者自己也难以维护，即便是在最常用的Linux下也无法很体面地处理构建过程
+
+### 2.3.1 下载
+
+| 文件 | 版本 | 说明 |
+| :- | :- | :- |
+|  |  |  |
+| [openocd](https://sourceforge.net/p/openocd/code/ci/master/tree/) | 0.12.0 | 调试下载工具，使用`git`克隆后回退版本 |
+
+| 可选文件 | 版本 | 说明 |
+| :- | :- | :- |
+| [libopencm3](https://github.com/libopencm3/libopencm3.git) |  | 开源的ARM单片机库，支持ST，TI，NXP，Atmel等厂家的单片机 |
+
+### 2.3.2 编译与安装
+
+创建ARM工具链家目录，以及源码目录，将下载的软件包全部放到`src`
+
+```shell
+mkdir ~/local/toolchain-arm
+cd ~/local/toolchain-arm
+mkdir src
+```
+
+配置变量：
+
+```shell
+PREFIX=/home/username/local/toolchain-arm
+export PREFIX
+PATH=$PATH:$PREFIX/bin
+export PATH
+```
+
+复制`git-new-workdir`到`/usr/local/bin`
+
+```shell
+chmod +x git-new-workdir
+sudo cp git-new-workdir /usr/local/bin/
+```
+
+在`abe`仓库上一级目录创建构建目录，并配置`abe`，编译安装`arm-none-eabi-gcc`。`configure`时根据报错在包管理器补全软件依赖
+
+```shell
+mkdir _build
+cd _build
+../abe/configure
+../abe/abe.sh --manifest ../arm-gnu-toolchain-arm-none-eabi-abe-manifest.txt --build all
+```
 
 ## 2 8051单片机
 
-### 2.1 工具链使用：SDCC
+## 2.1 工具链：sdcc
 
-### 2.1.1 SDCC的目录结构与组成
+### 2.1.1 sdcc的目录结构与组成
 
 Windows下SDCC的目录如下
 
@@ -485,7 +646,7 @@ vm8051 out.ihx
 使用说明见[VM8051Guide](src/201220a01/VM8051Guide.pdf)
 
 
-### 2.2 STC的89C51系列开发（STC89C52RC）
+## 2.2 STC的89C51系列开发（STC89C52RC）
 
 ### 2.2.1 扩展关键字
 
@@ -617,22 +778,7 @@ void io_func(unsigned char io, unsigned char s) {
 
 ## 3 ARM单片机
 
-### 3.1 工具链使用：arm-none-eabi-gcc
-
-`arm-none-eabi-gcc`是目前在各大MCU厂商的集成开发环境中使用最多的编译工具链，目前最典型的搭配就是Eclipse魔改+GNU工具链，ST的STM32CubeIDE、TI的CCS、NXP的MCUexpresso都是此种方案
+## 3.1 工具链：arm-none-eabi-gcc
 
 
-### 3.2 工具链使用：llvm
-
-llvm工具链也是开源工具链，目前被Keil所使用，在AC6被引入，取代了原本的ARM编译器
-
-
-### 3.3 ST的STM32系列开发（STM32F103C8T6，STM32F407VET6，STM32F401CCU6）（Third party boards）
-
-### 3.4 Atmel的SAM系列开发（ATSAM3X8E）（Arduino DUE）
-
-### 3.5 TI的Tiva系列开发（TM4C123GH6PM）（TI EK-TM4C123GXL）
-
-## 4 AVR单片机
-
-暂无
+## 3.2 工具链使用：llvm

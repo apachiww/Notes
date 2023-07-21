@@ -10,6 +10,36 @@
 
 [FreeBSD Handbook](https://docs.freebsd.org/en/books/handbook/)
 
+## 目录
+
++ [**1**](#1-linux) Linux
+    + [**1.1**](#11-防火墙iptables) 防火墙：iptables
+        + [**1.1.1**](#111-基本概念) 基本概念
+        + [**1.1.2**](#112-filter表简析) filter表简析
+        + [**1.1.3**](#113-配置文件) 配置文件
+        + [**1.1.4**](#114-常用命令和操作) 常用命令和操作
+        + [**1.1.5**](#115-日志) 日志
+        + [**1.1.6**](#116-常用配置) 常用配置
+        + [**1.1.7**](#117-nat配置) NAT配置
+    + [**1.2**](#12-存储与文件系统) 存储与文件系统
+        + [**1.2.1**](#121-lvm逻辑卷管理) LVM逻辑卷管理
+        + [**1.2.2**](#122-存储安全加密) 存储安全：加密
+        + [**1.2.3**](#123-使用zfs) 使用ZFS
+    + [**1.3**](#13-服务) 服务
+        + [**1.3.1**](#131-基于systemd) 基于systemd
+        + [**1.3.2**](#132-基于openrc) 基于openrc
+    + [**1.4**](#14-其他杂项) 其他杂项
+        + [**1.4.1**](#141-开机信息显示) 开机信息显示
+        + [**1.4.2**](#142-sudo与特权用户) sudo与特权用户
+        + [**1.4.3**](#143-将grub配置文件安装到esp分区) 将grub配置文件安装到ESP分区
+        + [**1.4.4**](#144-cmos时间同步) CMOS时间同步
++ [**2**](#2-freebsd) FreeBSD
+    + [**2.1**](#21-防火墙) 防火墙
+    + [**2.2**](#22-存储与文件系统) 存储与文件系 统
+        + [**2.2.1**](#221-zfs) ZFS
+    + [**2.3**](#23-服务) 服务
+    + [**2.4**](#24-其他杂项) 其他杂项
+
 ## 1 Linux
 
 ## 1.1 防火墙：iptables
@@ -382,7 +412,7 @@ usermod -a -G wheel your-username
 visudo
 ```
 
-### 1.4.3 将grub配置文件安装到ESP分区而不是Linux系统分区
+### 1.4.3 将grub配置文件安装到ESP分区
 
 通过以下命令，`grub`的配置文件就会安装到ESP分区下的`grub`目录，假设当前ESP挂载到`/mnt`
 
@@ -417,6 +447,43 @@ timedatectl set-ntp true
 
 ```shell
 timedatectl status
+```
+
+### 1.4.5 GPU与3D
+
+测试程序，`mesa-utils`
+
+```shell
+sudo pacman -S mesa-utils
+```
+
+运行`vkgears`和`glxgears`经典齿轮测试程序，分别检查Vulkan和OpenGL是否可用
+
+![](images/210130a003.png)
+
+还可以安装`vulkan-tools`，运行`vkcube`
+
+![](images/210130a004.png)
+
+AMD显卡安装`radeontop`查看GPU资源使用
+
+```shell
+sudo pacman -S radeontop
+```
+
+### 1.4.6 显示器亮度调节
+
+安装`light`并确保非特权用户加入`video`组
+
+```shell
+sudo pacman -S light
+su
+usermod -a -G video rev
+```
+
+```shell
+light -A 5 # 调亮5
+light -U 5 # 降低5
 ```
 
 ## 2 FreeBSD
