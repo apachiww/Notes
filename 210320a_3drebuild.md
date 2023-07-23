@@ -1164,7 +1164,7 @@ $$
 其中数据中心化求解：
 
 > 数据中心化就是将所有点减去图像点的质心 $\dot x_i$ （坐标均值）
-> $$ \begin{aligned} \hat x_{ij} &= x_{ij} - \dot x_i \\ \dot x_i &= \dfrac{1}{n} \sum^n_{k=1} x_{ik} \\ x_{ij} &= A_iX_j + b_i\end{aligned}$$
+> $$ \begin{aligned} \hat x_{ij} &= x_{ij} - \dot x_i \\ \dot x_i &= \dfrac{1}{n} \sum^n_{k=1} x_{ik} \\ x_{ij} &= A_iX_j + b_i\end{aligned} $$
 > 那么
 > $$ \begin{aligned} \hat x_{ij} &= A_iX_j + b_i - \dfrac{1}{n} \sum^n_{k=1} x_{ik} \\ &= A_iX_j + b_i - \dfrac{1}{n} \sum^n_{k=1}A_iX_k - \dfrac{1}{n}nb_i \\ &= A_iX_j - \dfrac{1}{n} \sum^n_{k=1}A_iX_k \\ &= A_i(X_j - \bar X) \\ &= A_i\hat X_j \end{aligned} $$
 > 如果3D点质心和世界坐标系中心重合

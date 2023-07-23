@@ -81,7 +81,7 @@
 | [230411a](230411a_unix-programming.md) | Linux/Unix系统编程 | 0% |
 | [230513a](230513a_texlive.md) | Texlive安装与使用 | 0% |
 | [230526a](230526a_driver.md) | Linux驱动开发，设备树 | 0% |
-| [230709a](230709a_container.md) | Linux容器LXD，Docker，K8s的使用 | 30% |
+| [230709a](230709a_container.md) | Linux容器工具LXD，Docker，K8s的使用 | 70% |
 | [230719a](230719a_js.md) | MEVN全栈，Node.js，Vue.js | 0% |
 
 ## 参考书收藏
@@ -122,9 +122,11 @@
 
 ## Recipe
 
-🍥 C CPP Rust Java Go Haskell Ruby Python Lua TypeScript JavaScript
+🍥 C C++ Rust Java Go Haskell Ruby Python Lua TypeScript JavaScript
 
 🍜 CSS HTML5
+
+🍣 ROR MEVN
 
 🍡 Verilog
 
@@ -138,8 +140,10 @@
 
 🍓 GLSL
 
-🍉 Qt Rails wxWidgets
+🍉 Qt wxWidgets
 
-🍋 ARM AVR 8051 FPGA
+🥑 ARM AVR 8051 FPGA
 
-🍍 ArchLinux AlpineLinux Slackware FreeBSD Tribblix FreeRTOS RT-Thread
+🍍 ArchLinux AlpineLinux Slackware FreeBSD Tribblix
+
+🥭 FreeRTOS RT-Thread

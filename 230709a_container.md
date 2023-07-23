@@ -41,12 +41,28 @@
         + [**2.2.1**](#221-创建应用镜像) 创建应用镜像
         + [**2.2.2**](#222-dockerhub上传) DockerHub上传
         + [**2.2.3**](#223-使用卷) 使用卷
-        + [**2.2.4**](#224-bind-mount) Bind mount
+        + [**2.2.4**](#224-bind-mount示例) Bind mount示例
         + [**2.2.5**](#225-多容器应用) 多容器应用
         + [**2.2.6**](#226-compose示例) Compose示例
         + [**2.2.7**](#227-镜像构建优化) 镜像构建优化
-    + [**2.3**](#23-存储) 存储
-    + [**2.4**](#24-网络) 网络
+    + [**2.3**](#23-基本使用) 基本使用
+        + [**2.3.1**](#231-创建与使用容器) 创建与使用容器
+        + [**2.3.2**](#232-管理配置容器) 管理配置容器
+        + [**2.3.3**](#233-日志) 日志
+        + [**2.3.4**](#234-安全) 安全
+        + [**2.3.5**](#235-镜像管理) 镜像管理
+    + [**2.4**](#24-存储管理) 存储管理
+        + [**2.4.1**](#241-本地卷) 本地卷
+        + [**2.4.2**](#242-第三方卷驱动) 第三方卷驱动
+        + [**2.4.3**](#243-bind-mount) bind mount
+        + [**2.4.4**](#244-tmpfs) tmpfs
+        + [**2.4.5**](#245-存储驱动) 存储驱动
+    + [**2.5**](#25-网络管理) 网络管理
+        + [**2.5.1**](#251-网桥) 网桥
+        + [**2.5.2**](#252-共享主机网络) 共享主机网络
+        + [**2.5.3**](#253-macvlan) macvlan
+    + [**2.6**](#26-docker-build) Docker Build
+    + [**2.7**](#27-docker-compose) Docker Compose
 + [**3**](#3-kubernetes) Kubernetes
 
 ## 1 LXC
@@ -1014,7 +1030,7 @@ lxc storage volume import pool0 ./myvol-bk.tar.gz myvol
 
 ## 1.11 网络管理
 
-在初始化过程中我们创建了一个网桥`lxdbr0`，相当于我们的宿主机担当一个NAT网关（路由），容器实例通过虚拟以太网接口连接到该网关。这是最简单的配置。`lxdbr0`只有在`lxd`守护进程启动以后该才会创建，并且每启动一个容器实例时，`lxd`都会在宿主机以及容器内新建**一对**虚拟以太网接口（使用`ip link`查看）来互联，就像一个网络内多台主机连接到一个路由器。此时这些容器之间加上宿主机都可以互相ping通（因为宿主机就是路由），同时宿主机将容器访问外网的流量向有Internet连接的物理端口转发。而宿主机上层网络内的主机无法访问容器
+在初始化过程中我们创建了一个网桥`lxdbr0`，它可以连通我们的宿主机以及容器，此时相当于我们的宿主机担当一个NAT网关（路由），容器实例通过虚拟以太网接口连接到该网关。这是最简单的配置。`lxdbr0`只有在`lxd`守护进程启动以后该才会创建，并且每启动一个容器实例时，`lxd`都会在宿主机以及容器内新建**一对**虚拟以太网接口（使用`ip link`查看）来互联，就像一个网络内多台主机连接到一个路由器。此时这些容器之间加上宿主机都可以互相ping通（因为宿主机就是路由），同时宿主机将容器访问外网的流量向有Internet连接的物理端口转发。而宿主机上层网络内的主机无法访问容器
 
 ### 1.11.1 容器网络接口
 
@@ -1139,9 +1155,11 @@ lxc network attach lxd-macvlan0 arch-01 eth1
 
 ## 2 Docker
 
-`docker`和`lxd`具有不同的定位，`lxd`主要用于整个操作系统的模拟，`lxd`的容器除内核和宿主机共用外都是独立的，拥有自己的init并可以管理服务，功能和虚拟机类似；而`docker`更多是为单个应用提供运行环境，主要是解决应用的缓存，配置，环境统一性等问题，其主要关注点在文件系统和进程的隔离上，多个应用通常需要使用多个`docker`容器
+`docker`和`lxd`具有不同的定位，`lxd`主要用于整个操作系统的模拟，`lxd`的容器除内核和宿主机共用外都是独立的，拥有自己的init并可以管理服务，功能和虚拟机类似，但内存浪费更少，并且有更强大的硬件配置功能；而`docker`更多是为单个应用提供运行环境，主要是解决应用的缓存，配置，依赖，环境统一性等问题，其主要关注点在文件系统和进程的隔离上，多个应用通常需要使用多个`docker`容器
 
-由于以上差别，`lxd`更多用于共享的（GPU）超算集群，而`docker`更多用于部署互联网服务
+通常`lxd`使用完整的操作系统镜像，主要是完整的发行版镜像；而`docker`不一定使用完整功能的镜像（虽然也可以支持），而是只支持一种特定服务的定制最小化镜像（例如去除了一些常用Linux命令行工具，只保留极其有限的一部分）
+
+由于以上差别，`lxd`更多用于共享的（GPU）超算集群，可以作为虚拟机的类似替代品使用；而`docker`更多用于部署互联网服务，适用于现在的微服务应用
 
 ## 2.1 安装与配置
 
@@ -1168,7 +1186,7 @@ sudo systemctl start docker
 sudo docker info
 ```
 
-将想要使用`docker`的用户添加到`docker`组后登出，重新登录，并重启`docker`服务
+将想要使用`docker`的用户添加到`docker`组后登出，重新登录，并重启`docker`服务，后续就无需`sudo`
 
 ```shell
 su
@@ -1193,7 +1211,7 @@ sudo touch /etc/docker/daemon.json
 sudo vim /etc/docker/daemon.json
 ```
 
-配置如下，配置`log driver`，限制日志文件大小和数量，单个不超过`2m`字节，文件数不超过`5`个
+配置如下，配置`log driver`，限制日志文件大小和数量，单个不超过`2M`字节，文件数不超过`5`个
 
 ```json
 {
@@ -1247,7 +1265,7 @@ EXPOSE 3000
 docker build --platform linux/amd64 -t getting-started .
 ```
 
-> `-t`指定的是此次构建镜像的名称（标签）。`.`指示`docker`在当前目录寻找`Dockerfile`
+> 构建镜像就是将我们的应用部署到下载的镜像中，并重新构建镜像。`-t`指定的是此次构建镜像的名称（标签）。`.`指示`docker`在当前目录寻找`Dockerfile`
 
 启动镜像，创建容器实例
 
@@ -1278,7 +1296,7 @@ docker stop 5628843613f3
 
 > 这里也可以使用`boring_euclid`指代该容器。`stop`结束以后的容器不能通过`docker ps`看到，需要通过`docker ps -a`查看，此时它还未被删除，并可以通过`start`再次启动
 
-删除容器实例
+删除容器实例。如果此时容器未停止，需要添加`-f`参数删除
 
 ```shell
 docker rm 5628843613f3
@@ -1304,7 +1322,7 @@ docker tag getting-started your-username/getting-started:latest
 
 ### 2.2.3 使用卷
 
-在`docker`中，卷（`volume`）用于持久化存储，并在多个容器实例之间共享
+在`docker`中，卷（`volume`）用于持久化存储，并可以在多个容器实例之间共享
 
 创建卷`test-db`
 
@@ -1332,7 +1350,7 @@ docker volume inspect test-db
 ]
 ```
 
-> 上述信息指出了该卷在宿主机的路径，在容器中创建的文件都可以在该目录下查找到。可以多个容器同时使用该卷
+> 上述信息`Mountpoint`指出了该卷在宿主机的路径，在容器中创建的文件都可以在该目录下查找到。可以多个容器同时使用该卷
 
 删除并重新创建实例，挂载实例到容器的`/mnt/test-db`
 
@@ -1341,7 +1359,7 @@ docker rm -f 5628843613f3
 docker run -dp 127.0.0.1:3000:3000 --mount type=volume,src=test-db,target=/mnt/test-db getting-started
 ```
 
-### 2.2.4 Bind mount
+### 2.2.4 Bind mount示例
 
 `docker`的Bind mount主要用于和宿主机共享文件系统，可以将宿主机上的目录映射到容器里面使用。在应用开发时可以很方便的实现应用的自动重载和部署，而无需每次重新构建镜像
 
@@ -1360,7 +1378,7 @@ docker run -dp 127.0.0.1:3000:3000 \
 >   sh -c "yarn install && yarn run dev"
 ```
 
-> `-w`参数指定后面的shell指定执行的目录，为容器的`/app`，同时又将宿主机的`/home/username/repo`映射到这里。这里的自动部署基于`nodemon`实现，工程的`package.json`中指定了`dev`为`nodemon src/index.js`，`yarn run dev`后`nodemon`就会启动，并且在后续我们对源文件进行更改后会自动重启我们开发的应用
+> `-w`参数指定后面的shell指定执行的目录，为容器的`/app`，同时又将宿主机的`/home/username/repo`映射到这里。这里的自动部署基于Node.js的`nodemon`实现，工程的`package.json`中指定了`dev`为`nodemon src/index.js`，`yarn run dev`后`nodemon`就会启动，并且在后续我们对源文件进行更改后会自动重启我们开发的应用
 
 ### 2.2.5 多容器应用
 
@@ -1522,6 +1540,7 @@ docker image history getting-started
 
 ```
 # syntax=docker/dockerfile:1
+
 FROM node:18-alpine
 WORKDIR /app
 COPY . .
@@ -1535,6 +1554,7 @@ CMD ["node", "src/index.js"]
 
 ```
 # syntax=docker/dockerfile:1
+
 FROM node:18-alpine
 WORKDIR /app
 COPY package.json yarn.lock ./
@@ -1543,7 +1563,7 @@ COPY . .
 CMD ["node", "src/index.js"]
 ```
 
-同时在同目录下创建一个`.dockerignore`，防止`yarn`的包缓存目录`node_modules/`被重复复制
+同时在`Dockerfile`同目录下创建一个`.dockerignore`，防止`yarn`的包缓存目录`node_modules/`被重复复制
 
 ```
 node_modules
@@ -1555,9 +1575,696 @@ node_modules
 docker build -t getting-started .
 ```
 
-## 2.3 存储
+## 2.3 基本使用
 
-## 2.4 网络
+### 2.3.1 创建与使用容器
+
+```shell
+docker create
+```
+
+```shell
+docker start
+```
+
+```shell
+docker stop
+```
+
+```shell
+docker run -it
+```
+
+```shell
+docker run --rm
+```
+
+```shell
+docker run -d
+```
+
+```shell
+docker network connect
+```
+
+```shell
+docker attach
+```
+
+```shell
+docker ps
+```
+
+```shell
+docker container
+```
+
+```shell
+docker exec
+```
+
+### 2.3.2 管理配置容器
+
+
+
+### 2.3.3 日志
+
+
+
+### 2.3.4 安全
+
+
+
+### 2.3.5 镜像管理
+
+```shell
+docker pull
+```
+
+## 2.4 存储管理
+
+`docker`和`lxd`类似，容器实例本身有存储功能，但随着容器被删除这些数据也会消失。除了将数据存放到容器内以外，`docker`一共支持3种类型的额外存储，分别为卷`volume`，`bind mount`，以及`tmpfs`
+
+卷`volume`是持久化存储，只能由`docker`管理，是`docker`最推荐的额外数据存储方式（一般用于数据库等）
+
+> 卷`volume`主要特性：多容器间文件共享（多容器使用同一个卷）；指定名称的卷未创建时自动创建；支持云存储协议；可以备份；空卷挂载到原先有文件的目录时，目录中的文件会被复制到空卷中
+>
+> 每一个卷都有卷驱动`volume driver`
+>
+> `docker`建议在应用开发过程中使用`Dockerfile`将文件复制到容器，而不是使用`bind mount`
+>
+> 默认不给出本地卷类型时，卷放置于宿主机的`/var/lib/docker/volumes`目录。不能使用其他命令（例如`cp rm mkdir`）更改该目录下的东西
+
+`bind mount`也是持久化存储，但不能通过`docker`管理，可以映射主机上的任意目录，可以被宿主机程序访问更改，有时用于容器和宿主机之间共享文件。`bind mount`使用不当会导致严重的安全问题
+
+> `bind mount`主要特性：共享主机文件，`docker`默认将宿主机的`/etc/resolv.conf`映射到容器提供DNS配置
+
+`tmpfs`相当于在宿主机内存中开辟一片存储，是非持久化存储
+
+> `tmpfs`主要特性：用于无需持久化的临时数据；性能较高
+
+### 2.4.1 本地卷
+
+每一个卷都有一个卷驱动`volume driver`。`local`本地卷驱动最常用，同时也是没有显式指定卷驱动时使用的默认卷驱动。`local`驱动支持的文件系统类型`type`（注意这个`type`和`type=volume`的`type`不是同一个，这个`type`在创建`volume`时通过`-o`指定）有`ext4 nfs cifs`以及默认为空（`/var/lib/docker/volumes`）等
+
+**所有类型的卷使用**`docker volume create`**创建后，只需在**`docker run`**命令中通过**`--mount`**选项的**`src`**和**`dst`**指定即可，**`--mount`**无需额外参数**
+
+显示当前已有的卷
+
+```shell
+docker volume ls
+```
+
+创建卷`my-vol`
+
+```shell
+docker volume create my-vol
+```
+
+查看`my-vol`信息
+
+```shell
+docker volume inspect my-vol
+```
+
+```
+[
+    {
+        "CreatedAt": "2023-0xxxxxxxxxxxxxx",
+        "Driver": "local",
+        "Labels": null,
+        "Mountpoint": "/var/lib/docker/volumes/my-vol/_data",
+        "Name": "my-vol",
+        "Options": null,
+        "Scope": "local"
+    }
+]
+```
+
+删除卷`my-vol`
+
+```shell
+docker volume rm my-vol
+```
+
+删除所有没用的卷（没有分配给任何一个容器的卷）
+
+```shell
+docker volume prune
+```
+
+基于`nginx:latest`镜像创建容器实例`nginx-test`并使用刚刚创建的`my-vol`，挂载到容器的`/app`。挂载参数可以使用`--mount`或`-v`（`--volume`）指定
+
+```shell
+docker run -d \
+> --name nginx-test \
+> --mount source=my-vol,target=/app \ # source和src同义，target和dst，destination同义 \
+> nginx:latest
+```
+
+或
+
+```shell
+docker run -d \
+> --name nginx-test \
+> -v my-vol:/app \
+> nginx:latest
+```
+
+> `-v`后使用`:`分隔的参数必须按顺序，`my-vol`为卷名，`/app`为卷在容器中的位置。后面还可以加参数，例如`ro`只读
+
+只读挂载卷加参数更改如下
+
+```shell
+docker run -d \
+> --name nginx-test \
+> --mount source=my-vol,target=/app,readonly \
+> nginx:latest
+```
+
+或
+
+```shell
+docker run -d \
+> --name nginx-test \
+> -v my-vol:/app:ro \
+> nginx:latest
+```
+
+不事先`docker volume create`，直接创建新卷并使用，需要指定更多参数
+
+```shell
+docker run -d \
+> --name nginx-test \
+> --mount type=volume,volume-driver=local,source=my-vol,target=/app,readonly \
+> nginx:latest
+```
+
+在`docker compose`（`docker-compose.yml`）中使用卷
+
+```yml
+services:
+  app:
+    image: node:18-alpine
+    volumes:
+      - my-vol2:/app
+volumes:
+  my-vol2:
+```
+
+> 上述`compose`会在`docker compose up`时自动创建一个卷`my-vol2`并挂载到`/app`
+
+如果`my-vol2`是已有卷，需要指定外部引用
+
+```yml
+services:
+  app:
+    image: node:18-alpine
+    volumes:
+      - my-vol2:/app
+volumes:
+  my-vol2:
+    external: true
+```
+
+创建`NFSv3`卷`vol-nfsv3`，使用NFS服务器的`/home/fs`
+
+```shell
+docker volume create --driver local \
+> -o type=nfs \
+> -o o=addr=192.168.1.182,rw \
+> -o device=:/home/fs \
+> vol-nfsv3
+```
+
+创建`NFSv4`卷
+
+```shell
+docker volume create --driver local \
+> -o type=nfs \
+> -o o=addr=192.168.1.182,rw,nfsvers=4,async \
+> -o device=:/home/fs \
+> vol-nfsv4
+```
+
+创建`CIFS/Samba`卷
+
+```shell
+docker volume create --driver local \
+> -o type=cifs \
+> -o device=//smb-host/fs \
+> -o o=addr=smb-host,username=your-name,password=your-secret,file_mode=0777,dir_mode=0777 \
+> vol-samba
+```
+
+卷也可以是一个**块设备**，下面示例中设`/dev/sda2`为`ext4`格式的磁盘
+
+```shell
+docker volume create --driver local \
+> -o type=ext4 \
+> -o device=/dev/sda2 \
+> vol-sda2
+```
+
+如果是想使用磁盘映像文件，需要事先创建`loop`设备（例如`/dev/loop0`），再使用上述相同方法创建卷。如下示例`raw.img`为`ext4`格式
+
+```shell
+mkfs.ext4 raw.img
+sudo losetup -f show raw.img
+```
+
+如果想要在创建容器实例同时新建上述类型的卷，`docker run`命令需要使用`volume-opt`指定上述由`-o`指定的参数，如下示例
+
+```shell
+docker run -d \
+> --name nginx-test \
+> --mount 'type=volume,source=vol-nfsv4,target=/app,volume-driver=local,volume-opt=type=nfs,volume-opt=device=:/home/fs,"volume-opt=o=addr=192.168.1.182,rw,nfsvers=4,async"' \
+> nginx:latest
+```
+
+备份卷可以通过很多种方法，例如通过`bind mount`，将容器中卷的挂载点打成包放入，这里不再讲述
+
+### 2.4.2 第三方卷驱动
+
+其他非本地卷例如`sshfs`需要使用第三方卷驱动
+
+只要对应主机开启`sshd`并且权限允许，容器就可以使用`sshfs`卷
+
+安装`vieux/sshfs`驱动，是一个插件
+
+```shell
+docker plugin install --grant-all-permissions vieux/sshfs
+```
+
+创建一个`sshfs`卷`ssh-volume`，该卷使用用户名`sshaccess`访问位于主机`sshserver`上的`/home/fs`，`sshaccess`的密码为`sshsecret`
+
+```shell
+docker volume create --driver vieux/sshfs \
+> -o sshcmd=sshaccess@sshserver:/home/fs \
+> -o password=sshsecret \
+> vol-sshfs
+```
+
+创建容器实例使用`ssh-volume`
+
+```shell
+docker run -d \
+> --name sshfs-test \
+> --mount src=vol-sshfs,dst=/app \
+> nginx:latest
+```
+
+### 2.4.3 bind mount
+
+`bind mount`直接挂载宿主机上的任意目录
+
+`bind mount`由于不能使用`docker volume`创建和管理，所以通常在创建容器时指定
+
+```shell
+docker run -d -it \
+> --name nginx-test \
+> --mount type=bind,src=/home/repos/dev,dst=/app \
+> nginx:latest
+```
+
+或
+
+```shell
+docker run -d -it \
+> --name nginx-test \
+> -v /home/repos/dev:/app \
+> nginx:latest
+```
+
+> 使用`-v`参数时会自动检测给出的`src`是否为宿主机目录还是已有卷名，决定`volume`还是`bind`
+>
+> 同理，想要只读使用`bind mount`只需相应的添加`readonly`以及`ro`即可
+
+在`docker compose`中使用`bind mount`
+
+```yml
+services:
+  app:
+    image: node:18-alpine
+    volumes:
+      - type: bind
+        source: /home/repos/dev
+        target: /app
+```
+
+### 2.4.4 tmpfs
+
+`tmpfs`和`volume` `bind mount`有一个重要不同是它不能在多个容器之间共享，且只能在Linux宿主机上使用
+
+```shell
+docker run -d -it \
+> --name nginx-test \
+> --mount type=tmpfs,dst=/app,tmpfs-size=2G \
+> nginx:latest
+```
+
+或
+
+```shell
+docker run -d -it \
+> --name nginx-test \
+> --tmpfs /app \
+> nginx:latest
+```
+
+查看容器的信息
+
+```shell
+docker inspect nginx-test --format ''
+```
+
+### 2.4.5 存储驱动
+
+重点
+
+存储驱动`storage driver`是和`volume`不相关的概念，要和`volume`的`volume driver`区分开
+
+> `volume`适用于存储需要频繁写，长期保存（超出容器生命周期），以及需要在多容器间共享的数据，例如数据库等
+>
+> `storage driver`主要用于镜像以及容器实例本体
+>
+> 镜像和容器本体是一种渐进、层叠式的存储结构，类似于`git`的版本控制，只通过创建新层（快照）记录相比之前的镜像更改的内容，而原先的层对于其他镜像/容器来说依然可用。这样可以避免不必要的数据冗余，例如在创建多个采用相同镜像的容器实例时，就无需重复原先镜像的数据，共用一份即可。这也是为什么我们无法删除还在应用中的（有容器实例使用的）镜像。`storage driver`的作用就是管理这些渐进层叠式的数据文件
+>
+> `storage driver`缺点是不适用于存在大量文件写入/更改的应用，且部分应用条件下性能相比原生文件系统会有折损；而容器实例的数据会随着容器生命周期的结束而删除，无法像`volume`一样超越容器生命周期而存在
+
+![](images/230709a001.jpg)
+
+![](images/230709a002.jpg)
+
+> 由于所有容器实例都是基于镜像创建的，所以容器实例只是相比镜像多出了**一层**`container layer`可读写的容器层，**这也是容器实例相比镜像的主要区别**。容器实例只有最上层是可写的，其余层只可读。同理，创建新镜像时也只有当前步骤创建的新层是可写的，而旧层只能读
+>
+> `storage driver`采用了写时复制（Copy on Write，CoW）技术，一个文件在需要更改时首先从下层（该文件最近发生更改的层）复制到当前新建层，再进行更改。**在新层中只能访问更改后的文件，该文件的旧版本不可见**。注意，**更改文件的元数据（例如权限等）也会使用CoW**
+>
+> 因为以上原因，`storage driver`不适用于大量写入的场合（如数据库），因为旧文件实际依然保留，会产生过多的存储开销。这也是实际应用中数据库需要使用`volume`的原因
+
+回到我们之前创建的`Dockerfile`示例
+
+```
+# syntax=docker/dockerfile:1
+
+FROM node:18-alpine
+WORKDIR /app
+COPY . .
+RUN yarn install --production
+CMD ["node", "src/index.js"]
+EXPOSE 3000
+```
+
+> 尽管`Dockerfile`只是用于镜像构建，但是它其实就是描述了构建镜像时的新建层的过程。镜像构建完成后，新建层的历史就可以通过`docker image history`命令查看
+>
+> `Dockerfile`的每一行视操作而定，可能会新建层也可能不会新建。只要是执行了**会改变镜像中实体文件内容的操作**（不包括仅创建目录）就会触发新层的创建，例如实体文件的新建、删除、更改，这在`docker image history`中显示为非`0B`的条目（如果是`0B`，就表示没有实际的文件更改，只是镜像对应的元数据更改了）
+>
+> 我们可以发现`docker image history`的输出中有很多行不显示指纹，而是`<missing>`。这些行表示这些构建步骤是在其他主机完成并从DockerHub拉取的，或是由`BuildKit`构建的
+
+查看`getting-started`中最近创建层的指纹
+
+```shell
+docker image inspect --format "{{json .RootFS.Layers}}" getting-started
+```
+
+> 可以通过`docker ps -s`查看各容器占用的存储，其中`size`相当于`container layer`占用的存储，而`virtual size`相当于整个容器（包含镜像内容在内）占用的存储。容器的其他占用空间如日志，卷，配置文件等不计算在内
+
+**存储驱动选择**
+
+`docker`支持`overlay2 btrfs zfs devicemapper`等存储驱动，存储驱动是相对宿主机而言的，如果宿主机上有`zfs`格式的磁盘那么就可以使用`zfs`驱动。目前Linux发行版都支持`overlay2`，这也是`docker`推荐使用的驱动，而`devicemapper`适用于拥有较老内核的历史版本，例如想要在较老版本的`CentOS RHEL`宿主机上使用
+
+> `overlay2`支持`xfs ftype=1`以及`ext4`，是最稳定的，且为默认驱动无需配置。`overlay2`相当于直接对宿主机系统目录`/var/lib/docker`进行读写
+>
+> 和`overlay2`不同，`btrfs`和`zfs`是块设备级别的，且需要较多内存
+
+可以使用以下命令查看当前使用的存储驱动
+
+```shell
+docker info
+```
+
+**使用**`overlay2`
+
+默认情况下无需配置
+
+从其他存储驱动切换到`overlay2`，通常首先备份`/var/lib/docker`
+
+```shell
+systemctl stop docker
+cp -au /var/lib/docker /var/lib/docker.bk
+```
+
+之后挂载想用的磁盘到`/var/lib/docker`，并修改`/etc/fstab`。修改`/etc/docker/daemon.json`添加如下内容
+
+```json
+{
+  "storage-driver": "overlay2"
+}
+```
+
+启动`docker`
+
+```shell
+systemctl start docker
+```
+
+`overlay2`默认存储的文件位于`/var/lib/docker/overlay2`。在该目录下，一个镜像的每一层都会有一个单独目录存储，可能是镜像层或容器实例的可写层，目录名为指纹，并且在`/var/lib/docker/overlay2/l`下还有缩减版的指纹符号链接，和`/var/lib/docker/overlay2`下的目录一一对应（考虑到`mount`命令限制的命令行长度）
+
+`/var/lib/docker/overlay2`下每一个层目录下通常有`committed merged diff link lower work`等文件和目录。其中`diff`目录中存储了本层被修改的文件（底层为原始的根目录），`link`文件存储的是`/var/lib/docker/overlay2/l`下对应的符号连接名，`lower`指向父层的指纹（组成链表，底层没有`lower`），`work`为`overlay2`当前的工作目录
+
+`overlay2`中的文件映射关系如下
+sudo 
+`docker`建议如果没有`zfs`相关使用经验，不要使用
+
+从其他驱动迁移到`zfs`
+
+```shell
+systemctl stop docker
+cp -au /var/lib/docker /var/lib/docker.bk
+rm -rf /var/lib/docker/*
+```
+
+创建名为`zpool-docker`的`zpool`，挂载到`/var/lib/docker`
+
+```shell
+zpool create -f zpool-docker -m /var/lib/docker /dev/sda4 /dev/sda5
+```
+
+配置`/etc/docker/daemon.json`
+
+```json
+{
+  "storage-driver": "zfs"
+}
+```
+
+启动`docker`
+
+```shell
+systemctl start docker
+```
+
+可以向该`zpool`添加设备扩容
+
+```shell
+zpool add zpool-docker /dev/sda6
+```
+
+## 2.5 网络管理
+
+通过以下命令显示当前已有的网络，可以看到默认的`bridge`（`docker`中的网络设备名和宿主机中的不是一个。宿主机为`docker0`）
+
+```shell
+docker network ls
+```
+
+所有的容器在没有显式指定使用的网络时都连接到`docker`创建的默认的网桥`bridge`（`docker0`），这个网桥可以在宿主机通过`ip link`看到，它在`docker`服务启动后才会出现。这里不再讲述网桥的概念，可以看`lxd`里[对于网桥的介绍](#111-网络管理)，`docker`的网桥工作原理基本相同
+
+默认情况下，我们创建一个容器时`docker`会自动为其分配IP地址，且不会暴露任何端口，必须通过`-p`参数将端口映射出来
+
+```shell
+docker run -d -p 80:80 --name nginx-test nginx # --network docker0 省略
+```
+
+> 上述示例将`nginx-test`的`80`端口映射到宿主机的`80`端口，此时`nginx`服务可以在本机通过`localhost`或`127.0.0.1`访问
+>
+> 可以分别指定`tcp udp`映射，示例`-p 80:80/tcp -p 80:80/udp`
+>
+> 可以显式指定IP（例如本机有多个网络连接的情况下），示例`-p 192.168.1.122:80:80`
+>
+> 容器在创建时只能连接到一个网络（可以使用`--network`显式指定）。后续如果想要连接到更多网络，需要通过`docker network connect`命令
+>
+> 建议非必要时不要将端口暴露到局域网内，可以使用`-p 127.0.0.1:80:80`限制仅宿主机访问
+
+`docker`的网络配置功能主要还依赖于`iptables`。`docker`会在宿主机安装两张`iptables`表，分别为`DOCKER DOCKER-USER`。`iptables`配置见[笔记](210130a_install-notice.md#11-防火墙iptables)
+
+`docker`默认继承宿主机的DNS配置`/etc/resolv.conf`，并将其映射到容器中。如果用户通过`--network`指定使用自己的网络，那么`docker`将会为容器提供一个DNS服务器
+
+> 创建容器时可以通过`--dns`参数指定想要使用的DNS地址。此外，还可以通过`--hostname`指定容器的主机名（否则容器主机名为一个哈希。`--network-alias`不会指定容器主机名）
+
+`docker`主要支持以下几种网络驱动
+
+| 名称 | 简介 |
+| :- | :- |
+| `bridge` | 网桥，创建网络时的默认网络类型 |
+| `host` | 直接使用主机网络，取消容器的网络隔离（类似于容器内程序直接在宿主机上运行） |
+| `overlay` | 用于多台`docker`主机节点之间组网，其中的容器互相访问 |
+| `ipvlan` | 见[1.11.1](#1111-容器网络接口) |
+| `macvlan` | 见[1.11.1](#1111-容器网络接口) |
+| `none` | 无网络配置 |
+
+`docker`的IPv6支持还不是很完善，使用需谨慎
+
+修改`/etc/docker/daemon.json`使能IPv6
+
+```
+{
+  "experimental": true,
+  "ip6tables": true
+}
+```
+
+`docker network create`创建网络时需要加上`--ipv6`参数
+
+### 2.5.1 网桥
+
+加入默认网桥`bridge`时由于`docker`直接将宿主机的DNS配置给了容器，容器直接使用宿主机的DNS，`docker`**本身不为这些容器提供DNS服务**，所以加入默认网桥`bridge`时容器之间只能使用IP地址访问，想要通过网络名访问只能修改`/etc/hosts`
+
+只有用户自己创建的网桥才支持`docker`提供的定制的DNS服务，此时就可以支持配置`--network-alias`，容器间可以使用这些网络别名互相访问。实际应用中建议不要使用默认网桥
+
+可以查看一个网桥的信息，会显示哪些容器连接到了该网桥
+
+```shell
+docker network inspect bridge
+```
+
+创建一个网桥
+
+```shell
+docker network create --driver bridge my-br0
+```
+
+可以指定其他参数，例如分配的IP，子网掩码，网关地址等
+
+```shell
+docker network create --driver bridge \
+> --subnet 192.168.0.0/16 \
+> --gateway 192.168.0.1 \
+> my-br0
+```
+
+还可以通过`-o`指定更多参数
+
+```shell
+docker network create --driver bridge \
+> -o "com.docker.network.bridge.name"="br-custom0" \
+> my-br0
+```
+
+参数解释
+
+| 参数 | 定义 | 默认值 |
+| :- | :- | :- |
+| `com.docker.network.bridge.name` | 网桥在宿主机系统中的名称 |  |
+| `com.docker.network.bridge.enable_ip_masquerade` | 启用NAT | `true` |
+| `com.docker.network.bridge.enable_icc` | 允许容器间网络通信 | `true` |
+| `com.docker.network.bridge.host_binding_ipv4` | 映射容器端口时的默认IP |  |
+| `com.docker.network.driver.mtu` | 网络MTU | `0`无限制 |
+| `com.docker.network.container_iface_prefix` | 容器虚拟以太网接口前缀 | `eth` |
+
+删除网桥
+
+```shell
+docker network rm my-br0
+```
+
+直接创建容器时使用`--network`参数连接到指定网桥（同样适用于`docker run`）
+
+```shell
+docker create --name nginx-test \
+> --network my-br0 \
+> -p 80:80 \
+> nginx:latest
+```
+
+将运行中容器`nginx-test`连接到网桥
+
+```shell
+docker network connect my-br0 nginx-test
+```
+
+可以指定IP
+
+```shell
+docker network connect --ip 192.168.0.122 my-br0 nginx-test
+```
+
+可以使用`--alias`指定（一个或多个）网络别名
+
+```shell
+docker network connect --alias www-server my-br0 nginx-test
+```
+
+断开容器和网桥的连接
+
+```shell
+docker network disconnect my-br0 nginx-test
+```
+
+删除所有未使用的网络
+
+```shell
+docker network prune
+```
+
+### 2.5.2 共享主机网络
+
+主机网络无需创建也不能创建，直接启动容器使用即可
+
+```shell
+docker run --rm -d --network host --name nginx-test nginx:latest
+```
+
+```shell
+docker create --name nginx-test --network host nginx:latest
+```
+
+### 2.5.3 macvlan
+
+Macvlan将所有容器桥接（`bridge`，默认行为）到物理网卡。相当于宿主机担当一台交换机，容器都连接到这台交换机上，同时将宿主机的一个物理接口作为交换机的一个接口用于连接外部网络。从宿主机网口收发的数据包会使用不同的MAC（通常一个容器使用一个MAC），需要硬件支持
+
+创建`macvlan`网络`my-macvlan`，所有容器桥接到物理网口`eth0`
+
+```shell
+docker network create --driver macvlan \
+> -o parent=eth0 \
+> my-macvlan
+```
+
+可以指定该`macvlan`网络的网关，以及容器加入时分配的地址、掩码
+
+```shell
+docker network create --driver macvlan \
+> --subnet 192.168.5.0/24 \
+> --gateway 192.168.5.1 \
+> -o parent=eth0 \
+> my-macvlan
+```
+
+如果宿主机物理接口连接的网络已有IP被占用，需要排除
+
+```shell
+docker network create --driver macvlan \
+> --subnet 192.168.5.0/24 \
+> --gateway 192.168.5.1 \
+> --aux-address="www-server=192.168.5.129" \
+> -o parent=eth0 \
+> my-macvlan
+```
+
+## 2.6 Docker Build
+
+## 2.7 Docker Compose
 
 ## 3 Kubernetes
 
