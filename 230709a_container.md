@@ -47,10 +47,10 @@
         + [**2.2.7**](#227-镜像构建优化) 镜像构建优化
     + [**2.3**](#23-基本使用) 基本使用
         + [**2.3.1**](#231-创建与使用容器) 创建与使用容器
-        + [**2.3.2**](#232-管理配置容器) 管理配置容器
-        + [**2.3.3**](#233-日志) 日志
-        + [**2.3.4**](#234-安全) 安全
-        + [**2.3.5**](#235-镜像管理) 镜像管理
+        + [**2.3.2**](#232-docker信息) docker信息
+        + [**2.3.3**](#233-镜像) 镜像
+        + [**2.3.4**](#234-日志) 日志
+        + [**2.3.5**](#235-安全) 安全
     + [**2.4**](#24-存储管理) 存储管理
         + [**2.4.1**](#241-本地卷) 本地卷
         + [**2.4.2**](#242-第三方卷驱动) 第三方卷驱动
@@ -1155,11 +1155,11 @@ lxc network attach lxd-macvlan0 arch-01 eth1
 
 ## 2 Docker
 
-`docker`和`lxd`具有不同的定位，`lxd`主要用于整个操作系统的模拟，`lxd`的容器除内核和宿主机共用外都是独立的，拥有自己的init并可以管理服务，功能和虚拟机类似，但内存浪费更少，并且有更强大的硬件配置功能；而`docker`更多是为单个应用提供运行环境，主要是解决应用的缓存，配置，依赖，环境统一性等问题，其主要关注点在文件系统和进程的隔离上，多个应用通常需要使用多个`docker`容器
+`docker`和Linux Container在容器的实现上本质是基本相同的，但是`docker`和`lxd`具有不同的定位。`lxd`主要用于整个操作系统的模拟，`lxd`的容器通常有较为健全的功能，可以管理服务，有更强大的硬件配置功能，整体功能和虚拟机类似，但相比之下内存浪费更少；而`docker`更多是为单个应用提供运行环境，主要是解决应用的缓存，配置，依赖，环境统一性等问题，其主要关注点在文件系统和进程的隔离上，多个应用通常需要使用多个`docker`容器
 
-通常`lxd`使用完整的操作系统镜像，主要是完整的发行版镜像；而`docker`不一定使用完整功能的镜像（虽然也可以支持），而是只支持一种特定服务的定制最小化镜像（例如去除了一些常用Linux命令行工具，只保留极其有限的一部分）
+通常`lxd`使用完整的操作系统镜像，主要是完整的发行版镜像；而`docker`不一定使用完整功能的镜像（虽然也可以支持），而是使用面向一种特定服务的定制最小化镜像（去除了大部分常用Linux系统工具，只保留非常基本的命令）
 
-由于以上差别，`lxd`更多用于共享的（GPU）超算集群，可以作为虚拟机的类似替代品使用；而`docker`更多用于部署互联网服务，适用于现在的微服务应用
+由于以上差别，`lxd`更多用于共享的（GPU）计算集群，可以作为虚拟机的类似替代品使用；而`docker`更多用于部署互联网服务，适用于现在的微服务应用
 
 ## 2.1 安装与配置
 
@@ -1173,6 +1173,8 @@ sudo pacman -S docker
 iptables -I DOCKER-USER -i lxdbr0 -o eth0 -j ACCEPT
 iptables -I DOCKER-USER -o lxdbr0 -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
 ```
+
+> 如果还没有安装配置过`lxd`，需要配置`/etc/subuid /etc/subgid`，[见前](#11-安装与配置)
 
 启动`docker`
 
@@ -1227,6 +1229,8 @@ sudo vim /etc/docker/daemon.json
 
 ## 2.2 简单应用示例
 
+可以先看后面的[基本使用](#23-基本使用)
+
 ### 2.2.1 创建应用镜像
 
 应用打包就是将应用打包到一个`docker`镜像中，之后就可以基于该镜像启动容器实例运行服务
@@ -1275,10 +1279,10 @@ docker run -dp 127.0.0.1:3000:3000 getting-started
 
 > 我们启动了刚刚创建的镜像`getting-started`。由于之前在`Dockerfile`中指定服务运行在`3000`端口，所以需要使用`-p`参数将该端口映射到主机的`127.0.0.1:3000`，后面的`3000`就代表容器端口。`-d`表示`--detach`，让容器运行在后台
 
-查看当前正在运行的容器实例，以及对应的镜像
+查看当前的容器实例，以及对应的镜像
 
 ```shell
-docker ps
+docker ps -a
 ```
 
 ```
@@ -1320,6 +1324,8 @@ docker tag getting-started your-username/getting-started:latest
 
 > 结尾不显式指明`tag`默认就是`latest`。这里显式指明为`latest`
 
+根据DockerHub的指示上传镜像
+
 ### 2.2.3 使用卷
 
 在`docker`中，卷（`volume`）用于持久化存储，并可以在多个容器实例之间共享
@@ -1336,7 +1342,7 @@ docker volume create test-db
 docker volume inspect test-db
 ```
 
-```
+```json
 [
     {
         "CreatedAt": "2023-07-19T17:51:48+01:00",
@@ -1445,14 +1451,14 @@ dig mysql
 
 ```shell
 docker run -dp 127.0.0.1:3000:3000 \
-   -w /app -v "$(pwd):/app" \
-   --network todo-app \
-   -e MYSQL_HOST=mysql \
-   -e MYSQL_USER=root \
-   -e MYSQL_PASSWORD=secret \
-   -e MYSQL_DB=todos \
-   node:18-alpine \
-   sh -c "yarn install && yarn run dev"
+>  -w /app -v "$(pwd):/app" \
+>  --network todo-app \
+>  -e MYSQL_HOST=mysql \
+>  -e MYSQL_USER=root \
+>  -e MYSQL_PASSWORD=secret \
+>  -e MYSQL_DB=todos \
+>  node:18-alpine \
+>  sh -c "yarn install && yarn run dev"
 ```
 
 ### 2.2.6 Compose示例
@@ -1579,66 +1585,493 @@ docker build -t getting-started .
 
 ### 2.3.1 创建与使用容器
 
+先看[下载镜像](#233-镜像管理)
+
+查看当前所有容器
+
 ```shell
-docker create
+docker ps -a
+# = docker container ls -a
 ```
 
+显示一个容器的详细信息
+
 ```shell
-docker start
+docker container inspect alpine-test
 ```
 
+基于镜像`alpine:latest`创建容器`alpine-test`，但不启动
+
 ```shell
-docker stop
+docker create --name alpine-test alpine:latest
+# = docker container create --name alpine-test alpine:latest
 ```
 
+可以在后面指定容器启动后在（容器内）前台执行的程序
+
 ```shell
-docker run -it
+docker create --name alpine-test alpine:latest some-front-daemon
 ```
 
+> 默认情况下创建的容器在后台运行，不能使用shell。上述的`alpine`官方镜像由于没有指定容器中前台运行的服务程序，**如果不指定该前台程序容器启动后会立即退出**
+
+如果想要在启动后使用终端，需要`-i -t`，这样容器会一直等待我们`attach`终端（`detach`后依旧运行），我们在容器内`exit`退出后由于`sh`终止，容器才立即终止运行
+
 ```shell
-docker run --rm
+docker create --name alpine-test -it alpine:latest
 ```
 
+删除容器
+
 ```shell
-docker run -d
+docker rm alpine-test
+# = docker container rm alpine-test
 ```
 
+删除所有未在运行的容器
+
 ```shell
-docker network connect
+docker container prune
 ```
 
+重命名容器
+
 ```shell
-docker attach
+docker rename alpine-test alpine-one
+# = docker container rename alpine-test alpine-one
 ```
 
+常用参数
+
+| 参数 | 作用 |
+| :- | :- |
+| `--name` | 容器名，`docker ps -a`显示的名字 |
+| `--hostname` | 容器主机名，`/etc/hostname` |
+| `--network-alias` | 只能用于用户自己创建的网桥网络，指定容器的网络名，相较IP访问更方便 |
+| `--network` | 连接到[网络](#25-网络管理)，只能一个。不指定默认连接到`bridge` |
+| `--publish -p` | 将容器端口映射到主机端口，例如容器`80`映射到主机`8080`使用`8080:80`，见[网络](#25-网络管理) |
+| `--mount` | 挂载一个卷或`bind mount`或`tmpfs`到容器，见[存储](#24-存储管理)。挂载已有卷添加`src=,dst=`参数即可 |
+| `--volume -v` | 见[存储](#24-存储管理) |
+| `--volume-driver` | 见[存储](#24-存储管理)，使用卷驱动（若卷没有事先创建，可以指定） |
+| `--volumes-from` | 后加运行中的容器名，将指定容器的卷也挂载到新建容器的相同目录下 |
+| `--interactive -i` | 保持STDIN开启 |
+| `--tty -t` | 分配虚拟终端，经常和`-i`连用 |
+| `--rm` | 容器退出后自动删除 |
+| `--read-only` | 只读挂载容器根文件系统 |
+| `--cpus` | 指定CPU内核数量 |
+| `--cpu-shares -c` | 多个容器运行时本容器被分配的CPU时间比例，默认为`1024`，可以设置为`512 2048 4096`等，例如三个容器分别为`1024 512 512`，那么第一个容器分配50%资源 |
+| `--cpuset-cpus` | 指定运行的CPU序号，格式示例`0,3-5` `2,3` `5-8` |
+| `--cpuset-mems` | 在NUMA上指定内存节点序号，格式同上 |
+| `--memory -m` | 内存限制 |
+| `--kernel-memory` | 内核内存限制 |
+| `--dns` | 指定DNS服务器地址 |
+| `--ip --ip6` | 指定容器IP |
+| `--mac-address` | 指定容器MAC |
+| `--env` | 设置容器环境变量 |
+| `--log-driver --log-opt` | 日志驱动和选项 |
+| `--user -u` | 指定容器中运行程序的用户（默认`root`），覆盖`Dockerfile`的`US正在运行ER`配置 |
+| `--workdir -w` | 指定容器中运行程序的目录（默认`/`），覆盖`Dockerfile`的`WORKDIR`配置 |
+
+设备相关
+
+| 参数 | 作用 |
+| :- | :- |
+| `--gpus` | 分配GPU，需要事先安装`nvidia-container-runtime`。`'"device=0,2"'`分配GPU0和2，`device=GPU-3a23c669-1f69-c64e-cf85-44e9b07e7a2a`基于UUID指定，`all`分配所有GPU |
+| `--device` | 允许容器访问宿主机设备，例如`/dev/snd:/dev/snd`。`/dev/sda:/dev/xvdc:r`将宿主机的`/dev/sda`只读映射到容器的`/dev/xvdc` |
+
+容器的配置可以在创建以后更改（需要停止运行容器），使用`docker update`。可更改参数有`--cpu-shares --cpus --cpuset-cpus --cpuset-mems --memory`等参数
+
 ```shell
-docker ps
+docker update --cpus 4 alpine-test
+# = docker container update --cpus 4 alpine-test
 ```
 
+启动容器`alpine-test`
+
 ```shell
-docker container
+docker start alpine-test
+# = docker container start alpine-test
 ```
 
+显示运行时资源使用状态
+
 ```shell
-docker exec
+docker stats --all
+# = docker container stats --all
+docker stats alpine-test
+# = docker container stats alpine-test
 ```
 
-### 2.3.2 管理配置容器
-
-
-
-### 2.3.3 日志
-
-
-
-### 2.3.4 安全
-
-
-
-### 2.3.5 镜像管理
+显示容器`top`
 
 ```shell
-docker pull
+docker top alpine-test
+# = docker container top alpine-test 
+```
+
+如果想要使用容器的终端，`docker attach`即可
+
+```shell
+docker attach alpine-test
+# = docker container attach alpine-test
+```
+
+也可以直接启动时`--attach`
+
+```shell
+docker start --attach -i alpine-test
+```
+
+退出detach时需要使用组合键，默认为`CTRL-p CTRL-q`（不适用于非`shell`的情况，例如启动后执行`top`），**此时容器不会退出**
+
+停止容器`alpine-test`
+
+```shell
+docker stop alpine-test
+# = docker container stop alpine-test
+```
+
+或`docker kill`，在运行出现异常的情况下有用
+
+```shell
+docker kill nginx-test
+# = docker container kill nginx-test
+```
+
+重启`alpine-test`
+
+```shell
+docker restart alpine-test
+# = docker container restart alpine-test
+```
+
+`docker run`命令只是相当于`create`和`start`的快捷方式，可用参数和`docker create`基本相同，常用于单次执行一个程序
+
+`docker run`有一个常用参数`-d`，表示`detached`，相当于`docker create`的默认模式（在后台运行）。因为`docker run -it`相当于`docker create -it`后`docker start --attach -i`，所以要使用`-d`显式指明`detached`
+
+> `docker run`经常添加`--rm`参数使容器在退出后删除
+
+容器启动在后台运行，执行一个`some-front-daemon`
+
+```shell
+docker run -d --rm --name alpine-test alpine:latest some-front-daemon 
+```
+
+或不执行`some-front-daemon`，等待`attach`
+
+```shell
+docker run -dit --rm --name alpine-test alpine:latest
+docker attach alpine-test
+```
+
+或直接`attach`到shell
+
+```shell
+docker run -it --rm --name alpine-test alpine:latest
+```
+
+> `docker`中容器启动后执行的程序也可以通过`Dockerfile`指定，并在打包镜像、创建容器后执行。类似于`alpine`官方镜像这样的镜像由于没有指定启动后执行的服务程序，所以容器启动后会直接退出，必须使用`-it`创建。而我们在前面的示例中打包的镜像`getting-started`由于在`Dockerfile`中使用`CMD`指定了启动后立即执行的`node`服务器，所以它不会立即退出
+
+在容器中执行一个程序
+
+```shell
+docker exec alpine-test ls / # 直接执行一条命令，列出根目录 
+docker exec -it alpine-test sh # 和直接进入shell效果相同
+docker exec -d alpine-test some-daemon # 后台运行，不占用当前终端
+docker exec -d --user your-username alpine-test ls ～ # 以指定用户运行 
+```
+
+可以在容器和宿主机当前目录之间复制文件或目录
+
+```shell
+docker cp ./config.yml alpine-test:/app/
+docker cp alpine-test:/etc/hosts ~/
+```
+
+显示容器相比镜像更改的文件
+
+```shell
+docker diff alpine-test
+# = docker container diff alpine-test
+```
+
+> `A`表示新建，`D`表示删除，`C`表示更改
+
+等待容器退出，并打印退出码。常用于脚本
+
+```shell
+docker wait alpine-test
+# = docker container wait alpine-test
+```
+
+`docker commit`可以将容器实例发生的更改添加到镜像中（不包括卷）。`docker`推荐使用`Dockerfile`以及`docker build`进行这些操作
+
+```shell
+docker commit alpine-test username/alpine-modified:latest
+# = docker container commit alpine-test username/alpine-modified:latest
+```
+
+可以添加作者以及message
+
+
+```shell
+docker commit --author "My Name <user@gmail.com>" -m "updated" alpine-test username/alpine-modified:latest
+```
+
+导出一个容器的文件系统，常用于备份（不包含`volume`）
+
+```shell
+docker export -o alpinefs.tar alpine-test
+# = docker container export -o alpinefs.tar alpine-test
+```
+
+导入一个容器
+
+```shell
+docker import https://example.com/container.tgz
+# = docker container import https://example.com/container.tgz
+docker import ./container.tgz
+```
+
+> 注意`export import`是用于容器的，而`save load`是用于[镜像](#233-镜像)的
+
+### 2.3.2 docker信息
+
+显示`docker`全局信息
+
+```shell
+docker info
+# = docker system info
+```
+
+`system`为`docker`管理命令
+
+```shell
+docker system df # 显示当前docker占用磁盘
+docker system prune # 删除所有无用数据
+docker system events # 监听工具，监听docker服务器事件，例如attach，容器启动等
+```
+
+### 2.3.3 镜像
+
+显示当前本地已有的镜像
+
+```shell
+docker images
+# = docker image ls
+```
+
+在DockerHub查找AlpineLinux（`alpine`），可以过滤掉除官方镜像以外的镜像
+
+```shell
+docker search --filter is-official=true alpine
+```
+
+下载`alpine`最新镜像`alpine:latest`（`latest`为`tag`）
+
+```shell
+docker image pull alpine:latest
+```
+
+> 可用的`tag`可以到DockerHub查看，例如`alpine`的位于 https://hub.docker.com/_/alpine/tags
+
+查看镜像的更新记录
+
+```shell
+docker image history alpine
+```
+
+查看镜像详细信息
+
+```shell
+docker image inspect alpine
+```
+
+删除`alpine:latest`
+
+```shell
+docker image rm alpine:latest
+# = docker rmi alpine:latest
+```
+
+删除所有未使用的镜像
+
+```shell
+docker image prune
+```
+
+为本地镜像`0e5574283393`创建一个标签
+
+```shell
+docker image tag 0e5574283393 debian-test:v1.0
+```
+
+使用`push`上传镜像到DockerHub前先登陆账号，再给要上传的镜像创建标签
+
+```shell
+docker login user-id
+docker tag nginx-test:latest user-id/nginx:latest
+docker image push user-id/nginx:latest
+docker logout
+```
+
+可以上传一个镜像的所有`tag`
+
+```shell
+docker image push --all-tags user-id/nginx
+```
+
+打包一个镜像并导出到当前目录
+
+```shell
+docker save alpine:latest -o alpine.tar
+# = docker image save alpine:latest -o alpine.tar
+```
+
+将镜像`alpine.tar`导入到`docker`
+
+```shell
+docker load -i alpine.tar
+# = docker image load -i alpine.tar
+```
+
+构建镜像，当前目录`.`作为上下文，`Dockerfile`位于当前目录
+
+
+```shell
+docker build -t custom:latest .
+```
+
+> `-t`指定构建出镜像的`tag`。此外，还可以通过`--platform`（`linux/amd64`）指定平台
+>
+> 除此之外，上下文也可以是`https://github.com/docker/rootfs.git#container:docker`这样的`git`仓库名，`container`分支，`docker`目录。还可以是一个`.tar.gz`格式的包，可以支持远程下载例如`http://server/context.tar.gz`
+
+删除构建镜像缓存
+
+```shell
+docker builder prune
+```
+
+### 2.3.4 日志
+
+查看容器`nginx-test`的日志
+
+```shell
+docker logs nginx-test
+# = docker container logs nginx-test
+```
+
+> `docker`的容器日志内容就是基本相当于以交互模式运行容器时，从终端输出的内容，主要有系统信息，服务的启动等
+>
+> 很多服务程序由于在默认配置下不会将运行时日志输出到标准输出，所以需要更改。`docker`的官方`nginx`和`httpd`镜像都已经更改了日志配置
+
+**日志驱动**
+
+和网络、存储一样，`docker`的日志也有驱动的概念，以实现不同的日志形式。以下为常用日志驱动
+
+| 驱动 | 描述 | 支持的opts |
+| :- | :- | :- |
+| `none` | 不使用日志 |  |
+| `local` | 支持log-rotation的本地日志，`docker`推荐使用 | `max-size max-file compress` |
+| `json-file` | json格式 | `max-size max-file compress labels env` |
+| `syslog` | 使用系统的`syslog`服务 | `syslog-address syslog-facility tag syslog-format labels env`等 |
+| `journald` | 使用系统的`journald`服务 | `tag labels env` |
+| `awslogs` | Amazon CloudWatch | 略 |
+| `gcplogs` | Google Cloud Platform | 略 |
+| `logentries` | Rapid7 Logentries | `logentries-token line-only` |
+
+`docker`默认的日志驱动为`json-file`，日志使用json格式记录存储。但是`json-file`不支持log-rotation（[前面](#21-安装与配置)我们也配置了`json-file`限制了日志大小），目前`docker`推荐使用`local`驱动，该驱动支持log-rotation。使用`json-file`只是历史原因，为兼容考虑
+
+想要更改默认驱动为`local`，更改`/etc/docker/daemon.json`重启`docker`。没有需求可以不添加`log-opts`，默认也行
+
+```json
+{
+  "log-driver": "local",
+  "log-opts": {
+    "max-size": "10m",
+    "max-file": "3",
+  }
+}
+```
+
+在创建运行容器时也可以通过`--log-driver --log-opt`指定日志驱动，**它会覆盖我们配置的默认驱动**
+
+```shell
+docker run -it --log-driver json-file --log-opt max-size=5m --name alpine-test alpine:latest
+```
+
+默认情况下，**容器输出到日志驱动是没有缓冲且受阻塞控制的**。可以将模式改成有缓冲的`non-blocking`模式，并指定缓冲大小，否则在日志压力较大时可能导致一些程序的异常。这适用于所有日志驱动，也可以在`daemon.json`中配置
+
+```shell
+docker run -it --log-opt mode=non-blocking --log-opt max-buffer-size=4m --name alpine-test alpine:latest
+```
+
+`file-json`使用`--label`和`--env`（`-e`）为该容器的日志添加标签，方便区分
+
+```shell
+docker run -dit --label production_status=testing -e os=ubuntu alpine:latest
+```
+
+**dual-logging**
+
+`docker`所谓的`dual-logging`就是即便使用非本地日志驱动时，依旧可以在宿主机使用`docker logs`查看日志，因为`docker`在使用非本地日志同时使用`local`驱动将日志记录在本地（默认`"max-size": "20m", "max-file": "5"`）
+
+使用`dual-logging`默认无需增加额外配置，直接使用非本地日志驱动即可，`docker`会自动`dual-logging`。除非通过`--log-opt cache-disabled=true`显式禁用`dual-logging`
+
+**查看docker服务日志**
+
+上述内容都是容器日志，不包含`docker`服务本身的日志
+
+`docker`服务日志通过以下命令查看
+
+```shell
+journalctl -xu docker.service
+```
+
+### 2.3.5 安全
+
+如果有必要，可以配置`docker`服务器不以`root`运行，原先的配置都是以`root`运行`docker`服务器（容器以非`root`运行），需要`sudo systemctl`
+
+首先确保配置了`/etc/subuid /etc/subgid`
+
+ArchLinux安装`fuse-overlayfs`
+
+```shell
+sudo pacman -S fuse-overlayfs
+```
+
+在`/etc/sysctl.conf`加一行
+
+```
+kernel.unprivileged_userns_clone=1
+```
+
+执行一下
+
+```shell
+sudo sysctl --system
+```
+
+禁用`docker`
+
+```shell
+sudo systemctl disable --now docker.service docker.socket
+```
+
+执行以下安装脚本，无需`sudo`，运行完根据提示配置`$PATH`和`$DOCKER_HOST`环境变量
+
+```shell
+curl -fsSL https://get.docker.com/rootless | sh
+```
+
+会将rootless安装到当前用户家目录`~/bin`
+
+卸载方法省略
+
+以用户身份启动`docker`
+
+```shell
+systemctl --user start docker
 ```
 
 ## 2.4 存储管理
@@ -2033,7 +2466,11 @@ systemctl start docker
 `/var/lib/docker/overlay2`下每一个层目录下通常有`committed merged diff link lower work`等文件和目录。其中`diff`目录中存储了本层被修改的文件（底层为原始的根目录），`link`文件存储的是`/var/lib/docker/overlay2/l`下对应的符号连接名，`lower`指向父层的指纹（组成链表，底层没有`lower`），`work`为`overlay2`当前的工作目录
 
 `overlay2`中的文件映射关系如下
-sudo 
+
+![](images/230709a003.jpg)
+
+**使用**`zfs`
+
 `docker`建议如果没有`zfs`相关使用经验，不要使用
 
 从其他驱动迁移到`zfs`
@@ -2083,7 +2520,7 @@ docker network ls
 默认情况下，我们创建一个容器时`docker`会自动为其分配IP地址，且不会暴露任何端口，必须通过`-p`参数将端口映射出来
 
 ```shell
-docker run -d -p 80:80 --name nginx-test nginx # --network docker0 省略
+docker run -d -p 80:80 --name nginx-test nginx # --network bridge 省略
 ```
 
 > 上述示例将`nginx-test`的`80`端口映射到宿主机的`80`端口，此时`nginx`服务可以在本机通过`localhost`或`127.0.0.1`访问
@@ -2095,6 +2532,13 @@ docker run -d -p 80:80 --name nginx-test nginx # --network docker0 省略
 > 容器在创建时只能连接到一个网络（可以使用`--network`显式指定）。后续如果想要连接到更多网络，需要通过`docker network connect`命令
 >
 > 建议非必要时不要将端口暴露到局域网内，可以使用`-p 127.0.0.1:80:80`限制仅宿主机访问
+
+可以使用`docker port`命令查看端口映射情况
+
+```shell
+docker port nginx-test
+# = docker container port nginx-test
+```
 
 `docker`的网络配置功能主要还依赖于`iptables`。`docker`会在宿主机安装两张`iptables`表，分别为`DOCKER DOCKER-USER`。`iptables`配置见[笔记](210130a_install-notice.md#11-防火墙iptables)
 
@@ -2264,7 +2708,19 @@ docker network create --driver macvlan \
 
 ## 2.6 Docker Build
 
+`buildx`需要额外安装
+
+```shell
+sudo pacman -S docker-buildx
+```
+
 ## 2.7 Docker Compose
+
+`compose`需要额外安装
+
+```shell
+sudo pacman -S docker-compose
+```
 
 ## 3 Kubernetes
 
