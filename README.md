@@ -29,7 +29,7 @@
 >
 > `./index-gen.awk note.md`
 
-| No. | Content | Completeness |
+| No. | Content | Done |
 | :- | :- | :-: |
 | [200908a](200908a_sdram.md) | 计算机存储：SDRAM | 100% |
 | [200908b](200908b_qemu-arm.md) | LFS并使用QEMU运行Linux（ARMv7）| 100% |

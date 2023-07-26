@@ -34,7 +34,7 @@
         + [**1.11.2**](#1112-查看与配置) 查看与配置
         + [**1.11.3**](#1113-使用网桥) 使用网桥
         + [**1.11.4**](#1114-使用独占物理网卡) 使用独占物理网卡
-        + [**1.11.5**](#1115-和宿主机共用网卡和mac) 和宿主机共用网卡和MAC
+        + [**1.11.5**](#1115-macvlan) macvlan
 + [**2**](#2-docker) Docker
     + [**2.1**](#21-安装与配置) 安装与配置
     + [**2.2**](#22-简单应用示例) 简单应用示例
@@ -62,6 +62,11 @@
         + [**2.5.2**](#252-共享主机网络) 共享主机网络
         + [**2.5.3**](#253-macvlan) macvlan
     + [**2.6**](#26-docker-build) Docker Build
+        + [**2.6.1**](#261-dockerfile) Dockerfile
+        + [**2.6.2**](#262-上下文) 上下文
+        + [**2.6.3**](#263-多阶段构建) 多阶段构建
+        + [**2.6.4**](#264-builders) Builders
+        + [**2.6.5**](#265-输出) 输出
     + [**2.7**](#27-docker-compose) Docker Compose
 + [**3**](#3-kubernetes) Kubernetes
 
@@ -1137,7 +1142,7 @@ lxc config device add arch-01 eth1 nic nictype=physical parent=enp1s0
 lxc config device remove arch-01 eth1
 ```
 
-### 1.11.5 和宿主机共用网卡和MAC
+### 1.11.5 macvlan
 
 首先创建一个`macvlan`，名称为`lxd-macvlan0`
 
@@ -2712,6 +2717,265 @@ docker network create --driver macvlan \
 
 ```shell
 sudo pacman -S docker-buildx
+```
+
+> `docker`正在推进新的`buildx`的应用。使用老的`build`命令会提示更新到`buildx`。安装`buildx`后输入`build`命令默认就调用`docker buildx build`
+
+`docker`的`buildx`架构基本原理非常简单，同样为C/S结构，`buildx`为客户端，BuildKit为服务器。我们通过`buildx`客户端命令让服务器执行`build`操作（一个BuildKit实例，称为一个`builder`）
+
+为了构建镜像，我们需要在客户端`buildx`给出使用的`Dockerfile`，参数，镜像导出（`export`）方式，以及缓存方式，提供给BuildKit服务器。而反过来服务器BuildKit可以在执行构建的过程中向客户端`buildx`请求额外的资源和信息，例如本地文件系统上的build context，Build secrets，SSH连接，以及构建完毕上传时使用到的Registry authentication tokens。
+
+![](images/230709a004.png)
+
+![](images/230709a005.png)
+
+`docker build`基本用法
+
+```shell
+docker build -t myimage:latest .
+```
+
+> 我们指定构建出的镜像名和标签为`myimage:latest`，而**初始的上下文**为`docker build`执行的当前目录`.`（需要在这个上下文里面寻找`Dockerfile`，需要复制到容器镜像中的源码文件等）
+>
+> 上下文除了可以是本机的目录以外，也可以是一个远程Git仓库，归档文件或文本文件
+
+`docker`会自动检测我们的平台架构并选择正确的镜像，例如x86平台就使用`linux/amd64`，ARM平台就使用`linux/arm64`
+
+### 2.6.1 Dockerfile
+
+`docker build`默认在执行该命令当前目录下寻找`Dockerfile`，如果需要同目录下多个`Dockerfile`，可以使用`-f`指定使用该文件。`Dockerfile`中的指令**逐行执行**
+
+| 关键字（Command） | 描述 |
+| :- | :- |
+| `FROM` | 指定基于哪个已有镜像构建新镜像，例如`alpine:latest` |
+| `RUN` | 在新镜像上执行一个命令，并保存文件系统的更改，格式为`["executable","param1","param2"]`（非shell下运行，需要可执行文件的完整路径）或`command param1 param2`（shell下运行） |
+| `WORKDIR` | `Dockerfile`中，指定之后的`RUN CMD ENTRYPOINT COPY ADD`执行的目录 |
+| `COPY` | 将**当前目录下的**文件复制到新建镜像文件系统的指定位置，保存更改，可以指定文件的所有权和权限例如`--chown=admin:wheel` `--chmod=644` |
+| `EXPOSE` | 指定暴露的容器端口。可以运行容器时使用`-p`参数将该端口映射到主机的端口 |
+| `CMD` | **容器启动后**自动执行的前台程序，格式为`["executable","param1","param2"]`（非shell下运行）或`command param1 param2`（shell下运行），`Dockerfile`文件中唯一，该程序结束退出时，容器也会终止。在`docker run`命令中如果最后添加了指定的命令，它会覆盖`CMD`的设置，转而执行命令行指定的命令 |
+| `ENTRYPOINT` | 必须和JSON格式的`CMD`一起使用，和`CMD`一样同样支持两种格式，这里只建议使用JSON格式。`ENTRYPOINT`会被放到所有`CMD`以及`docker run`命令行参数之前，因此无法覆盖`ENTRYPOINT` |
+| `ENV` | 设置一个环境变量，形式`VAR=value`，可以在`docker run`时使用`--env VAR=value`更改。`ENV`指定的变量在后面所有的命令中有效，会成为`RUN`中执行的命令的shell环境变量，也会成为容器启动后的环境变量。`ENV`指定的变量也可以在`Dockerfile`中使用`${VAR}`的形式引用 |
+| `ARG` | 相比`ENV`更弱，同名的`ENV`会覆盖`ARG`，同时`ARG`不会成为容器运行时的环境变量，只在镜像构建过程有效。`ARG`可以在`docker run`时使用`--build-arg VAR=value`更改。`ARG`通过`VAR=default_value`形式定义，可以不包含默认值。`docker`的构建系统预定义了一些`ARG`，可以更改 |
+| `VOLUME` | 创建一个新卷并挂载到容器中指定目录，例如`/var/lib/db`，JSON指定多个`["/var/log/","/var/db"]` |
+| `USER` | 接下来`Dockerfile`指令执行的用户身份，默认`root:root`，对之后的`RUN ENTRYPOINT CMD`有效 |
+| `TAG` | 指定构建出的镜像名称以及标签，可以被`docker build`命令行`-t`覆盖 |
+| `LABEL` | 设置镜像的元数据，例如`version="1.0"` |
+
+> 为防止非必要的变量空间污染，在`Dockerfile`中无需后续引用的变量可以使用例如`RUN VAR=value command`的形式，仅成为临时的shell变量
+>
+> `CMD`使用JSON格式指定运行的命令是不在shell下运行的，所以JSON格式不能使用环境变量例如`${JAVA_HOME}`，同时必须使用可执行文件的**完整路径**。想要使用shell环境必须`["sh","-c","echo $HOME"]`
+>
+> 在实际应用中，`ENTRYPOINT`通常用于在`Dockerfile`中指定容器启动后执行的可执行文件路径，例如`/usr/bin/server`，而`CMD`以及`docker run`用于提供命令行参数，其中`CMD`指定默认参数，可以被`docker run`指定的参数覆盖
+
+`RUN`和`COPY`可以支持多行命令
+
+```
+RUN <<EOT
+  apt install git
+  mkdir app/src
+  mkdir app/build
+EOT
+```
+
+此外，`RUN`还可以通过参数设置网络，挂载等，方便构建命令调用的程序使用
+
+```
+RUN --mount=type=bind
+```
+
+> 可用类型：`bind cache tmpfs secret ssh`
+
+```
+RUN --mount=type=cache,target=/root/.cache/build \
+  commands
+```
+
+> 可用类型：`default none host`
+
+`docker build`相关常用命令行参数
+
+| 参数 | 描述 |
+| :- | :- |
+| `-t --tag` | 指定镜像的名称与标签，覆盖`Dockerfile`的`TAG` |
+| `-f --file` | 指定`Dockerfile`文件 |
+
+基本格式（可以看[示例](#221-创建应用镜像)）
+
+```
+# syntax=docker/dockerfile:1
+
+INSTRUCTION1 arguments
+INSTRUCTION2 arguments
+...
+```
+
+python示例
+
+```
+# syntax=docker/dockerfile:1
+FROM ubuntu:22.04
+
+# install app dependencies
+RUN apt-get update && apt-get install -y python3 python3-pip
+RUN pip install flask==2.1.*
+
+# install app
+COPY hello.py /
+
+# final configuration
+ENV FLASK_APP=hello
+EXPOSE 8000
+CMD flask run --host 0.0.0.0 --port 8000
+```
+
+> 类似`# syntax=docker/dockerfile:1`这样的称为一个`directive`。`directive`必须出现在`Dockerfile`的最前面。其他的`directive`还有`# escape=\ `等
+
+### 2.6.2 上下文
+
+前文已经简单介绍过了上下文。`docker build`命令是**在构建刚开始**就把上下文传给了BuildKit，所以后续都是在这个上下文里执行，不能再改变，包括`Dockerfile`的读取，使用`COPY`复制的工程以及源码文件，以及其他`docker`会使用到的文件如`.dockerignore`和`docker-compose.yml`等
+
+使用Git仓库类型的上下文时，可以使用以下形式指定Git仓库的分支以及上下文所在的子目录（下例中为`container`分支，`docker`子目录）
+
+```shell
+docker build https://github.com/user/myrepo.git#container:docker
+```
+
+默认情况下Git仓库的`.git`目录不会下载，需要在`docker build`时加参数`--build-arg BUILDKIT_CONTEXT_KEEP_GIT_DIR=1`
+
+### 2.6.3 多阶段构建
+
+由于开发和部署环境的差异，会用到不同的`docker`镜像，为此传统方法需要维护两个`Dockerfile`，分别用于两种环境。一个`Dockerfile`用于构建可执行的程序（开发），它没有`CMD`；另一个用于为**开发阶段得到的二进制文件**提供运行环境（部署），它通常有`CMD`。例如开发使用`golang:latest`，部署使用`alpine:latest`。甚至很多情况下需要维护多个`Dockerfile`，并通过shell脚本进行顺序构建操作，期间可能会从开发容器中拷贝文件到部署容器中。为解决这种问题便有了多阶段构建
+
+所谓多阶段构建就是一个`Dockerfile`中有多个`FROM`关键字，一个`FROM`就代表一个构建阶段。以下为`docker`官方示例
+
+```
+# syntax=docker/dockerfile:1
+
+FROM golang:latest
+WORKDIR /go/src/github.com/alexellis/href-counter/
+RUN go get -d -v golang.org/x/net/html  
+COPY app.go ./
+RUN CGO_ENABLED=0 go build -a -installsuffix cgo -o app .
+
+FROM alpine:latest  
+RUN apk --no-cache add ca-certificates
+WORKDIR /root/
+COPY --from=0 /go/src/github.com/alexellis/href-counter/app ./
+CMD ["./app"]
+```
+
+> `Dockerfile`多阶段构建序号从`0`开始。上述示例中我们发现使用`COPY --from=0 /go/src/github.com/alexellis/href-counter/`可以访问`0`阶段镜像的目录
+
+除`docker`给各个阶段的自动编号外，还可以使用`AS`为一个`FROM`开始的阶段赋予名称，之后使用该名称即可
+
+```
+# syntax=docker/dockerfile:1
+
+FROM golang:latest AS builder
+WORKDIR /go/src/github.com/alexellis/href-counter/
+RUN go get -d -v golang.org/x/net/html  
+COPY app.go ./
+RUN CGO_ENABLED=0 go build -a -installsuffix cgo -o app .
+
+FROM alpine:latest  
+RUN apk --no-cache add ca-certificates
+WORKDIR /root/
+COPY --from=builder /go/src/github.com/alexellis/href-counter/app ./
+CMD ["./app"]
+```
+
+> `--from`参数不仅可以指定阶段，还可以指定镜像，示例`--from=nginx:latest`
+
+阶段有名称以后就可以使用`--target`指明在执行到该阶段后停止。BuildKit**会分析这些阶段的依赖关系，并且只执行在依赖树中的阶段**
+
+```shell
+docker build --target builder -t alexellis2/href-counter:latest .
+```
+
+### 2.6.4 Builders
+
+一个`builder`就是一个BuildKit守护进程，它也可以被管理，创建和删除
+
+`builder`也有驱动的概念，驱动会指定该`builder`在哪里运行。`docker`中有一个默认的`builder`，为`default`，使用的驱动为`docker`。`docker`支持的`builder`驱动有`docker docker-container kubernetes remote`
+
+| 驱动 | 解释 |
+| :- | :- |
+| `docker` | 使用本机`docker`服务内置的BuildKit，支持自动加载镜像，不支持tarball输出，跨平台镜像以及BuildKit配置 |
+| `docker-container` | 创建独立的BuildKit容器，支持导出缓存 |
+| `kubernetes` | 在K8s集群中创建BuildKit pods |
+| `remote` | 连接到远程的BuildKit守护进程 |
+
+查看已有`builder`
+
+```shell
+docker buildx ls
+```
+
+> `docker build`时可以使用`--builder`指定`builder`
+
+查看`builder`信息
+
+```shell
+docker buildx inspect my_builder
+```
+
+切换默认`builder`（立即生效）
+
+```shell
+docker buildx user my_builder
+```
+
+创建新`builder`
+
+```shell
+docker buildx create --name=my_builder --driver=docker
+```
+
+> 普通应用`docker`驱动已经足够
+
+### 2.6.5 输出
+
+可以将构建结果以不同方式输出
+
+```shell
+docker buildx build -t my-image:latest --output type=image .
+```
+
+| 输出 | 解释 |
+| :- | :- |
+| `image` | 输出为容器镜像 |
+| `registry` | 输出为容器镜像并推送到远程仓库（例如DockerHub） |
+| `local` | 将镜像根文件系统放到本地目录 |
+| `tar` | 打包为归档文件 |
+| `oci` | 导出为OCI镜像格式 |
+| `docker` | 导出为`docker`专用镜像格式 |
+| `cacheonly` | 不导出镜像，但会执行构建并生成缓存 |
+
+使用`--load`时相当于使用了`docker`格式，镜像直接添加到本地镜像库并且可以直接`docker run`创建容器
+
+```shell
+docker buildx build --tag username/my-image:latest --load .
+# = docker buildx build --output type=docker,name=username/my-image:latest .
+```
+
+使用`--push`时，相当于输出`image`，并推送到`registry`
+
+```shell
+docker buildx build --tag image,name=registry/my-image:latest --push .
+# = docker buildx build --output type=image,name=registry/my-image:latest,push=true .
+```
+
+导出镜像layout到本地
+
+```shell
+docker buildx build --output type=oci,dest=./my-image.tar .
+```
+
+导出文件系统到本地
+
+```shell
+docker buildx build --output type=tar,dest=/home/my-name/my-fs.tar .
+docker buildx build --output type=local,dest=/home/my-name/my-fs/ .
 ```
 
 ## 2.7 Docker Compose

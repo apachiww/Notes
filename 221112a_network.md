@@ -34,6 +34,7 @@
         + [**4.3.2**](#432-路由协议) 路由协议
     + [**4.4**](#44-arp协议) ARP协议
     + [**4.5**](#45-ndp协议) NDP协议
+        + [**4.5.1**](#451-slaac) SLAAC
     + [**4.6**](#46-nat) NAT
     + [**4.7**](#47-ecn) ECN
         + [**4.7.1**](#471-ip数据包中的ecn标记位) IP数据包中的ECN标记位
@@ -122,14 +123,16 @@
         + [**6.4.4**](#644-常用options) 常用Options
     + [**6.5**](#65-telnet) Telnet
     + [**6.6**](#66-ftp) FTP
-    + [**6.7**](#67-smtp) SMTP
-    + [**6.8**](#68-snmp) SNMP
-    + [**6.9**](#69-ssdp) SSDP
-    + [**6.10**](#610-sstp) SSTP
+    + [**6.7**](#67-mqtt) MQTT
+    + [**6.8**](#68-coap) CoAP
+    + [**6.9**](#69-smtp) SMTP
+    + [**6.10**](#610-snmp) SNMP
+    + [**6.11**](#611-ssdp) SSDP
+    + [**6.12**](#612-sstp) SSTP
+    + [**6.13**](#613-bgp) BGP
 + [**7**](#7-附录) 附录
     + [**7.1**](#71-wireshark中部分tcp分析的定义) Wireshark中部分TCP分析的定义
-    + [**7.2**](#72-bgp) BGP
-    + [**7.3**](#73-cdn) CDN
+    + [**7.2**](#72-cdn) CDN
 
 
 ## 1 协议栈分层模型
@@ -927,6 +930,8 @@ Options (MAC)
 > 主机请求指定IP的MAC地址时，主机首先需要发送一个组播ICMPv6 `NS`报文，这个`NS`报文使用组播目标MAC，IPv6头的源地址为本机IP，目标地址为被请求方的**组播IP地址**`ff02::1:ffXX:XXXX`。`NS`报文body的目标地址为被请求方的**单播IP地址**。并且在`NS`报文最后附上本机的MAC，`Type`为`1`
 >
 > 被请求方回复MAC地址请求时，发送一个`NA`报文，这个报文的源MAC和目标MAC分别为被请求方MAC以及请求方的MAC（非组播），源IP和目标IP同理。`NA`报文body的目标地址依然是自己的**单播IP地址**。在`NA`最后附上自己的MAC地址，`Type`为`2`
+
+### 4.5.1 SLAAC
 
 ## 4.6 NAT
 
@@ -5509,13 +5514,19 @@ All others                 MAY           MAY              MUST NOT
 
 ## 6.6 FTP
 
-## 6.7 SMTP
+## 6.7 MQTT
 
-## 6.8 SNMP
+## 6.8 CoAP
 
-## 6.9 SSDP
+## 6.9 SMTP
 
-## 6.10 SSTP
+## 6.10 SNMP
+
+## 6.11 SSDP
+
+## 6.12 SSTP
+
+## 6.13 BGP
 
 ## 7 附录
 
@@ -5669,6 +5680,4 @@ TCP conversations are said to be complete when they have both opening and closin
 
 For example, a conversation containing only a three-way handshake will be found with the filter 'tcp.completeness==7' (1+2+4) while a complete conversation with data transfer will be found with a longer filter as closing a connection can be associated with FIN or RST packets, or even both : 'tcp.completeness==31 or tcp.completeness==47 or tcp.completeness==63'
 
-## 7.2 BGP
-
-## 7.3 CDN
+## 7.2 CDN

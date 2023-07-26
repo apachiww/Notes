@@ -480,7 +480,7 @@ sudo pacman -S radeontop
 ```shell
 sudo pacman -S light
 su
-usermod -a -G video rev
+usermod -a -G video your-username
 ```
 
 ```shell
