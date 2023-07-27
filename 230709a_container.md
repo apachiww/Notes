@@ -68,6 +68,12 @@
         + [**2.6.4**](#264-builders) Builders
         + [**2.6.5**](#265-输出) 输出
     + [**2.7**](#27-docker-compose) Docker Compose
+        + [**2.7.1**](#271-基本用法) 基本用法
+        + [**2.7.2**](#272-环境变量) 环境变量
+        + [**2.7.3**](#273-profile) Profile
+        + [**2.7.4**](#274-使用gpu) 使用GPU
+        + [**2.7.5**](#275-网络配置) 网络配置
+        + [**2.7.6**](#276-卷) 卷
 + [**3**](#3-kubernetes) Kubernetes
 
 ## 1 LXC
@@ -2980,10 +2986,329 @@ docker buildx build --output type=local,dest=/home/my-name/my-fs/ .
 
 ## 2.7 Docker Compose
 
-`compose`需要额外安装
+`compose`需要额外安装，配置基于当前目录的`docker-compose.yml`
 
 ```shell
 sudo pacman -S docker-compose
+```
+
+`compose`主要解决了每次启动多容器服务时重复的繁琐操作
+
+默认情况下对于`compose`来说，`docker-compose.yml`所在目录就是该`compose`的工程名，并且会用于命名构建出的镜像以及新建的默认网络
+
+### 2.7.1 基本用法
+
+假设我们的系统需要两个容器，一个提供web服务，一个为`redis`数据库。其中web服务的容器镜像需要通过当前目录的`Dockerfile`构建，而`redis`数据库使用DockerHub现有镜像。现在在开发过程中，我们在容器的`/code`目录挂载服务器所需所有文件，方便动态更改。在当前目录创建`docker-compose.yml`
+
+```yml
+services:
+  web:
+    build: .
+    ports:
+      - "8080:80"
+    volumes:
+      - .:/code
+    environment:
+      BUILD_DEBUG: "true"
+  redis:
+    container_name: redis-server
+    image: "redis:latest"
+```
+
+构建并执行服务
+
+```shell
+docker compose up -d
+```
+
+> `-d`参数指定这些容器在detach模式（后台）下运行
+>
+> 此后可以执行无需重构建的更新（例如更改网页中的一个字符串），让更改立即生效（例如刷新网页）
+
+此时应该可以看到新创建的镜像
+
+```shell
+docker image ls
+```
+
+> 默认情况下镜像命名格式为执行`docker-compose.yml`所在目录名+`_`+`service`名称，这里为`web`
+
+以及执行中的镜像
+
+```shell
+docker compose ps
+```
+
+可以在服务`web`所属容器执行一下`env`命令
+
+```shell
+docker compose run web env
+```
+
+停止所有容器
+
+```shell
+docker compose stop
+```
+
+或停止所有容器，同时删除容器
+
+```shell
+docker compose down --volumes
+```
+
+> `--volumes`表示同时删除所有`docker-compose.yml`中新创建的卷
+
+实际生产环境中，为保证重启速度无缝重部署，需要添加`restart: always`
+
+```yml
+services:
+  web:
+    build: .
+    ports:
+      - "8080:80"
+    volumes:
+      - .:/code
+    environment:
+      BUILD_DEBUG: "true"
+    restart: always
+  redis:
+    image: "redis:latest"
+    restart: always
+```
+
+和普通的创建容器实例一样，`docker-compose.yml`中也可以通过参数设定CPU资源，系统IO等参数，例如`cpu_count cpu_shares dns deploy.limits.memory`等，不再详述
+
+### 2.7.2 环境变量
+
+`docker-compose.yml`也支持变量的使用，在这里指定的环境变量和`Dockerfile`中的`ENV`是相同的。前文已经给出了直接在`docker-compose.yml`中使用`environment`指定变量的形式。我们也可以在`docker-compose.yml`同目录下使用一个`.env`文件设定变量，`docker`会自动读取文件
+
+```
+ALPINE_TAG=3.18
+```
+
+在`docker-compose.yml`中作如下引用
+
+```yml
+services:
+  web2:
+    image: 'alpine:${ALPINE_TAG}'
+```
+
+在指定`docker compose run`时也可以使用`-e`指定变量
+
+```shell
+docker compose run -e VAR=value
+```
+
+### 2.7.3 Profile
+
+`docker-compose.yml`可以使用`profile`选择性地启动部分容器，而不是全部
+
+```yml
+services:
+  frontend:
+    image: frontend
+    profiles: ["frontend"]
+
+  db:
+    image: mysql
+
+  backend:
+    image: backend
+    profile:
+      - backend
+```
+
+上述一共定义了三个容器，分别为`frontend db backend`，其中给`frontend`以及`backend`指定了`profile`
+
+只启动数据库
+
+```shell
+docker compose up
+```
+
+同时启动`frontend`，`backend`和数据库
+
+```shell
+docker compose --profile frontend --profile backend up
+```
+
+还可以指定依赖关系，这样在指定启动一个容器时依赖的容器也会启动。**这也指定了容器的启动顺序**
+
+```yml
+services:
+  frontend:
+    image: frontend
+    profiles: ["frontend"]
+    depends_on:
+      - backend
+
+  db:
+    image: mysql
+
+  backend:
+    image: backend
+    profile: ["backend"]
+    depends_on:
+      - db
+```
+
+### 2.7.4 使用GPU
+
+使用`deploy`指定，使用一个GPU，并运行`nvidia-smi`
+
+```yml
+services:
+  test:
+    image: nvidia/cuda:10.2-base
+    command: nvidia-smi
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+```
+
+或使用指定GPU
+
+```yml
+services:
+  test:
+    image: tensorflow/tensorflow:latest-gpu
+    command: python -c "import tensorflow as tf;tf.test.gpu_device_name()"
+    deploy:
+      resources:
+        reservations:
+          devices:
+          - driver: nvidia
+            device_ids: ['0', '3']
+            capabilities: [gpu]
+```
+
+### 2.7.5 网络配置
+
+假设我们的`docker-compose.yml`位于目录`myapp`，那么此时我们的工程名为`myapp`，默认`docker compose up`时会创建一个名为`myapp_default`的网桥，并且支持`service`容器之间**直接通过主机名访问**。尽管到**主机端口**的映射通过`ports:`项指定，但是容器之间依旧采用原来的容器端口访问
+
+更改容器服务后`docker compose up`重启时，容器的IP会发生改变，但容器名不变
+
+可以在`docker-compose.yml`中创建自己的网络，并指定容器加入这些网络即可
+
+```yml
+services:
+  proxy:
+    build: ./proxy
+    networks:
+      - frontend
+  app:
+    build: ./app
+    networks:
+      - frontend
+      - backend
+  db:
+    image: postgres
+    networks:
+      - backend
+
+networks:
+  frontend:
+    name: frontend-1
+    # Use a custom driver
+    driver: custom-driver-1
+  backend:
+    name: backend-1
+    # Use a custom driver which takes special options
+    driver: custom-driver-2
+    driver_opts:
+      foo: "1"
+      bar: "2"
+```
+
+> 加入的可以是已有的网络，直接将`name:`设为已有网络名即可
+
+也可以只更改默认网络的配置
+
+```yml
+networks:
+  default:
+    # Use a custom driver
+    driver: custom-driver-1
+```
+
+使用`host`或`none`网络
+
+```yml
+services:
+  web:
+    networks:
+      hostnet: {}
+
+networks:
+  hostnet:
+    external: true
+    name: host
+```
+
+```yml
+services:
+  web:
+    ...
+    networks:
+      nonet: {}
+
+networks:
+  nonet:
+    external: true
+    name: none
+```
+
+### 2.7.6 卷
+
+卷已经[示例](#226-compose示例)过
+
+新建`db-data`卷
+
+```yml
+services:
+  backend:
+    image: awesome/database
+    volumes:
+      - db-data:/etc/data
+
+  backup:
+    image: backup-service
+    volumes:
+      - db-data:/var/lib/backup/data
+
+volumes:
+  db-data:
+```
+
+使用已有`db-data`卷
+
+```yml
+volumes:
+  db-data:
+    external: true
+```
+
+指定驱动以及选项
+
+```yml
+volumes:
+  db-data:
+    driver: foobar
+```
+
+```yml
+volumes:
+  example:
+    driver_opts:
+      type: "nfs"
+      o: "addr=10.40.0.199,nolock,soft,rw"
+      device: ":/docker/example"
 ```
 
 ## 3 Kubernetes
