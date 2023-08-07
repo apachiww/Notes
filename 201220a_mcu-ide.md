@@ -240,11 +240,7 @@ bin  include  lib  share  src
 
 ## 2.3 ARM
 
-~~`arm-none-eabi-gcc`工具链，基于Linaro ABE构建系统~~
-
-~~参考 https://developer.arm.com/downloads/-/arm-gnu-toolchain-downloads Release Note~~
-
-~~ABE构建系统 https://wiki-archive.linaro.org/ABE~~
+较为繁琐，建议使用crosstool-NG
 
 `arm-none-eabi-gcc`工具链
 
@@ -285,8 +281,6 @@ arm-none-eabi-gdb
     texinfo
     boost
 ```
-
-> 虽然ABE已经过时，这里还是不得不吐槽一下Linaro。如果看过ABE脚本的源码，你会感叹一个本可以很简单的构建工具是如何因为混乱的设计，质量低下的代码，成为垃圾堆的。尽管基于shell的设计确实导致了一些局限性，但是这不是滥用函数嵌套和全局变量，写死判断的原因。ABE似乎从一开始就没有合理安排设计，却尝试自动处理太多的事情，导致开发者自己也难以维护，即便是在最常用的Linux下也无法很体面地处理构建过程
 
 ### 2.3.1 下载
 

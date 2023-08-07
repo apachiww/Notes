@@ -130,9 +130,9 @@ ARMv7 Cortex-A和R、M两个系列不同，它面向完整的现代操作系统�
 
 本笔记主要分析ARMv7-A体系结构，ARMv8-A仅作为补充说明
 
-由于ARMv7-A指令众多，且内存架构、中断控制较复杂，本笔记仅对重要的基本指令进行讲解，系统应用以外的指令如NEON和VFP指令可能会省略。重点在于内存架构、中断异常和多核，这是ARMv7-A区别于R、M两种核心的重要特性
+由于ARMv7-A指令众多，且内存架构、中断控制较复杂，本笔记仅对重要的基本指令进行讲解，系统应用以外的指令如NEON和VFP指令只会简略讲解。重点在于内存架构、中断异常和多核，这是ARMv7-A区别于R、M两种核心的重要特性
 
-ARMv7-A不包含DMA。通常不同的SoC厂商使用的DMA也有所不同
+ARMv7-A的体系规范不包含DMA。ARM提供DMA330，DMA350等DMA IP，有些SoC厂商也会使用自设计或第三方的DMA
 
 ARMv7-A部分指令和ARMv7-M工作原理相同，例如`IT`指令，这里不再详细讲述，具体内容可以看[ARMv7-M体系结构笔记](201020a_stm32.md)
 
@@ -158,7 +158,7 @@ MPCore，单个Cluster结构
 >
 > Cortex-A9使用AMBA3 AXI连接到L2缓存。L2不属于Cortex-A9的组成部分，但是几乎所有的SoC都会配备有L2
 >
-> 其他MPCore处理器除核心外，组成结构基本类似。ARM会推出拥有相近指令特性但能耗特性不同的MPCore处理器来组成big.LITTLE大小核。ARMv7中使用Cortex-A7和Cortex-A15组成大小核。而ARMv8常见的有Cortex-A53（高频）+Cortex-A53（低频）组合，Cortex-A53+Cortex-A57组合，Cortex-A53+Cortex-A72组合，Cortex-A55+Cortex-A76组合，Cortex-A55+Cortex-A77组合等
+> 其他MPCore处理器除核心外，组成结构基本类似。ARM会推出拥有相近指令特性但能耗特性不同的MPCore处理器来组成big.LITTLE大小核。ARMv7中使用Cortex-A7和Cortex-A15组成大小核。而ARMv8常见的有Cortex-A53（高频）+Cortex-A53（低频）组合，Cortex-A53+Cortex-A57组合，Cortex-A53+Cortex-A72组合，Cortex-A53+Cortex-A73组合，Cortex-A55+Cortex-A76组合，Cortex-A55+Cortex-A77组合等。最新的ARMv9有Cortex-A510+Cortex-A710，X系列超大核也开始普及
 
 ## 1.4 其他关键特性
 
