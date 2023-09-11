@@ -15,14 +15,15 @@ ARMv7-M体系结构笔记[传送门](201020a_stm32.md)
 
 ## 0 常见SoC厂商与产品
 
-从普通爱好者角度，容易找到资料，适合折腾的ARM SoC
+从普通爱好者角度，可以折腾的ARM SoC
 
 **中国厂商**
 
 御三家
 
 + Allwinner 全志科技（珠海）
-    + ~~山寨之王，马甲遍地~~，价格相对友好，目前产品性能一般，有许多异构以及集成DRAM的产品，适合DIY入门级Linux开发板。官方不支持开源，由第三方泄露了大部分资料，部分产品无需NDA。软件坑比较多，产品线变更较为频繁。尽量不要使用冷门型号
+    + ~~山寨之王，马甲遍地~~，价格相对友好，目前产品性能一般，有许多异构以及集成DRAM的产品，适合DIY入门级Linux开发板。由第三方泄露了大部分资料，部分产品无需NDA。软件坑比较多，产品线变更较为频繁。尽量不要使用冷门型号
+    + Datasheet & TRM [Repo](https://github.com/DeciHD/allwinner_docs)
     + 开发者论坛 https://bbs.aw-ol.com/
     + sunxi wiki https://linux-sunxi.org/Main_Page
     + 部分新产品文档 https://gitee.com/aw-sunxi/awesome-sunxi
@@ -37,7 +38,7 @@ ARMv7-M体系结构笔记[传送门](201020a_stm32.md)
     + V3s (1xA7 with 64MB DDR2, eLQFP128)
     + F1C100/200s (1xARM9 with DDR)
     + 以下是未来会出的高端型号（仅供参考）
-    + A523/A527/T523/T527/MR527/R828(?) (8xA55+1xRISCV(E906), sun55i new product 2023, 22nm)（T527为完整功能版）
+    + A523/A527/T523/T527/MR527/R828(?) (8xA55+1xRISCV(E906), sun55i new product 2023, 22nm)（只有T527为完整功能版）
     + A513 (4xA55, new product 2023/2024, 22nm)
     + R923 (4xA73+4xA53+1xRISCV(E906), sun60i new product 2023/2024, 12nm)
     + A736/T736 (2xA76+6xA55, IMG BXM GPU, new product 2023/2024, 12nm)
@@ -48,9 +49,10 @@ ARMv7-M体系结构笔记[传送门](201020a_stm32.md)
     + R329 (2xA53 with 64/128MB DDR3)
 + Rockchip 瑞芯微（福州）
     + ~~官方资料开放程度相对某志较高~~，高端产品线性能较强，也有许多高性价比主力产品。部分未开放完整版手册由泄露得来。未来中高端ARM开源硬件首选，但是新产品软件支持欠佳
+    + Datasheet & TRM [Repo](https://github.com/DeciHD/rockchip_docs)
     + wiki https://opensource.rock-chips.com/wiki_Main_Page
     + RK3588/RK3588S (4xA76+4xA55+3xM0, 8nm)
-    + RK3566/RK3568/RK3568B2 (4xA55+1xRISCV(RV32IMC), 22nm)
+    + RK3566/RK3568/RK3568B2/RK3568J (4xA55+1xRISCV(RV32IMC), 22nm)
     + RK3562 (4xA53, new product 2023)
     + RK3528 (4xA53, new product 2023, 对标全志sun50i系列)
     + RK3399 (2xA72+4xA53+2xM0, 28nm)
@@ -60,10 +62,11 @@ ARMv7-M体系结构笔记[传送门](201020a_stm32.md)
     + RK1808 (2xA35, 28nm)
     + RV1126 (4xA7+1xRISCV(RV32IMC), 28nm)
     + RV1109 (2xA7+1xRISCV(RV32IMC), 28nm)
-    + RV1103 (1xA7+1xRISCV(RV32IMC), 64MB SIP DDR ,28nm, 对标全志V851s)
+    + RV1103 (1xA7+1xRISCV(RV32IMC), 64MB SIP DDR, 28nm, 对标全志V851s)
     + RK3288 (4xA17, 28nm)
 + Amlogic 晶晨半导体（上海）
     + ~~由于运营商机顶盒以及某讯N1盒子而闻名天下的S905~~。第三方泄露手册可到odroid，radxa，banana-pi等开发板官网查找
+    + Datasheet & TRM [Repo](https://github.com/DeciHD/amlogic_docs)
     + A311D2 (4xA73+4xA53, 12nm)
     + A311D (4xA73+2xA53, 12nm)
     + S922X (4xA73+2xA53, 12nm)
@@ -75,19 +78,7 @@ ARMv7-M体系结构笔记[传送门](201020a_stm32.md)
 + Nuvoton 新唐科技（台湾）
     + MA35D1 (2xA35, 首款产品)
 
-> 同一厂商参数相近的SoC经常会使用同一个Die，这是业内普遍的降低成本的做法。通过配置特性甚至命名就能推测。而同一厂家的不同SoC也有较大概率使用相同或相近的IP核，例如IO、内存控制器等
-
-论坛
-
-[Whycan](https://whycan.com/index.html)
-
-Datasheet & TRM 仓库
-
-[Allwinner](https://github.com/DeciHD/allwinner_docs)
-
-[Rockchip](https://github.com/DeciHD/rockchip_docs)
-
-[Amlogic](https://github.com/DeciHD/amlogic_docs)
+> 同一厂商参数相近的SoC经常会使用同一个Die。通过配置特性甚至命名就能推测。而同一厂家的不同SoC也有较大概率使用相同或相近的IP
 
 **国际厂商**
 
@@ -119,9 +110,9 @@ Datasheet & TRM 仓库
 + Samsung 三星半导体
     + 大部分原有产品已停产。不推荐
 
-> 国际大厂ST，NXP，TI，Renesas的SoC通常性能一般，并且价格较高，但是文档开放，软件支持更好，稳定性优，更适合工业或车规产品。而除手机、平板外的消费电子、广告屏等基本由中国厂商主导
+> 国际大厂ST，NXP，TI，Renesas的SoC通常性能一般，并且价格较高，但是文档开放，软件支持更好，稳定性优，更适合工业或车规产品，以及初学入门。而除手机、平板外的消费电子、广告屏等基本由中国厂商主导
 
-> 树莓派使用的是博通定制的SoC，博通芯片手册严格保密。树莓派定位主要作为普通PC使用，不开放原理图，不属于开源硬件。这些类型的产品不在考虑范围内
+> 树莓派使用的是博通定制的SoC，博通芯片手册严格保密。树莓派定位主要作为普通PC使用，不开放原理图，不属于开源硬件
 
 
 ## 1 简介
