@@ -29,22 +29,22 @@ ARMv7-M体系结构笔记[传送门](201020a_stm32.md)
     + T113-s3/T113-s4/R528 (2xA7 with 128MB/256MB SIP DDR3, T113-s3/s4为eLQFP128, 22nm)
     + T113-i (2xA7+1xRISCV(C906), 22nm)
     + A40i/V40/R40/T3 (4xA7, SATA embedded, 40nm)
+    + V853/V851/V853s/V851s/V851se (1xA7+1xRISCV(E907), s后缀表示带64MB SIP DDR)
     + R128 (RISCV+xtensa DSP+ARM with 8/16MB DRAM and WIFI/Bluetooth, QFN)
-    + V853/V851/V853s/V851s (1xA7+1xRISCV(E907), s后缀表示带64MB SIP DDR)
     + V833/V831 (1xA7)
     + A33/R16 (4xA7, 28nm)
     + H3 (4xA7, 40nm)
     + V3s (1xA7 with 64MB DDR2, eLQFP128)
     + F1C100/200s (1xARM9 with DDR)
     + 以下是未来会出的高端型号（仅供参考）
-    + A523/A527/T523/T527/MR527/R828 (8xA55+1xRISCV(E906), sun55i new product 2023, 22nm)
+    + A523/A527/T523/T527/MR527/R828(?) (8xA55+1xRISCV(E906), sun55i new product 2023, 22nm)（T527为完整功能版）
     + A513 (4xA55, new product 2023/2024, 22nm)
     + R923 (4xA73+4xA53+1xRISCV(E906), sun60i new product 2023/2024, 12nm)
-    + A736/T736 (2xA76+6xA55, IMG BXM, new product 2023/2024, 12nm)
-    + A737/T737 (2xA78+6xA55, IMG BXM, 12nm)
-    + 以下是sun50i系列。尽管为64位ARMv8，为减小芯片Die size，sun50i内部AMBA数据总线只有32位宽。带宽不足容易遇到性能瓶颈
-    + A133/R818 (4xA53, 28nm)
-    + H616/H618 (4xA53, H618使用DDR4, 28nm)
+    + A736/T736 (2xA76+6xA55, IMG BXM GPU, new product 2023/2024, 12nm)
+    + A737/T737 (2xA78+6xA55, IMG BXM GPU, 12nm)
+    + 以下是sun50i系列。尽管为64位ARMv8，为减小芯片Die size，sun50i内部数据总线只有32位宽。带宽不足容易遇到性能瓶颈
+    + A133/R818 (4xA53, IMG GE8300 GPU, 28nm)
+    + H616/H618 (4xA53, 28nm)
     + R329 (2xA53 with 64/128MB DDR3)
 + Rockchip 瑞芯微（福州）
     + ~~官方资料开放程度相对某志较高~~，高端产品线性能较强，也有许多高性价比主力产品。部分未开放完整版手册由泄露得来。未来中高端ARM开源硬件首选，但是新产品软件支持欠佳
@@ -52,16 +52,18 @@ ARMv7-M体系结构笔记[传送门](201020a_stm32.md)
     + RK3588/RK3588S (4xA76+4xA55+3xM0, 8nm)
     + RK3566/RK3568/RK3568B2 (4xA55+1xRISCV(RV32IMC), 22nm)
     + RK3562 (4xA53, new product 2023)
-    + RK3528 (4xA53, new product 2023)（RK3528对标全志sun50i系列定位，可能砍总线）
+    + RK3528 (4xA53, new product 2023, 对标全志sun50i系列)
     + RK3399 (2xA72+4xA53+2xM0, 28nm)
     + RK3328 (4xA53, 28nm)
     + RK3326/PX30 (4xA35, 28nm)
     + RK3308 (4xA35, 28nm)
     + RK1808 (2xA35, 28nm)
     + RV1126 (4xA7+1xRISCV(RV32IMC), 28nm)
+    + RV1109 (2xA7+1xRISCV(RV32IMC), 28nm)
+    + RV1103 (1xA7+1xRISCV(RV32IMC), 64MB SIP DDR ,28nm, 对标全志V851s)
     + RK3288 (4xA17, 28nm)
 + Amlogic 晶晨半导体（上海）
-    + ~~由于运营商机顶盒以及某讯N1盒子而闻名天下的S905~~。第三方泄露手册可到odroid，radxa，banana-pi等开发板官网查找。官方做过主线
+    + ~~由于运营商机顶盒以及某讯N1盒子而闻名天下的S905~~。第三方泄露手册可到odroid，radxa，banana-pi等开发板官网查找
     + A311D2 (4xA73+4xA53, 12nm)
     + A311D (4xA73+2xA53, 12nm)
     + S922X (4xA73+2xA53, 12nm)
