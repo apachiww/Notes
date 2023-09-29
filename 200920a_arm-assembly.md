@@ -22,22 +22,22 @@ ARMv7-M体系结构笔记[传送门](201020a_stm32.md)
 御三家
 
 + Allwinner 全志科技（珠海）
-    + ~~山寨之王，马甲遍地~~，价格相对友好，目前产品性能一般，有许多异构以及集成DRAM的产品，适合DIY入门级Linux开发板。由第三方泄露了大部分资料，部分产品无需NDA。软件坑比较多，产品线变更较为频繁。尽量不要使用冷门型号
+    + 价格相对友好，目前产品性能一般，有许多异构以及集成DRAM的产品，适合DIY入门级Linux开发板。由第三方泄露了大部分资料，部分产品无需NDA
     + Datasheet & TRM [Repo](https://github.com/DeciHD/allwinner_docs)
     + 开发者论坛 https://bbs.aw-ol.com/
     + sunxi wiki https://linux-sunxi.org/Main_Page
     + 部分新产品文档 https://gitee.com/aw-sunxi/awesome-sunxi
-    + T113-s3/T113-s4/R528 (2xA7 with 128MB/256MB SIP DDR3, T113-s3/s4为eLQFP128, 22nm)
+    + T113-s3/T113-s4/R528 (2xA7 with 128MB/256MB SIP DDR3, T113-s3/s4 have eLQFP128 package, 22nm)
     + T113-i (2xA7+1xRISCV(C906), 22nm)
     + A40i/V40/R40/T3 (4xA7, SATA embedded, 40nm)
-    + V853/V851/V853s/V851s/V851se (1xA7+1xRISCV(E907), s后缀表示带64MB SIP DDR)
+    + V853/V851/V853s/V851s/V851se (1xA7+1xRISCV(E907), s variants feature 64MB SIP DDR, e variants feature SIP EPHY)
     + R128 (RISCV+xtensa DSP+ARM with 8/16MB DRAM and WIFI/Bluetooth, QFN)
     + V833/V831 (1xA7)
     + A33/R16 (4xA7, 28nm)
-    + H3 (4xA7, 40nm)
+    + H3/H2+ (4xA7, 40nm)
     + V3s (1xA7 with 64MB DDR2, eLQFP128)
     + F1C100/200s (1xARM9 with DDR)
-    + 以下是未来会出的高端型号（仅供参考）
+    + 以下是未来会出的中高端型号（仅供参考）
     + A523/A527/T523/T527/MR527/R828(?) (8xA55+1xRISCV(E906), sun55i new product 2023, 22nm)（只有T527为完整功能版）
     + A513 (4xA55, new product 2023/2024, 22nm)
     + R923 (4xA73+4xA53+1xRISCV(E906), sun60i new product 2023/2024, 12nm)
@@ -46,15 +46,14 @@ ARMv7-M体系结构笔记[传送门](201020a_stm32.md)
     + 以下是sun50i系列。尽管为64位ARMv8，为减小芯片Die size，sun50i内部数据总线只有32位宽。带宽不足容易遇到性能瓶颈
     + A133/R818 (4xA53, IMG GE8300 GPU, 28nm)
     + H616/H618 (4xA53, 28nm)
-    + R329 (2xA53 with 64/128MB DDR3)
 + Rockchip 瑞芯微（福州）
-    + ~~官方资料开放程度相对某志较高~~，高端产品线性能较强，也有许多高性价比主力产品。部分未开放完整版手册由泄露得来。未来中高端ARM开源硬件首选，但是新产品软件支持欠佳
+    + 高端产品线性能较强，也有许多高性价比主力产品。部分未开放完整版手册由泄露得来。未来中高端ARM开源硬件首选，但是新产品软件支持欠佳
     + Datasheet & TRM [Repo](https://github.com/DeciHD/rockchip_docs)
     + wiki https://opensource.rock-chips.com/wiki_Main_Page
     + RK3588/RK3588S (4xA76+4xA55+3xM0, 8nm)
     + RK3566/RK3568/RK3568B2/RK3568J (4xA55+1xRISCV(RV32IMC), 22nm)
     + RK3562 (4xA53, new product 2023)
-    + RK3528 (4xA53, new product 2023, 对标全志sun50i系列)
+    + RK3528 (4xA53, new product 2023, Allwinner sun50i counterpart)
     + RK3399 (2xA72+4xA53+2xM0, 28nm)
     + RK3328 (4xA53, 28nm)
     + RK3326/PX30 (4xA35, 28nm)
@@ -62,10 +61,10 @@ ARMv7-M体系结构笔记[传送门](201020a_stm32.md)
     + RK1808 (2xA35, 28nm)
     + RV1126 (4xA7+1xRISCV(RV32IMC), 28nm)
     + RV1109 (2xA7+1xRISCV(RV32IMC), 28nm)
-    + RV1103 (1xA7+1xRISCV(RV32IMC), 64MB SIP DDR, 28nm, 对标全志V851s)
-    + RK3288 (4xA17, 28nm)
+    + RV1106 (1xA7+1xRISCV(RV32IMC), 128MB/256MB SIP DDR, 28nm)
+    + RV1103 (1xA7+1xRISCV(RV32IMC), 64MB SIP DDR, 28nm, Allwinner V851se counterpart)
 + Amlogic 晶晨半导体（上海）
-    + ~~由于运营商机顶盒以及某讯N1盒子而闻名天下的S905~~。第三方泄露手册可到odroid，radxa，banana-pi等开发板官网查找
+    + 第三方泄露手册可到odroid，radxa，banana-pi等开发板官网查找
     + Datasheet & TRM [Repo](https://github.com/DeciHD/amlogic_docs)
     + A311D2 (4xA73+4xA53, 12nm)
     + A311D (4xA73+2xA53, 12nm)
@@ -78,7 +77,7 @@ ARMv7-M体系结构笔记[传送门](201020a_stm32.md)
 + Nuvoton 新唐科技（台湾）
     + MA35D1 (2xA35, 首款产品)
 
-> 同一厂商参数相近的SoC经常会使用同一个Die。通过配置特性甚至命名就能推测。而同一厂家的不同SoC也有较大概率使用相同或相近的IP
+> 同一厂商参数相近的SoC经常会使用同一个Die。通过配置特性甚至命名就能推测
 
 **国际厂商**
 
@@ -112,7 +111,7 @@ ARMv7-M体系结构笔记[传送门](201020a_stm32.md)
 
 > 国际大厂ST，NXP，TI，Renesas的SoC通常性能一般，并且价格较高，但是文档开放，软件支持更好，稳定性优，更适合工业或车规产品，以及初学入门。而除手机、平板外的消费电子、广告屏等基本由中国厂商主导
 
-> 树莓派使用的是博通定制的SoC，博通芯片手册严格保密。树莓派定位主要作为普通PC使用，不开放原理图，不属于开源硬件
+> 树莓派定位主要作为普通PC使用，和大部分x86 PC一样，不开放原理图，SoC手册也严格保密，不属于开源硬件。用户不可能基于树莓派的定制SoC设计自己的开发板。树莓派优势在于软件生态良好，可用性要优于几乎所有的同类产品。硬件不是树莓派的强项
 
 
 ## 1 简介
@@ -123,7 +122,7 @@ ARMv7 Cortex-A和R、M两个系列不同，它面向完整的现代操作系统�
 
 本笔记主要分析ARMv7-A体系结构，ARMv8-A仅作为补充说明
 
-由于ARMv7-A指令众多，且内存架构、中断控制较复杂，本笔记仅对重要的基本指令进行讲解，系统应用以外的指令如NEON和VFP指令只会简略讲解。重点在于内存架构、中断异常和多核，这是ARMv7-A区别于R、M两种核心的重要特性
+本笔记仅对重要的基本指令进行讲解，系统应用以外的指令如NEON和VFP指令只会简略讲解。重点在于内存架构、中断异常和多核，这是ARMv7-A区别于R、M两种核心的重要特性
 
 ARMv7-A的体系规范不包含DMA。ARM提供DMA330，DMA350等DMA IP，有些SoC厂商也会使用自设计或第三方的DMA
 
@@ -133,7 +132,7 @@ ARMv7-A部分指令和ARMv7-M工作原理相同，例如`IT`指令，这里不�
 
 ![](images/200920a001.png)
 
-> 后来推出的Cortex-A17是Cortex-A12的改进版，Rockchip的RK3288就使用了Cortex-A17核心并且获得了良好的市场表现
+> 后来推出的Cortex-A17是Cortex-A12的改进版
 
 ## 1.3 微架构概览：以Cortex-A9为例
 
