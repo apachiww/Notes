@@ -22,12 +22,11 @@ ARMv7-M体系结构笔记[传送门](201020a_stm32.md)
 御三家
 
 + Allwinner 全志科技（珠海）
-    + 价格相对友好，目前产品性能一般，有许多异构以及集成DRAM的产品，适合DIY入门级Linux开发板。由第三方泄露了大部分资料，部分产品无需NDA
     + Datasheet & TRM [Repo](https://github.com/DeciHD/allwinner_docs)
     + 开发者论坛 https://bbs.aw-ol.com/
     + sunxi wiki https://linux-sunxi.org/Main_Page
     + 部分新产品文档 https://gitee.com/aw-sunxi/awesome-sunxi
-    + T113-s3/T113-s4/R528 (2xA7 with 128MB/256MB SIP DDR3, T113-s3/s4 have eLQFP128 package, 22nm)
+    + T113-s3/T113-s4/R528 (2xA7 with 128MB/256MB SIP DDR3, T113-s3/s4 are eLQFP128 packaged, 22nm)
     + T113-i (2xA7+1xRISCV(C906), 22nm)
     + A40i/V40/R40/T3 (4xA7, SATA embedded, 40nm)
     + V853/V851/V853s/V851s/V851se (1xA7+1xRISCV(E907), s variants feature 64MB SIP DDR, e variants feature SIP EPHY)
@@ -38,16 +37,15 @@ ARMv7-M体系结构笔记[传送门](201020a_stm32.md)
     + V3s (1xA7 with 64MB DDR2, eLQFP128)
     + F1C100/200s (1xARM9 with DDR)
     + 以下是未来会出的中高端型号（仅供参考）
-    + A523/A527/T523/T527/MR527/R828(?) (8xA55+1xRISCV(E906), sun55i new product 2023, 22nm)（只有T527为完整功能版）
+    + A523/A527/T523/T527/MR527/R828(?) (8xA55+1xRISCV(E906), sun55i new product 2023, 22nm)（只有T527为完整功能）
     + A513 (4xA55, new product 2023/2024, 22nm)
     + R923 (4xA73+4xA53+1xRISCV(E906), sun60i new product 2023/2024, 12nm)
-    + A736/T736 (2xA76+6xA55, IMG BXM GPU, new product 2023/2024, 12nm)
+    + A736/T736 (2xA76+6xA55, IMG BXM GPU, sun60i new product 2023/2024, 12nm)
     + A737/T737 (2xA78+6xA55, IMG BXM GPU, 12nm)
-    + 以下是sun50i系列。尽管为64位ARMv8，为减小芯片Die size，sun50i内部数据总线只有32位宽。带宽不足容易遇到性能瓶颈
+    + 以下是sun50i系列。尽管为64位ARMv8，为减小芯片Die size，内部数据总线只有32位宽，可能遇到瓶颈
     + A133/R818 (4xA53, IMG GE8300 GPU, 28nm)
-    + H616/H618 (4xA53, 28nm)
+    + H616/H618/T507 (4xA53, 28nm)
 + Rockchip 瑞芯微（福州）
-    + 高端产品线性能较强，也有许多高性价比主力产品。部分未开放完整版手册由泄露得来。未来中高端ARM开源硬件首选，但是新产品软件支持欠佳
     + Datasheet & TRM [Repo](https://github.com/DeciHD/rockchip_docs)
     + wiki https://opensource.rock-chips.com/wiki_Main_Page
     + RK3588/RK3588S (4xA76+4xA55+3xM0, 8nm)
@@ -64,7 +62,6 @@ ARMv7-M体系结构笔记[传送门](201020a_stm32.md)
     + RV1106 (1xA7+1xRISCV(RV32IMC), 128MB/256MB SIP DDR, 28nm)
     + RV1103 (1xA7+1xRISCV(RV32IMC), 64MB SIP DDR, 28nm, Allwinner V851se counterpart)
 + Amlogic 晶晨半导体（上海）
-    + 第三方泄露手册可到odroid，radxa，banana-pi等开发板官网查找
     + Datasheet & TRM [Repo](https://github.com/DeciHD/amlogic_docs)
     + A311D2 (4xA73+4xA53, 12nm)
     + A311D (4xA73+2xA53, 12nm)
@@ -74,10 +71,8 @@ ARMv7-M体系结构笔记[传送门](201020a_stm32.md)
     + S905X3/D3 (4xA55, 12nm)
     + S905X2/S905Y2 (4xA53, 12nm)
     + S905D/S905L/S905X (4xA53, 28nm)
-+ Nuvoton 新唐科技（台湾）
-    + MA35D1 (2xA35, 首款产品)
 
-> 同一厂商参数相近的SoC经常会使用同一个Die。通过配置特性甚至命名就能推测
+> 同一厂商参数相近的SoC经常会使用同一个Die，开启或屏蔽部分功能。通过配置特性或命名就能推测
 
 **国际厂商**
 
@@ -109,22 +104,26 @@ ARMv7-M体系结构笔记[传送门](201020a_stm32.md)
 + Samsung 三星半导体
     + 大部分原有产品已停产。不推荐
 
-> 国际大厂ST，NXP，TI，Renesas的SoC通常性能一般，并且价格较高，但是文档开放，软件支持更好，稳定性优，更适合工业或车规产品，以及初学入门。而除手机、平板外的消费电子、广告屏等基本由中国厂商主导
+> 国际大厂ST，NXP，TI，Renesas的SoC通常性能一般，并且价格较高，但是文档开放，软件支持更好，稳定性优，更适合工业或车规产品，以及初学入门。而除手机、平板外的商业消费电子、广告屏等基本由御三家方案主导。由于成本优势，近几年御三家的产品在工控和车载领域也已经有很多应用
 
-> 树莓派定位主要作为普通PC使用，和大部分x86 PC一样，不开放原理图，SoC手册也严格保密，不属于开源硬件。用户不可能基于树莓派的定制SoC设计自己的开发板。树莓派优势在于软件生态良好，可用性要优于几乎所有的同类产品。硬件不是树莓派的强项
+> 树莓派定位主要作为普通PC使用，走的是和大部分x86 PC一样的消费电子路线，不开放原理图，SoC手册也严格保密，不属于开源硬件。新出的5B分离了处理器和部分外设（RP1芯片类似南桥，走PCIe）更加佐证了这一趋势。硬件爱好者不可能基于树莓派的定制SoC设计自己的开发板。树莓派优势在于软件生态良好，由于用户多，并且树莓派主要面向新手用户，很多问题基金会官方与社区已经帮用户填坑，对于toy project的需求而言，它的可用性要优于几乎所有的同类产品
+>
+> 虽然树莓派外观好看，其尺寸和接口布局被各厂商模仿，但事实上硬件设计不能算树莓派的强项。从4B的Type-C电阻设计失误，到5B的5V5A大电流供电都体现了这样的问题。5B的设计使得用户无法再使用普通的廉价数据线和手头已有的电源，而这仅仅是添加一个板载DCDC就可以解决的问题（基金会的态度很明显，想要用户再单独购买官方电源。5B的研发成本大约为25M美元，为4B的5倍）
+>
+> 另一方面，虽然御三家资源相对开放，玩转这些SoC仍然需要相当的专业技能，尤其GPU驱动方面，需要社区的共同努力。这些开发板很多是为具备专业软硬件技能的爱好者设计的，和树莓派相比本身定位就不同。事实上这些开发板商家甚至没有能力解决一些软件上的问题，只能依靠社区，例如GPU、编解码、PD协商等，这些问题更多在于SoC厂家支持不力，或来自IP核供应商的问题，此外相比树莓派还有人数与热度的劣势。明确自己的需求，如果你的需求仅仅是作为NAS等网络服务器使用，而对ARM体系结构底层、U-Boot、Linux内核、系统编程、逆向、硬件调试、驱动开发、硬件设计等不了解，也没有足够的时间和兴趣，最好的选择也许依旧是低功耗x86平台。如果只是想要快速做成一个简单的玩具项目，同时有一定的性能要求，树莓派可能是较好的选择
 
 
 ## 1 简介
 
-ARMv7 Cortex-A和R、M两个系列不同，它面向完整的现代操作系统应用，拥有更强大的性能与功能，最大的特性是具备MMU。同时，ARMv7-A系列通常还具备较长的流水线，更高的运行频率，并配备有Cache。有些内核支持指令双发射、三发射，和乱序执行。除Cortex-A8以外其他处理器都原生支持多核配置，每个Cluster可以配备1到4个核心（现在的新产品已经突破了这种限制）。同时为满足多媒体运算需求，ARMv7 Cortex-A核心通常会配备有VFP以及NEON SIMD扩展
+ARMv7 Cortex-A和R、M两个系列不同，它面向完整的现代操作系统应用，拥有更强大的性能与功能，最大的特性是具备MMU。同时，ARMv7-A系列通常还具备较长的流水线，更高的运行频率，并配备有Cache。多数内核支持超标量和乱序执行。除Cortex-A8以外其他处理器都原生支持多核配置，每个Cluster可以配备1到4个核心（现在部分ARMv8新产品已经不再限制4核。Cluster主要是为了核间通信，Cache一致性等多核系统存在的问题而设计，也方便了SoC厂商集成）。同时为满足多媒体运算需求，ARMv7 Cortex-A核心通常会配备有VFP以及NEON SIMD扩展
 
 ## 1.1 说明
 
-本笔记主要分析ARMv7-A体系结构，ARMv8-A仅作为补充说明
+本笔记主要分析ARMv7-A体系结构，ARMv8-A作为补充说明。ARMv9本质就是ARMv8，仅仅添加了一些扩展而已。ARMv9.0相当于ARMv8.6，不像ARMv7到ARMv8那样出现ISA的跨越性改变
 
 本笔记仅对重要的基本指令进行讲解，系统应用以外的指令如NEON和VFP指令只会简略讲解。重点在于内存架构、中断异常和多核，这是ARMv7-A区别于R、M两种核心的重要特性
 
-ARMv7-A的体系规范不包含DMA。ARM提供DMA330，DMA350等DMA IP，有些SoC厂商也会使用自设计或第三方的DMA
+ARMv7-A的体系规范不包含DMA。ARM提供DMA330，DMA350等IP
 
 ARMv7-A部分指令和ARMv7-M工作原理相同，例如`IT`指令，这里不再详细讲述，具体内容可以看[ARMv7-M体系结构笔记](201020a_stm32.md)
 
