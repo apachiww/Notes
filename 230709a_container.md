@@ -2,7 +2,7 @@
 
 ## 目录
 
-+ [**1**](#1-lxc) LXC
++ [**1**](#1-lxd) LXD
     + [**1.1**](#11-安装与配置) 安装与配置
     + [**1.2**](#12-下载镜像) 下载镜像
     + [**1.3**](#13-创建并启动容器) 创建并启动容器
@@ -76,7 +76,7 @@
         + [**2.7.6**](#276-卷) 卷
 + [**3**](#3-kubernetes) Kubernetes
 
-## 1 LXC
+## 1 LXD
 
 ArchLinux下，基于LXD
 
@@ -85,6 +85,8 @@ https://wiki.archlinux.org/title/Linux_Containers
 https://wiki.archlinux.org/title/LXD
 
 https://documentation.ubuntu.com/lxd/en/latest/
+
+> LXD已经被商业公司Canonical接管。正如MySQL被Sun收购一样（现Oracle），历史再次重演，LXD的自由版本Incus已经诞生（[2023.8.7](https://linuxcontainers.org/incus/)）。在Archlinux，截至2023.10.11，Incus 0.1已经进入AUR，即将替换LXD
 
 ## 1.1 安装与配置
 

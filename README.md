@@ -69,7 +69,6 @@
 | [210811a](210811a_sata.md) | 计算机常用存储设备接口协议 | 0% |
 | [210904b](210904b_power.md) | 开关电源，DC-DC | 2% |
 | [211017a](211017a_analog.md) | 模电，无线电 | 0% |
-| [211119a](211119a_rpipico.md) | 树莓派Pico笔记 | 0% |
 | [211211a](211211a_codestyle-and-licence.md) | 代码规范，开源协议 | 50% |
 | [220420a](220420a_tribblix.md) | Tribblix、Slackware安装与日常使用 | 0% |
 | [220429a](220429a_compiler.md) | 二进制ELF文件格式，链接器原理 | 100% |

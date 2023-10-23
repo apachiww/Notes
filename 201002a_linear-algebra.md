@@ -159,13 +159,21 @@ $$ \lim_{x\to0} x^2 $$
 
 显示如下
 
-$$ \int_{-\infty}^0 x^2dx $$
+$$
+\int_{-\infty}^0 x^2dx
+$$
 
-$$ \iint $$
+$$
+\iint
+$$
 
-$$ \oint $$
+$$
+\oint
+$$
 
-$$ \oiint $$
+$$
+\oiint
+$$
 
 **分数**
 
@@ -191,12 +199,15 @@ $$ \dfrac{xy}{2} \frac{xy}{2} $$
 需要添加转义符
 
 ```
-\Big{ \Big}
+\Big\lbrace \Big\rbrace
 ```
 
 显示如下
 
-$$ \Big\{  \Big\} $$
+$$ 
+\Big\lbrace
+\Big\rbrace
+$$
 
 **方括号**
 
@@ -206,7 +217,10 @@ $$ \Big\{  \Big\} $$
 
 显示如下
 
-$$ \Big[ \Big] $$
+$$
+\Big[
+\Big]
+$$
 
 **圆括号**
 
