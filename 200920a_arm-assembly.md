@@ -28,7 +28,7 @@ ARMv7-M体系结构笔记[传送门](201020a_stm32.md)
     + 部分新产品文档 https://gitee.com/aw-sunxi/awesome-sunxi
     + T113-s3/T113-s4/R528 (2xA7 with 128MB/256MB SIP DDR3, T113-s3/s4 are eLQFP128 packaged, 22nm)
     + T113-i (2xA7+1xRISCV(C906), 22nm)
-    + A40i/V40/R40/T3 (4xA7, SATA embedded, 40nm)
+    + A40i/V40/R40/T3 (4xA7, SATA embedded, no HDMI on T3, 40nm)
     + V853/V851/V853s/V851s/V851se (1xA7+1xRISCV(E907), s variants feature 64MB SIP DDR, e variants feature SIP EPHY)
     + R128 (RISCV+xtensa DSP+ARM with 8/16MB DRAM and WIFI/Bluetooth, QFN)
     + V833/V831 (1xA7)
@@ -37,7 +37,7 @@ ARMv7-M体系结构笔记[传送门](201020a_stm32.md)
     + V3s (1xA7 with 64MB DDR2, eLQFP128)
     + F1C100/200s (1xARM9 with DDR)
     + 以下是未来会出的中高端型号（仅供参考）
-    + A523/A527/T523/T527/MR527/R828(?) (8xA55+1xRISCV(E906), sun55i new product 2023, 22nm)（只有T527为完整功能）
+    + A523/A527/T523/T527/MR527/R828(?) (8xA55+1xRISCV(E906), no HDMI on A523 MR527, sun55i new product 2023, 22nm)（只有T527为完整功能）
     + A513 (4xA55, new product 2023/2024, 22nm)
     + R923 (4xA73+4xA53+1xRISCV(E906), sun60i new product 2023/2024, 12nm)
     + A736/T736 (2xA76+6xA55, IMG BXM GPU, sun60i new product 2023/2024, 12nm)

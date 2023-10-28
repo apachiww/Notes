@@ -502,7 +502,7 @@ mount -t ext2fs -o ro /dev/adaXpX /mnt
 
 ## 4 jails玩耍简记
 
-`jails`可以算较早出现的容器技术（2000年），为FreeBSD特有功能，且至今仍得到广泛应用。后来Linux端的`lxc`在2008年才诞生，`docker`2013年诞生。`kubernetes`（常说的K8s）于2017年开始流行
+`jails`可以算较早出现的容器技术（2000年），为FreeBSD特有功能，且至今仍得到广泛应用
 
 ## 5 ZFS使用简记
 

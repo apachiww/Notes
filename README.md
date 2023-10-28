@@ -15,7 +15,7 @@
 | [Shell脚本](201219a_shell.md#2-shell脚本基础) |
 | [Awk字符串处理，正则表达式](201219a_shell.md#31-awk编程) |
 | [Tcl编程](201219a_shell.md#33-tcl编程) |
-| [Docker](230709a_container.md#2-docker) [LXD](230709a_container.md#1-lxc) |
+| [Docker](230709a_container.md#2-docker) [LXD](230709a_container.md#1-lxd) |
 | [iptables](210130a_install-notice.md#11-防火墙iptables) |
 | [USB通信](210731b_usb.md) |
 | [Haskell函数式编程](210409a_haskell.md) |
@@ -33,7 +33,7 @@
 | No. | Content | Done |
 | :- | :- | :-: |
 | [200908a](200908a_sdram.md) | 计算机存储：SDRAM | 100% |
-| [200908b](200908b_qemu-arm.md) | LFS并使用QEMU运行Linux（ARMv7）| 100% |
+| [200908b](200908b_qemu-arm.md) | Linux From Scratch (ARMv7)，并使用QEMU运行 | 100% |
 | [200920a](200920a_arm-assembly.md) | ARMv7-A ARMv8-A体系结构，内存架构 | 10% |
 | [200920b](200920b_dsp.md) | 信号与系统，DSP数字信号处理 | 1% |
 | [200920c](200920c_verilog.md) | 数字逻辑以及Verilog，FPGA开发 | 95% |
@@ -73,7 +73,6 @@
 | [220420a](220420a_tribblix.md) | Tribblix、Slackware安装与日常使用 | 0% |
 | [220429a](220429a_compiler.md) | 二进制ELF文件格式，链接器原理 | 100% |
 | [220502a](220502a_psychoanalysis.md) | 精神分析学 | 0% |
-| [221018a](221018a_uboot.md) | Das U-Boot | 0% |
 | [221019a](221019a_bsd-impl.md) | FreeBSD设计与实现 | 0% |
 | [221112a](221112a_network.md) | 计算机网络 | 80% |
 | [221116a](221116a_wacom.md) | Wacom数位板手动配置 | 100% |

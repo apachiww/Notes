@@ -86,7 +86,7 @@ https://wiki.archlinux.org/title/LXD
 
 https://documentation.ubuntu.com/lxd/en/latest/
 
-> LXD已经被商业公司Canonical接管。正如MySQL被Sun收购一样（现Oracle），历史再次重演，LXD的自由版本Incus已经诞生（[2023.8.7](https://linuxcontainers.org/incus/)）。在Archlinux，截至2023.10.11，Incus 0.1已经进入AUR，即将替换LXD
+> LXD已经被商业公司Canonical接管。正如MySQL被Sun收购一样（现Oracle），历史再次重演，LXD的自由软件版本Incus已经诞生（[2023.8.7](https://linuxcontainers.org/incus/)）。在Archlinux，截至2023.10.11，Incus 0.1已经进入AUR，在以后将会替换LXD
 
 ## 1.1 安装与配置
 
@@ -1167,9 +1167,9 @@ lxc network attach lxd-macvlan0 arch-01 eth1
 
 ## 2 Docker
 
-`docker`和Linux Container在容器的实现上本质是基本相同的，但是`docker`和`lxd`具有不同的定位。`lxd`主要用于整个操作系统的模拟，`lxd`的容器通常有较为健全的功能，可以管理服务，有更强大的硬件配置功能，整体功能和虚拟机类似，但相比之下内存浪费更少；而`docker`更多是为单个应用提供运行环境，主要是解决应用的缓存，配置，依赖，环境统一性等问题，其主要关注点在文件系统和进程的隔离上，多个应用通常需要使用多个`docker`容器
+`docker`和`lxd`本质都是容器管理工具，但是`docker`和`lxd`具有不同的定位。`lxd`主要用于整个操作系统的模拟，`lxd`的容器通常有较为健全的功能，可以管理服务，有更强大的硬件配置功能，整体功能和虚拟机类似，但相比之下内存浪费更少；而`docker`更多是为单个应用提供轻量化的运行环境，主要是解决应用的缓存，配置，依赖，环境统一性等问题，其主要关注点在文件系统和进程的隔离上，多个应用通常需要使用多个`docker`容器
 
-通常`lxd`使用完整的操作系统镜像，主要是完整的发行版镜像；而`docker`不一定使用完整功能的镜像（虽然也可以支持），而是使用面向一种特定服务的定制最小化镜像（去除了大部分常用Linux系统工具，只保留非常基本的命令）
+通常`lxd`使用完整的操作系统镜像，主要是完整的发行版镜像；而`docker`不一定使用完整的发行版镜像（虽然也可以支持），而是使用面向一种特定服务的定制最小化镜像（去除了大部分常用Linux系统工具，只保留非常基本的命令）
 
 由于以上差别，`lxd`更多用于共享的（GPU）计算集群，可以作为虚拟机的类似替代品使用；而`docker`更多用于部署互联网服务，适用于现在的微服务应用
 
@@ -1597,7 +1597,7 @@ docker build -t getting-started .
 
 ### 2.3.1 创建与使用容器
 
-先看[下载镜像](#233-镜像管理)
+先看[下载镜像](#233-镜像)
 
 查看当前所有容器
 
@@ -1627,7 +1627,7 @@ docker create --name alpine-test alpine:latest some-front-daemon
 
 > 默认情况下创建的容器在后台运行，不能使用shell。上述的`alpine`官方镜像由于没有指定容器中前台运行的服务程序，**如果不指定该前台程序容器启动后会立即退出**
 
-如果想要在启动后使用终端，需要`-i -t`，这样容器会一直等待我们`attach`终端（`detach`后依旧运行），我们在容器内`exit`退出后由于`sh`终止，容器才立即终止运行
+如果想要在启动后使用终端，创建容器时需要加`-i -t`参数。这样创建出来的容器会一直等待我们`attach`终端（`detach`后依旧运行），我们在容器内`exit`退出后由于`sh`终止，容器才立即终止运行
 
 ```shell
 docker create --name alpine-test -it alpine:latest
@@ -1734,7 +1734,7 @@ docker attach alpine-test
 docker start --attach -i alpine-test
 ```
 
-退出detach时需要使用组合键，默认为`CTRL-p CTRL-q`（不适用于非`shell`的情况，例如启动后执行`top`），**此时容器不会退出**
+退出detach时需要使用组合键，默认为`CTRL-p CTRL-q`（不适用于非`shell`的情况，例如启动后执行`top`），**此时容器不会停止运行**
 
 停止容器`alpine-test`
 
@@ -1782,7 +1782,7 @@ docker attach alpine-test
 docker run -it --rm --name alpine-test alpine:latest
 ```
 
-> `docker`中容器启动后执行的程序也可以通过`Dockerfile`指定，并在打包镜像、创建容器后执行。类似于`alpine`官方镜像这样的镜像由于没有指定启动后执行的服务程序，所以容器启动后会直接退出，必须使用`-it`创建。而我们在前面的示例中打包的镜像`getting-started`由于在`Dockerfile`中使用`CMD`指定了启动后立即执行的`node`服务器，所以它不会立即退出
+> `docker`中容器启动后执行的程序也可以通过`Dockerfile`指定，并在打包镜像、创建容器后执行。类似于`alpine`官方镜像这样的镜像由于没有指定启动后执行的服务程序，所以容器启动后会直接退出，必须使用`-it`创建。而我们在前面的示例中打包的镜像`getting-started`由于在`Dockerfile`中使用`CMD`指定了启动后立即执行的`nodejs`服务，所以它不会立即退出
 
 在容器中执行一个程序
 
