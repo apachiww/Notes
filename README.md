@@ -15,14 +15,10 @@
 | [Shell脚本](201219a_shell.md#2-shell脚本基础) |
 | [Awk字符串处理，正则表达式](201219a_shell.md#31-awk编程) |
 | [Tcl编程](201219a_shell.md#33-tcl编程) |
+| [Git教程](201219a_shell.md#35-git使用) |
 | [Docker](230709a_container.md#2-docker) [LXD](230709a_container.md#1-lxd) |
-| [iptables](210130a_install-notice.md#11-防火墙iptables) |
-| [USB通信](210731b_usb.md) |
-| [Haskell函数式编程](210409a_haskell.md) |
-| [Intel hex文件格式](220429a_compiler.md#31-intel-hex文件格式) |
+| [iptables配置](210130a_install-notice.md#11-防火墙iptables) |
 | [IEEE754浮点数](200920c_verilog.md#51-IEEE754浮点数标准) |
-| [RS232](210524a_8051.md#8-补充rs232串口通信) |
-| [FreeBSD物理机安装](210115a_freebsd.md) |
 
 ## 列表
 
@@ -33,18 +29,18 @@
 | No. | Content | Done |
 | :- | :- | :-: |
 | [200908a](200908a_sdram.md) | 计算机存储：SDRAM | 100% |
-| [200908b](200908b_qemu-arm.md) | Linux From Scratch (ARMv7)，并使用QEMU运行 | 100% |
+| [200908b](200908b_qemu-arm.md) | Linux From Scratch (ARMv7)，并使用QEMU运行 | 30% |
 | [200920a](200920a_arm-assembly.md) | ARMv7-A ARMv8-A体系结构，内存架构 | 10% |
 | [200920b](200920b_dsp.md) | 信号与系统，DSP数字信号处理 | 1% |
 | [200920c](200920c_verilog.md) | 数字逻辑以及Verilog，FPGA开发 | 95% |
 | [201002a](201002a_linear-algebra.md) | 线性代数，矩阵计算 | 50% |
-| [201002b](201002b_calculus.md) | 高数 | 0% |
+| [201002b](201002b_calculus.md) | 高数，数学分析 | 0% |
 | [201002c](201002c_complex.md) | 复变函数 | 0% |
 | [201020a](201020a_stm32.md) | ARMv7-M体系结构以及STM32单片机开发 | 70% |
 | [201219a](201219a_shell.md) | Linux命令行，Shell脚本，Awk字符串处理，Tcl编程，Expect | 100% |
 | [201219b](201219b_makefile.md) | Makefile的用法，基于cmake和GNU make | 90% |
 | [201220a](201220a_mcu-ide.md) | MCU开发环境构建 | 10% |
-| [201220b](201220b_crack.md) | 密码爆破 | 0% |
+| [201220b](201220b_crack.md) | CTF相关实用技能摘录 | 0% |
 | [201220c](201220c_metasploit.md) | Metasploit渗透测试 | 0% |
 | [201225a](201225a_ssd.md) | 计算机存储：固态硬盘工作原理与优化方法 | 100% |
 | [201230a](201230a_cryptography.md) | 加密算法，密码学 | 0% |
@@ -52,9 +48,9 @@
 | [210110a](210110a_computer-arch.md) | 计算机体系结构以及处理器的设计 | 1% |
 | [210111a](210111a_qt.md) | Qt应用开发 | 0% |
 | [210115a](210115a_freebsd.md) | FreeBSD日常使用 | 80% |
-| [210130a](210130a_install-notice.md) | 各种类Unix的管理维护以及安全优化 | 1% |
+| [210130a](210130a_install-notice.md) | 各种类Unix的管理维护以及安全优化 | 10% |
 | [210316a](210316a_computer-graphics.md) | 计算机图形学，Vulkan，OpenGL（GLSL） | 0% |
-| [210317a](210317a_parallel.md) | 并行计算，C++11线程库 | 0% |
+| [210317a](210317a_parallel.md) | Linux并发编程，C++11线程库 | 0% |
 | [210320a](210320a_3drebuild.md) | 卫星遥感 | 100% |
 | [210409a](210409a_haskell.md) | 函数式编程，Haskell | 30% |
 | [210501a](210501a_famitracker.md) | 计算机音乐，编曲作曲，（爵士）和声，FamiTracker，经典计算机音乐集成电路解析 | 0% |
@@ -80,9 +76,12 @@
 | [230411a](230411a_unix-programming.md) | Linux/Unix系统编程 | 0% |
 | [230513a](230513a_texlive.md) | Texlive安装与使用 | 0% |
 | [230526a](230526a_driver.md) | Linux驱动开发，设备树 | 0% |
-| [230709a](230709a_container.md) | Linux容器工具LXD，Docker，K8s的使用 | 70% |
-| [230719a](230719a_js.md) | MEVN全栈，Node.js，Vue.js | 0% |
+| [230709a](230709a_container.md) | Linux容器和虚拟化工具，LXD（Incus），Docker，CRI-O，Kata Containers，VirtualBox，QEMU（+KVM），K8s，Vagrant等工具的使用 | 30% |
+| [230719a](230719a_js.md) | 基于Node.js和React全栈开发 | 0% |
 | [230813a](230813a_auto.md) | 自动控制算法 | 0% |
+| [231101a](231101a_riscv.md) | RISC-V体系结构，SBI | 0% |
+| [231104a](231104a_database.md) | 数据库 | 0% |
+| [231126a](231126a_pcb.md) | 高速PCB设计 | 0% |
 
 ## 参考书收藏
 
@@ -122,31 +121,35 @@
 
 ## Recipe
 
-🍥 C C++ Go Java Rust Ruby Python Lua TypeScript JavaScript Haskell
+🍥 C C++ Go Java Rust Ruby Python Lua Node.js Zig Dart
 
-🍜 CSS HTML
+🍣 Haskell | Erlang OCaml Agda
+
+🍜 CSS HTML JavaScript
 
 🍙 Shell Awk Tcl
 
-🍡 Verilog
+🍱 Verilog
 
-🍣 MySQL PostgreSQL SQLite
+🍡 MySQL PostgreSQL SQLite
 
-🥝 MongoDB Redis Geode
+🍢 MongoDB Redis Geode
 
-🍇 Rails(Ruby) Express(Node) Spring(Java) Iris(Go) WebAssembly
+🍇 Rails(Ruby) Express(Node.js) Spring(Java) Gin(Go)
+
+🍒 WebAssembly
 
 🍈 Docker LXD Kubernetes
 
-🍎 Vue React
+🍎 React Vue
 
 🍐 Makefile
 
 🥥 Matlab
 
-🍓 Vulkan OpenGL GLSL
+🍓 Vulkan OpenGL | GLSL
 
-🍉 Qt wxWidgets
+🍉 Qt wxWidgets SDL
 
 🥑 ARM AVR 8051 FPGA
 
@@ -154,4 +157,4 @@
 
 🍌 KiCAD FreeCAD
 
-🍍 ArchLinux AlpineLinux Slackware FreeBSD Tribblix
+🍍 ArchLinux ArtixLinux AlpineLinux Slackware FreeBSD Tribblix

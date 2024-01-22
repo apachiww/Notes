@@ -1,4 +1,4 @@
-# Linux容器的使用
+# Linux容器和虚拟机
 
 ## 目录
 
@@ -75,6 +75,20 @@
         + [**2.7.5**](#275-网络配置) 网络配置
         + [**2.7.6**](#276-卷) 卷
 + [**3**](#3-kubernetes) Kubernetes
++ [**4**](#4-cri-o) CRI-O
++ [**5**](#5-kata-containers) Kata Containers
++ [**6**](#6-qemu) QEMU
+    + [**6.1**](#61-先行检查) 先行检查
+    + [**6.2**](#62-qemu使用简介) QEMU使用简介
+        + [**6.2.1**](#621-创建磁盘镜像) 创建磁盘镜像
+        + [**6.2.2**](#622-通过光盘镜像安装) 通过光盘镜像安装
+        + [**6.2.3**](#623-运行) 运行
+        + [**6.2.4**](#624-iommu的基本配置) IOMMU的基本配置
+        + [**6.2.5**](#625-一些性能调优方法) 一些性能调优方法
+    + [**6.3**](#63-qemu命令行完整参考) QEMU命令行完整参考
++ [**7**](#7-virtualbox) VirtualBox
++ [**8**](#8-vagrant) Vagrant
++ [**9**](#9-libvirt) libvirt
 
 ## 1 LXD
 
@@ -86,7 +100,7 @@ https://wiki.archlinux.org/title/LXD
 
 https://documentation.ubuntu.com/lxd/en/latest/
 
-> LXD已经被商业公司Canonical接管。正如MySQL被Sun收购一样（现Oracle），历史再次重演，LXD的自由软件版本Incus已经诞生（[2023.8.7](https://linuxcontainers.org/incus/)）。在Archlinux，截至2023.10.11，Incus 0.1已经进入AUR，在以后将会替换LXD
+> LXD已经被商业公司Canonical接管。正如MySQL被Sun收购一样（现Oracle），历史再次重演，LXD的自由软件版本Incus已经诞生（[2023.8.7](https://linuxcontainers.org/incus/)）。截至2023.10.11，Incus 0.1已经进入ArchLinux AUR，在以后将会替换LXD。而仓库的LXD已经不再更新
 
 ## 1.1 安装与配置
 
@@ -3314,4 +3328,522 @@ volumes:
 
 ## 3 Kubernetes
 
-K8s
+K8s K3s
+
+TODO
+
+## 4 CRI-O
+
+TODO
+
+## 5 Kata Containers
+
+TODO
+
+## 6 QEMU
+
+运行QEMU，利用KVM
+
+KVM是集成于Linux内核的一个虚拟化模块。QEMU的传统模式使用纯软件模拟一个计算机系统，而启用了KVM以后可以利用CPU的虚拟化扩展，提高同架构虚拟机运行效率
+
+## 6.1 先行检查
+
+首先需要确保硬件开启了虚拟化扩展，x86平台为VT-x或AMD-V，在BIOS打开
+
+检查Linux内核是否包含KVM，应当为`m`或`y`
+
+```
+$ zgrep CONFIG_KVM= /proc/config.gz
+CONFIG_KVM=m
+```
+
+检查KVM模块是否加载。应当同时有`kvm`以及`kvm_amd`或`kvm_intel`。如果只有`kvm`，可能是BIOS没有开启虚拟化
+
+```
+$ lsmod | grep kvm
+kvm_amd               204800  0
+kvm                  1368064  1 kvm_amd
+```
+
+## 6.2 QEMU使用简介
+
+直接安装`qemu-full`，这个是提供图形界面支持的（Non-headless，依赖GTK和SDL）
+
+```
+$ sudo pacman -S qemu-full
+```
+
+`qemu`可以支持完整的计算机系统模拟或仅仅模拟用户程序。这里我们只用到完整的`x86_64`系统模拟，命令`qemu-system-x86_64`（所有的计算机完整系统模拟都是`qemu-system-`加处理器架构）
+
+### 6.2.1 创建磁盘镜像
+
+可以使用`raw`格式（原始的硬盘镜像），也可以使用`qcow2`格式
+
+创建`raw`格式镜像
+
+```
+qemu-img create -f raw rhel1.img 32G
+```
+
+或直接`fallocate`也可以
+
+```
+fallocate -l 32G rhel1.img
+```
+
+创建`qcow2`格式镜像。这里的`32G`指的是磁盘映像最大允许大小。`qcow2`格式的镜像是按需分配的，但是性能可能没有`raw`格式的高
+
+```
+qemu-img create -f qcow2 rhel1.cow 32G
+```
+
+**增量镜像（overlay image）的使用**
+
+`qemu`可以支持在一个基础镜像之上建立一个增量镜像。基础镜像为只读，所有的后续更改在增量镜像上发生，类似于`docker`的镜像，可以方便回滚以及共享镜像
+
+```
+qemu-img create -o backing_file=base.img,backing_fmt=raw -f qcow2 rhel1.cow
+```
+
+> 后续直接使用`rhel1.cow`即可，基础镜像的路径记录在其中，`qemu`会自动查找并使用`base.img`
+
+如果基础镜像的路径发生变更，内容没有更改，执行以下命令即可切换到新的基础镜像路径（`-u`表示Unsafe模式，仅更改`qcow2`增量镜像中记录的基础镜像路径，而不检查新镜像的内容）
+
+```
+qemu-img rebase -u -b /new/path/base.img rhel1.cow
+```
+
+如果想要更改基础镜像为另一个不同的镜像（原镜像必须还保留在原处），需要使用Safe模式。`qemu`镜像工具会检查新镜像相比老镜像的更改，将这些更改合并到`rhel1.cow`后才会切换到新的基础镜像（可能会耗费很长时间）
+
+```
+qemu-img rebase -b /new/path/base.cow -F qcow2 rhel1.cow
+```
+
+> 如果基础镜像格式发生变更，需要`-F`指明
+
+可以使用上述特性，生成两个镜像之间的差分
+
+```
+qemu-img create -f qcow2 -b mod.img diff.cow
+qemu-img rebase -b base.img diff.cow
+```
+
+> 最终`diff.cow`中包含的就是`mod.img`相比`base.img`的增量
+
+**放大缩小镜像**
+
+`raw`和`qcow2`格式都可以用
+
+```
+qemu-img resize image.cow +10G
+```
+
+> 上述命令只能用于增加镜像可分配空间，操作完成后还需要启动虚拟机扩展分区。注意对于Windows来说可能会导致无法启动，需要备份
+
+```
+qemu-img resize --shrink image.cow -10G
+```
+
+> 缩小镜像需要添加`--shrink`参数。缩小之前先要在虚拟机中调节分区
+
+**镜像格式转换**
+
+示例，从`raw`格式转`qcow2`格式
+
+```
+qemu-img convert -f raw -O qcow2 old.img new.cow
+```
+
+### 6.2.2 通过光盘镜像安装
+
+不要使用`root`身份运行`qemu`
+
+Legacy模式启动
+
+```
+qemu-system-x86_64 \
+-m 4G \
+-smp cpus=4 \
+-cpu host \
+-accel kvm \
+-boot order=d \
+-cdrom /path/to/dvd.iso \
+-drive file=rhel1.cow,format=qcow2
+```
+
+> Legacy模式默认使用的SeaBIOS固件位于`/usr/share/qemu/bios-256k.bin`，通过包名`seabios`安装。如果想使用其他固件通过`-bios`指定即可
+
+UEFI启动操作有些不同。需要`edk2-ovmf`包提供的OVMF固件，可以将其拷贝到当前目录后使用（必须可写）
+
+```
+cp /usr/share/edk2-ovmf/x64/OVMF.fd .
+chmod u+w OVMF.fd
+```
+
+启动时添加一些额外参数，使用OVMF固件
+
+```
+qemu-system-x86_64 \
+-m 4G \
+-smp cpus=4 \
+-cpu host \
+-accel kvm \
+-boot order=d \
+-cdrom /path/to/dvd.iso \
+-drive file=rhel1.cow,format=qcow2 \
+-drive if=pflash,format=raw,file=/path/to/OVMF.fd
+```
+
+OVMF也提供了分体版本固件`OVMF_CODE.fd`和`OVMF_VARS.fd`，只需拷贝`OVMF_VARS.fd`到当前目录即可
+
+```
+cp /usr/share/edk2-ovmf/x64/OVMF_VARS.fd .
+chmod u+w OVMF_VARS.fd
+```
+
+```
+qemu-system-x86_64 \
+-m 4G \
+-smp cpus=4 \
+-cpu host \
+-accel kvm \
+-boot order=d \
+-cdrom /path/to/dvd.iso \
+-drive file=rhel1.cow,format=qcow2 \
+-drive if=pflash,format=raw,readonly=on,file=/usr/share/edk2-ovmf/x64/OVMF_CODE.fd \
+-drive if=pflash,format=raw,file=/copy/of/OVMF_VARS.fd
+```
+
+> `qemu`默认只会分配`128M`内存，需要通过`-m`显式指定分配的内存。同时分配的CPU线程数通过`-smp`指定，可以更详细一点`cpus=4,sockets=1,cores=2,thread=2,maxcpus=4`
+>
+> 具体模拟的CPU架构（支持的指令集）也可以通过`-cpu`指定。可用的CPU通过`-cpu help`查看，`-cpu host`表示使用主机CPU架构（必须开启`kvm`）
+>
+> `kvm`必须通过`-enable-kvm`或`-accel kvm`开启
+>
+> `-boot order=d`表示本次优先从`cdrom`启动，之后恢复。也可以更改为`-boot menu=on`，使用BIOS的启动菜单
+>
+> 如果是Headless模式运行的`qemu`，会开启一个VNC端口，在`5900`
+>
+> 点击`qemu`窗口后鼠标会被捕获，`Ctrl+Alt+g`释放
+
+**QEMU终端**
+
+`qemu`虚拟机有一个终端，可以通过`Ctrl+Alt+2`切换，输入`help`查看帮助。通过`Ctrl+Alt+1`切换回系统终端。这个终端可以用于更换光盘镜像等操作
+
+### 6.2.3 运行
+
+安装完毕后，执行以下命令，Legacy模式启动
+
+```
+qemu-system-x86_64 \
+-m 4G \
+-smp cpus=4 \
+-cpu host \
+-accel kvm \
+-drive file=rhel1.cow,format=qcow2
+```
+
+UEFI启动
+
+```
+qemu-system-x86_64 \
+-m 4G \
+-smp cpus=4 \
+-cpu host \
+-accel kvm \
+-drive file=rhel1.cow,format=qcow2 \
+-drive if=pflash,format=raw,file=/path/to/OVMF.fd
+```
+
+```
+qemu-system-x86_64 \
+-m 4G \
+-smp cpus=4 \
+-cpu host \
+-accel kvm \
+-drive file=rhel1.cow,format=qcow2 \
+-drive if=pflash,format=raw,readonly=on,file=/usr/share/edk2-ovmf/x64/OVMF_CODE.fd \
+-drive if=pflash,format=raw,file=/copy/of/OVMF_VARS.fd
+```
+
+### 6.2.4 IOMMU的基本配置
+
+如果想要让PCI设备直连虚拟机，需要配置好IOMMU，在GPU服务器以及多网卡的主机上会有用（容器也可以支持类似功能）。没有此需求跳过即可。Intel平台需要支持VT-d，AMD平台需要支持AMD-Vi。确保BIOS已经正确设置
+
+**开启IOMMU**
+
+如果是Intel平台，视情况可能需要添加以下内核参数
+
+```
+intel_iommu=on
+```
+
+AMD和Intel平台需要加上以下内核参数，防止Linux内核触碰不支持穿透的硬件设备。之后执行一下`grub-mkconfig`并重启，参考[笔记](201219a_shell.md#1210-内核参数)
+
+```
+iommu=pt
+```
+
+执行以下命令，有相关输出且没有报错表示IOMMU已正确开启
+
+```
+dmesg | grep -i -e DMAR -e IOMMU
+```
+
+**PCIe设备向QEMU虚拟机的分配以IOMMU组（IOMMU Group）为最小单位**，同一个IOMMU组内的所有PCI设备只能同时分配到一个虚拟机。所有的IOMMU组都在`/sys/kernel/iommu_groups`下，可以通过以下脚本列出每个IOMMU组下的PCIe设备。如果发现有不想同组的设备出现在同一个组，需要尝试更换其他插槽
+
+```shell
+for i in `ls /sys/kernel/iommu_groups | sort -n`; do
+    echo "IOMMU GROUP $i:"
+    for d in /sys/kernel/iommu_groups/$i/devices/*; do
+        lspci -nns `basename $d`
+    done
+done
+```
+
+**设备保留：以GPU为例**
+
+主机系统启动时会加载PCI上挂载设备的驱动并与其交互。此后这些PCI设备是无法分配给虚拟机的，如果虚拟机想要使用这些设备，意味着主机系统（或其他虚拟机系统）不能占用它们。解决方案是让其他系统（主机系统或其他虚拟机系统）只为这些PCI设备加载一个占位驱动`vfio-pci`或`pci-stub`，这样的驱动不会有实际的作用，虚拟机就可以使用这些PCI设备。对于大部分有良好虚拟化环境支持的硬件来说（例如某些PCI网卡），它们可以很方便地动态绑定，即无需重启系统就可以从主机脱离并绑定到虚拟机（在启动虚拟机时在命令行显式指定即可，虚拟机程序会自动执行这些操作）。然而GPU由于其驱动的复杂性，不能很好地支持动态绑定，需要手工操作防止冲突。最好的解决方案就是让主机在刚启动时就为GPU加载`vfio-pci`驱动。显卡直连需要GPU的VBIOS支持
+
+> 如果有接显示器的需求，不要在单显卡机器上操作，包括笔记本独显直连模式。可以开启`ssh`后操作
+
+查看所有的PCI设备，显示设备ID（即产品ID，相同的PCI设备会显示相同的ID）
+
+```shell
+lspci -nn
+```
+
+GPU设备通常显示如下
+
+```
+06:00.0 VGA compatible controller: NVIDIA Corporation GM204 [GeForce GTX 970] [10de:13c2] (rev a1)
+06:00.1 Audio device: NVIDIA Corporation GM204 High Definition Audio Controller [10de:0fbb] (rev a1)
+```
+
+将GPU交由`vfio-pci`接管需要给出GPU的设备ID，最方便的方法是直接设置[内核参数](201219a_shell.md#1210-内核参数)。编辑`grub`传递的内核参数，添加以下内容即可，系统启动时`vfio-pci`就会起作用
+
+```
+vfio-pci.ids=10de:13c2,10de:0fbb
+```
+
+> 我们已经看过了IOMMU的分组。如果同组内有PCI bridge，不能将该设备ID传给`vfio-pci`。如果同组内有其他PCI设备，并且虚拟机支持动态换绑，那么无需将该设备ID传给`vfio-pci`
+>
+> 使用`vfio-pci`占位驱动的一个缺陷就是在使用多张相同显卡的环境下缺乏灵活性，因为相同型号显卡使用相同的产品型号ID。只要配置了上述内核参数，主机上所有同型号的显卡都会被`vfio-pci`接管
+
+另一种方法是在`/etc/modprobe.d`下添加`.conf`文件配置，之后需要执行`mkinitcpio -P`重新生成`initramfs`，这是更为推荐的方法
+
+```
+options vfio-pci ids=10de:13c2,10de:0fbb
+```
+
+**Early Bind：initramfs阶段的设备保留**
+
+`grub`在加载系统时会解压Linux内核（Arch下默认为`/boot/vmlinuz-linux`），外加一个临时的根文件系统`initramfs`到内存（`/boot/initramfs-linux.img`）。Linux内核刚刚启动时无法访问磁盘上的文件系统，会先使用内存中的`initramfs`作为根文件系统。`initramfs`中会有内核驱动模块。想要让`vfio-pci`驱动尽早接管GPU，还需要一些额外处理
+
+为达到上述要求，同样有两种方法
+
+一种方法是在`.conf`中添加以下配置，并重新生成`initramfs`。是较为推荐的方法
+
+```
+softdep drm pre: vfio-pci
+```
+
+另一种方法是将`vfio-pci`相关内核模块加入到`initramfs`。这会增大`initramfs`，可能会稍稍减缓开机速度
+
+> Linux 6.0以后在`initramfs`阶段加载`vfio-pci`后framebuffer会停止工作，需要注意。可能需要再将显卡驱动加入到`initramfs`
+
+首先将以下内容添加到`/etc/mkinitcpio.conf`的`MODULES`中（必须在任何Early modesetting显卡驱动模块之前）
+
+```
+MODULES=(vfio_pci vfio vfio_iommu_type1)
+```
+
+同时保证`HOOKS`中包含了`modconf`
+
+```
+HOOKS=(modconf)
+```
+
+之后执行一下`mkinitcpio -P`即可
+
+> 采用这种方法时，如果先前配置了N卡专用驱动`nvidia`的Early modesetting，只能通过`modprobe`配置指定设备ID
+
+**重启检查**
+
+重启后查看`dmesg`有没有`vfio`相关内容
+
+```
+dmesg | grep -i vfio
+```
+
+检查显卡是否被`vfio`接管
+
+```
+lspci -nnk
+```
+
+如果正常，显卡硬件信息会显示
+
+```
+Kernel driver in use: vfio-pci
+```
+
+### 6.2.5 一些性能调优方法
+
+**CPU绑核**
+
+对于QEMU虚拟机来说，它所模拟的每一个虚拟CPU在主机系统上本质都是一个线程（包括使用KVM时），并且遵守主机系统的调度。而在大部分的Linux系统下，线程会经常性的切换CPU运行，由于Cache问题这会在虚拟机上带来一些性能损失。因此在对性能要求较高的场合下需要绑核，让QEMU虚拟机使用固定的CPU核心。大部分的服务器平台都是NUMA平台，绑核需要综合考虑L1L2L3缓存架构，超线程，以及多路处理器问题
+
+> 绑核操作不一定在所有平台或操作系统都有性能提升，还需要看操作系统的调度器特性，绑核可能会适得其反，造成不正常的卡顿。这种情况下就不必再绑核了
+
+通过`lscpu -e`就可以显示系统内CPU线程和内核，L1L2L3缓存的对应关系。如下是一个支持超线程，且所有核心共享一个L3的AMD处理器。Intel处理器会有所不同，如果是8核16线程，CPU`0`和CPU`8`才是属于核心`0`的两个线程。有些处理器可能不止一个L3，也有可能多个核心会共享L2
+
+```
+$ lscpu -e
+CPU NODE SOCKET CORE L1d:L1i:L2:L3 ONLINE    MAXMHZ   MINMHZ
+  0    0      0    0 0:0:0:0          yes 4546.0000 400.0000
+  1    0      0    0 0:0:0:0          yes 4546.0000 400.0000
+  2    0      0    1 1:1:1:0          yes 4546.0000 400.0000
+  3    0      0    1 1:1:1:0          yes 4546.0000 400.0000
+  4    0      0    2 2:2:2:0          yes 4546.0000 400.0000
+  5    0      0    2 2:2:2:0          yes 4546.0000 400.0000
+  6    0      0    3 3:3:3:0          yes 4546.0000 400.0000
+  7    0      0    3 3:3:3:0          yes 4546.0000 400.0000
+  8    0      0    4 4:4:4:0          yes 4546.0000 400.0000
+  9    0      0    4 4:4:4:0          yes 4546.0000 400.0000
+ 10    0      0    5 5:5:5:0          yes 4546.0000 400.0000
+ 11    0      0    5 5:5:5:0          yes 4546.0000 400.0000
+ 12    0      0    6 6:6:6:0          yes 4546.0000 400.0000
+ 13    0      0    6 6:6:6:0          yes 4546.0000 400.0000
+ 14    0      0    7 7:7:7:0          yes 4546.0000 400.0000
+ 15    0      0    7 7:7:7:0          yes 4546.0000 400.0000
+```
+
+> 还有一个查看处理器缓存架构的图形化工具为`lstopo`
+
+**隔离CPU核**
+
+可以通过Bootloader传递内核参数，在系统启动时隔离指定CPU核，防止主机占用虚拟机的CPU资源。主机系统就不会使用这些核心
+
+```
+isolcpus=8-9 nohz_full=8-9
+```
+
+需要使用如下命令启动`qemu`，开启调度器的`round-robin`
+
+```
+chrt -r 1 taskset -c 8-9 qemu-system-x86_64
+```
+
+也可以通过`systemd`动态地隔离以及回收CPU
+
+设定允许使用的CPU，其余保留给虚拟机
+
+```
+# systemctl set-property --runtime -- user.slice AllowedCPUs=0-7
+# systemctl set-property --runtime -- system.slice AllowedCPUs=0-7
+# systemctl set-property --runtime -- init.scope AllowedCPUs=0-7
+```
+
+回收所有CPU
+
+```
+# systemctl set-property --runtime -- user.slice AllowedCPUs=0-9
+# systemctl set-property --runtime -- system.slice AllowedCPUs=0-9
+# systemctl set-property --runtime -- init.scope AllowedCPUs=0-9
+```
+
+**大内存页**
+
+高性能计算中可能会有很大连续空间内存的需求。如果使用的内存页太小，会导致分配的页太多，访问页表和访问内存的延迟会变大，降低性能。同时由于现代CPU中TLB快表缓存是有限的，太多的页会导致TLB频繁换进换出，命中率降低，也会降低访存效率。大内存页对于很多虚拟机应用来说是有利的，但是对于很多数据库负载是不利的，`mongodb`等数据库就要求关闭大内存页功能。在x86平台下Linux可以支持2MiB和1GiB大小的huge page（默认一个页4KiB）
+
+> Linux下使用大内存页有三种常用的方式：一种是**Transparent**（Transparent huge pages，通常简写为THP），一种是**Static**，一种是**Dynamic**
+>
+> Transparent也即透明模式，该模式在大部分Linux发行版内核中默认打开，无需另外配置，应用程序可以无需显式说明自己想要2MiB大小的页，只要mmap区域是2MiB对齐的，Linux内核会尽量为该程序分配一个2MiB大小的页。只有在找不到可用的2MiB页或遇到其他情况例如mmap域非2MiB对齐时，会给该程序分配4KiB的页
+>
+> Static也即静态分配模式，该模式需要通过传递内核参数设定，在系统启动时就会分配指定数量和大小的空内存页，并且这些内存页只能由指定的程序使用，普通程序不可使用。由于目前的Linux内核中THP仅支持2MiB大小的内存页，它通常用于1GiB页的分配。Static分配缺乏灵活性，其性能提升相比THP也是微乎其微
+>
+> Dynamic也即动态分配方式，可以运行时通过`sysctl`内核参数设定。为虚拟机分配的大内存页在虚拟机退出后会自动由系统回收，而启动时同样也是动态地分配
+
+Transparent huge pages
+
+系统自动分配的THP可以通过`/proc/meminfo`以及`/proc/PID/smaps`查看，在`AnonHugePages`
+
+系统当前自动分配的2MiB大内存页占用内存总量。如下，说明系统当前分配了`155`个大内存页
+
+```
+$ grep -i anonhugepages /proc/meminfo
+AnonHugePages:    317440 kB
+```
+
+显示分配给具体进程的大内存页
+
+```
+$ grep -P 'AnonHugePages:\s+(?!0)\d+' /proc/830/smaps
+AnonHugePages:     22528 kB
+AnonHugePages:      2048 kB
+AnonHugePages:      2048 kB
+AnonHugePages:      2048 kB
+AnonHugePages:      2048 kB
+```
+
+如果想要禁用THP，需要添加以下启动时内核参数
+
+```
+transparent_hugepage=never
+```
+
+或在运行时执行以下命令
+
+```
+echo never > /sys/kernel/mm/transparent_hugepage/enabled
+echo never > /sys/kernel/mm/transparent_hugepage/defrag
+```
+
+Static huge pages
+
+使用Static预留分配的大内存页，需要设定如下内核参数，示例分配`256`个2MiB页
+
+```
+hugepages=256
+```
+
+分配2个1GiB页，需要添加以下参数设定Static内存页的大小
+
+```
+default_hugepagesz=1G hugepagesz=1G hugepages=2
+```
+
+Dynamic huge pages
+
+使用Dynamic大内存页，通过`vm`相关内核参数设置，使用`sysctl`。`kvm`虚拟机在启动时会自动分配指定数量的大内存页，默认2MiB页
+
+```
+vm.nr_hugepages = 0
+vm.nr_overcommit_hugepages = 128
+```
+
+可以运行时执行以下命令分别设定2MiB和1GiB动态大内存页数量
+
+```
+echo 128 > /sys/kernel/mm/hugepages/hugepages-2048kB/nr_hugepages
+echo 2 > /sys/kernel/mm/hugepages/hugepages-1048576kB/nr_hugepages
+```
+
+## 6.3 QEMU命令行完整参考
+
+TODO
+
+## 7 VirtualBox
+
+TODO
+
+## 8 Vagrant
+
+TODO
+
+## 9 libvirt
+
+TODO
+
+## 10 专题：SR-IOV

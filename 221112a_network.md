@@ -200,13 +200,13 @@ TCP/IP(DoD/ARPANet)是事实上的网络分层标准，分为5层（一说4层�
 
 ### 3.1.1 物理介质
 
-以太网最早在1983年以IEEE802.3标准化。最早的以太网使用同轴电缆（coaxial）作为传输介质；后来发展出了如今最为常见的8芯双绞线，使用RJ45接口；以及光纤，常见光纤接口有SC，LC，ST等。以太网的基础设施主要有以太网交换机等。如果使用了光纤，在交换机、路由器、网卡会添加额外的光接口，这些设备经常会使用可拆卸的光模块（SFP）
+以太网最早在1983年以IEEE802.3标准化。最早的以太网使用同轴电缆（coaxial）作为传输介质；后来发展出了如今最为常见的8芯双绞线，使用RJ45接口；以及光纤，现在光交换机也非常常见，常见光纤接口有SC，LC，ST等。以太网的基础设施主要有以太网交换机等。如果使用了光纤，在交换机、路由器、网卡会添加额外的光接口，这些设备经常会使用可拆卸的光模块（SFP）
 
-> 国内运营商光纤入户最常用EPON以及GPON，这些光网络除上网数据外还需要搭载IPTV，语音（座机）以及运营商管理等服务，普通的上网数据在PON网络上走以太网协议。此外连接运营商网络需要验证，只有运营商的光猫才能通过验证并成功联网。在GPON网络中，语音等服务会使用其他一些协议如ATM搭载。而EPON网络中语音也使用以太网数据帧搭载
+> 国内运营商光纤入户最常用EPON以及GPON，这些光网络除上网数据外还需要搭载IPTV，语音（座机）以及运营商管理等服务，普通的上网数据在PON网络上走以太网协议。在GPON网络中，语音等服务会使用其他一些协议如ATM搭载。而EPON网络中语音也使用以太网数据帧搭载
 >
 > 多个邻近家庭/用户的网络一般通过分光器共享，分光器再向上连接运营商的OLT设备，这样就形成了多个ONT终端连接一个OLT的PON网络结构。这导致了上下行通信的不对称，从用户角度看下行使用广播的方式，而上行为了解决冲突问题使用TDMA时分复用
 >
-> 光纤的主要优点是材料成本低，抗干扰能力强，传输距离远。事实上光信号在光纤中的传导速度要慢于电信号在铜丝中的传导速度。实际应用中，有时各级路由器以及交换机带来的处理延迟才是更主要的影响因素
+> 光纤的主要优点是抗干扰能力强，传输距离远。事实上光信号在光纤中的传导速度要慢于电信号在铜丝中的传导速度。实际应用中，有时各级路由器以及交换机带来的处理延迟才是更主要的影响因素
 
 ### 3.1.2 以太网帧格式
 
@@ -717,13 +717,13 @@ RP address
 
 ## 4.3 路由原理
 
-路由器是第三层网络设备，它的本质就是一种只能理解到网络层的特殊的主机（现在的路由器也可以理解更高层）。它和主机的不同点是它通常至少拥有2个网络接口，需要连接到不同的网络进行网络之间的数据转发，而主机只需要1个接口连接到网络就可以（家用路由器通常集成交换机，引出多个LAN接口，只能算一个接口）。路由器连接不同网络的每一个端口都拥有独立的MAC地址，数据包通过路由器转发时需要更改MAC地址为路由器转发接口的MAC。防火墙可以算一种特殊的路由器，具备更多的安全功能
+路由器是第三层网络设备，它的本质就是一种只能理解到网络层的特殊的主机（现在的路由器当然也可以理解更高层）。它和主机的不同点是它通常至少拥有2个网络接口，需要连接到不同的网络进行网络之间的数据转发，而主机只需要1个接口连接到网络就可以（家用路由器通常集成交换机，引出多个LAN接口，只能算一个接口）。路由器连接不同网络的每一个端口都拥有独立的MAC地址，数据包通过路由器转发时需要更改MAC地址为路由器转发接口的MAC。防火墙可以算一种特殊的路由器，主要实现过滤等保护功能
 
-在[本章开头](#4-网络层)说过，如果没有NAT的特殊情况，数据包在不同网络之间，穿过路由器传输时**源IP和目标IP是不会改变的**，只有数据链路层的MAC地址会不断改变。网络中的主机会配置默认网关（路由器）IP，发送数据包时它会判断目标IP是否属于当前已经连接的网络，如果**属于已连接网络**只需设置好目标MAC地址后直接向网络中发送数据包；如果**不属于**已有网络，主机会将MAC地址设置为默认网关或对应静态路由器的MAC，将数据包发送给路由器转发处理
+在[本章开头](#4-网络层)说过，如果没有NAT的特殊情况，数据包在不同网络之间，穿过路由器传输时**源IP和目标IP是不会改变的**，只有数据链路层的MAC地址会不断改变。网络中的主机会配置默认网关（路由器）IP，发送数据包时它会判断目标IP是否属于当前已经连接的网络，如果**属于已连接网络**只需设置好目标MAC地址后直接向网络中发送数据包；如果**不属于**已有网络，主机会将MAC地址设置为默认网关或对应静态路由器的MAC，不更改IP，将数据包发送给路由器转发处理
 
-> 在日常生活中我们接触到的路由器通常都是属于边界网关设备。真正的核心路由器都由运营商管理，保存于运营商机房中，普通人难以接触。核心路由器需要搭载更多的功能，首先必须集成路由协议，这是大部分消费级设备所不具备的（所以严格意义上叫边界网关，不算真正的路由器）
+> 在日常生活中我们接触到的消费级路由器都是属于NAT网关设备。真正的核心路由器都由运营商管理，部署于运营商机房中，普通人难以接触。核心路由器需要搭载更多的功能，首先必须实现路由协议，这是几乎所有消费级设备所不具备的。所以狭义上说消费级路由器只能算网关，不能算真正的路由器
 >
-> 目前全球有许多网络设备厂商，但是拥有核心路由产品的厂家只有Cisco思科，Juniper瞻博，Huawei华为，Nokia诺基亚，Ericsson爱立信，ZTE中兴等少数几家。高端核心路由的单价都在六位数，且体积巨大，使用专用的芯片，非常易于扩展，可以占据一个机柜
+> 目前全球有许多网络设备厂商，但是拥有核心路由产品的厂家只有Cisco思科，Juniper瞻博，Huawei华为，Nokia诺基亚，Ericsson爱立信，ZTE中兴等少数几家。高端核心路由的单价都在六位数左右，体积巨大，使用专用的芯片，并且有极其强大的扩展性和稳定性
 
 ### 4.3.1 路由表
 
@@ -937,31 +937,31 @@ Options (MAC)
 
 参考RFC1918
 
-NAT全称`Network Address Translation`，由路由器实现，它可以使得私有网络内的多台主机共用一个公网IP地址，本质上是利用传输层的端口号（长16位）来弥补IPv4地址数量不足的问题。IPv4网络下我们日常用的局域网都使用了私有IP地址。同时NAT在某种程度上为IPv4私有网络提供了天生的安全保护。但是由于端口号的限制，一个NAT网络中同时访问同一公网主机的进程数量也有所限制。虽然应用广泛，事实上NAT打破了一些原有的设计规则，它并不被一些人看好
+NAT全称`Network Address Translation`，由网关实现，它可以使得私有网络内的多台主机共用一个公网IP地址，本质上是利用传输层的端口号（长16位）来弥补IPv4地址数量不足的问题。IPv4网络下我们日常用的局域网都使用了私有IP地址。同时NAT在某种程度上为IPv4私有网络提供了天生的安全保护。但是由于端口号的限制，一个NAT网络中同时访问同一公网主机的进程数量也有所限制。虽然应用广泛，事实上NAT打破了一些原有的设计规则，它并不被一些人看好
 
-NAT网络需要路由器理解传输层端口。家用路由都是NAT路由器
+NAT网络需要网关理解传输层端口。家用路由器都是NAT网关
 
-在NAT网络中，访问当前私有网络以外网络的数据包会被直接发送往NAT路由。假设当前NAT路由的WAN口直接连接了公网并拥有公网IP（假设`194.47.156.230`）。我们访问一台公网主机产生一个数据包。那么在私有网络内，该数据包：
+在NAT网络中，访问当前私有网络以外网络的数据包会被直接发送往NAT路由。假设当前NAT网关的WAN口直接连接了公网并拥有公网IP（假设`194.47.156.230`）。我们访问一台公网主机产生一个数据包。那么在私有网络内，该数据包：
 
 > 源IP为主机在私有网络内的IP（假设`192.168.1.23`），目标IP为被访问公网主机的IP（假设为`17.253.144.10`）（MAC的修改省略）
 >
 > 源Port为主机发送数据的传输层Port，目标Port为公网主机提供服务的Port（假设访问`http`，端口`80`，源端口`10320`）
 
-NAT路由接收到上述数据包以后，进行以下操作后发送：
+NAT网关接收到上述数据包以后，进行以下操作后发送：
 
 > 记录两个IP和端口（`192.168.1.23:10320, 17.253.144.10:80`）。将源IP修改为WAN口IP，再随机分配一个未使用过的上行端口（例如`12004`）。发送的数据包的源IP和Port变为`194.47.156.230:12004`，最终形成`192.168.1.23:10320 -> WAN Port 12004 -> 17.253.144.10:80`的映射
 
-公网主机收到后回复一个数据包，路由器进行以下操作：
+公网主机收到后回复一个数据包，网关进行以下操作：
 
 > 发现WAN端口`12004`收到了来自`17.253.144.10:80`的数据包。经过查表将目标IP和Port改为`192.168.1.23:10320`，发送给私有网络内的主机
 
-NAT的应用场景不限于以上示例。Outbound NAT时，数据从私有网络发送往上层网络，不同的内网`host:port`访问相同的外网`host:port`，必须分配不同的WAN端口（如果访问不同外网`host:port`，可以分配相同WAN端口，但是没必要这么做。而相同内网`host:port`访问不同外网`host:port`，也可以分配相同的WAN端口）。Inbound NAT时，NAT路由直接查询之前的表格就可以确定内网的`host:port`
+NAT的应用场景不限于以上示例。Outbound NAT时，数据从私有网络发送往上层网络，不同的内网`host:port`访问相同的外网`host:port`，必须分配不同的WAN端口（如果访问不同外网`host:port`，可以分配相同WAN端口，但是没必要这么做。而相同内网`host:port`访问不同外网`host:port`，也可以分配相同的WAN端口）。Inbound NAT时，NAT网关直接查询之前的表格就可以确定内网的`host:port`
 
 > 对于`TCP`和`UDP`来说NAT的端口保留机制有所不同
 >
-> `TCP`中使用`<src addr, src port, dest addr, dest port>`定义一个唯一的连接，一个公网端口需要在`TCP`通信过程中全程保留。每建立一个新的连接，路由器需要为该连接分配一个公网`port`，该连接未释放前其他**从私有网络**访问同一`<dest addr, dest port>`的`TCP`连接不得使用该端口，**所谓保留本质就是避免这种冲突**。路由器需要监视`TCP`的**连接状态**，断开连接后才可以释放该端口（可能会在一段较长的延时之后），该端口归入可用端口池，可以重新用于其他`TCP`连接
+> `TCP`中使用`<src addr, src port, dest addr, dest port>`定义一个唯一的连接，一个公网端口需要在`TCP`通信过程中全程保留。每建立一个新的连接，网关需要为该连接分配一个公网`port`，该连接未释放前其他**从私有网络**访问同一`<dest addr, dest port>`的`TCP`连接不得使用该端口，**所谓保留本质就是避免这种冲突**。网关需要监视`TCP`的**连接状态**，断开连接后才可以释放该端口（可能会在一段较长的延时之后），该端口归入可用端口池，可以重新用于其他`TCP`连接
 >
-> `UDP`由于是无状态协议，路由器无需跟踪连接状态。一个`UDP`数据包发送时路由器立即分配端口并保留一段较短时间即可释放（可能几秒到十几秒），这段时间**私有网络**内从其他`<src addr, src port>`访问同一`<dest addr, dest port>`的`UDP`数据包不可使用该端口
+> `UDP`由于是无状态协议，网关无需跟踪连接状态。一个`UDP`数据包发送时网关立即分配端口并保留一段较短时间即可释放（可能几秒到十几秒），这段时间**私有网络**内从其他`<src addr, src port>`访问同一`<dest addr, dest port>`的`UDP`数据包不可使用该端口
 
 ## 4.7 ECN
 
@@ -2573,7 +2573,7 @@ finished_label
 
 通过以上介绍，我们可以发现两者最大的区别在于**预备密钥**的生成方法。`RSA`的预备密钥在客户端随机生成，并且需要在加密后直接通过网络传输。而`ECDH`方案的预备密钥由双方自行计算得出，无需通过网络传输，这是`ECDH`的优势之一
 
-此外，`ECDH`相比`RSA`还具备**前向安全性**。`RSA`中预备密钥仅仅由服务器内SSL证书的公钥加密，一旦某一天服务器的私钥泄漏（暴力计算通常较为耗时，更多的是通过一些手段直接获取），客户端之前发送的所有**预备密钥**都将暴露，从而使得所有会话中传输过的数据都暴露。`ECDH`每个会话都会使用临时密钥，即便服务器的私钥泄漏，也只能暴露客户端的临时公钥，不会影响其他传输过的数据（同时直接获取私钥也几乎不可能）
+此外，`ECDH`相比`RSA`还具备**前向安全性**。`RSA`中预备密钥仅仅由服务器内SSL证书的公钥加密，一旦某一天服务器的私钥泄漏（暴力计算非常耗时，更多的是通过一些手段直接获取），客户端之前发送的所有**预备密钥**都将暴露，从而使得所有会话中传输过的数据都暴露。`ECDH`每个会话都会使用临时密钥，即便服务器的私钥泄漏，也只能暴露客户端的临时公钥，不会影响其他传输过的数据（同时直接获取私钥也几乎不可能）
 
 > 在最新的`TLS 1.3`中已经废弃了普通的`RSA`交换算法
 >
@@ -2766,9 +2766,9 @@ signatureValue
 >
 > 证书签发时，CA首先生成非对称密钥，用于根证书并自签名。根证书中包含公钥，以及使用对应私钥对`tbs`哈希值进行加密得到的签名
 >
-> CA再重新生成非对称密钥，用于生成CA次级证书的CSR（`Certificate Signing Request`，使用`pkcs`格式），该CSR包含了新密钥的公钥，以及使用新密钥私钥生成的`tbs`签名。使用根证书签名时签发方首先会通过CSR给定公钥解密验证CSR签名，之后填写`Issuer`等信息，重新计算`tbs`哈希，并使用根证书私钥签名，生成次级证书（`x509`格式，注意此时`tbs`内公钥依旧是新密钥的公钥）
+> CA再重新生成非对称密钥，用于生成CA次级证书的CSR（`Certificate Signing Request`，使用`pkcs`格式），该CSR包含了新密钥的公钥，以及使用新密钥私钥生成的`tbs`签名。使用根证书签名时签发方首先会通过CSR给出的公钥解密验证CSR签名，之后填写`Issuer`等信息，重新计算`tbs`哈希，并使用根证书私钥签名，生成次级证书（`x509`格式，注意此时`tbs`内公钥依旧是新密钥的公钥）
 >
-> 站点生成自己的非对称密钥并提交CSR给CA签名。同样CA首先使用CSR中站点的公钥验证CSR签名，之后进行`Issuer`等信息的填充（此时填充的是CA次级证书对应的信息，**同时需要包含获取次级证书的URI**），最后重新算哈希并使用次级证书公钥签名，生成证书返还站点
+> 站点生成自己的非对称密钥并提交CSR给CA签名。同样CA首先使用CSR中站点的公钥验证CSR签名，之后进行`Issuer`等信息的填充（此时填充的是CA次级证书对应的信息，**同时需要包含获取次级证书的URI**），最后重新算哈希并使用次级证书私钥签名，生成证书返还站点
 
 > 证书校验时，客户端预先安装了根证书。客户端首先获取了站点的证书以及对应的CA次级证书，并分别提取公钥，对所有证书进行解密与哈希校验。之后客户端依据次级证书的`Issuer`提示在本地找到了根证书，并提取公钥对次级证书签名进行了校验。此时校验成功，站点证明了合法身份
 
@@ -3090,11 +3090,11 @@ https://www.chromium.org/quic/
 >
 > 目前`QUIC`依旧处于[重复造轮子](https://github.com/quicwg/base-drafts/wiki/Implementations)的阶段，有多种实现且集成于各应用中，例如符合IETF标准的就可以称为`IETF QUIC`，而Google开发的版本就称为`Google QUIC`。现在的`IETF QUIC`相比`Google QUIC`**已经有了很多的改动，基本可以算是一个完全不同的协议了**。使用Wireshark抓取不同软件的`QUIC`包可以观察发现许多的差异
 >
-> 未来`QUIC`可能会像`TCP`一样集成到操作系统中。但由于`QUIC`是一种复杂的协议，这需要大量的工作，包括网络设施的更新，操作系统的更改，API接口的标准化。`QUIC`规范化可能需要耗费很多年时间。即便是现在的`TCP`相比最早期的版本也有了很多的更改，而其最终还是由`Berkeley/POSIX sockets`统一了接口
+> 未来`QUIC`有可能会像`TCP`一样成为操作系统的一个可用组件。但由于`QUIC`是一种复杂的协议，这需要大量的工作，包括网络设施的更新，操作系统的更改，API接口的标准化。`QUIC`规范化可能需要耗费很多年时间。即便是现在的`TCP`相比最早期的版本也有了很多的更改，而其最终还是由`Berkeley/POSIX sockets`统一了接口
 >
 > `TCP`和`UDP`的同号端口是不相关的。目前依然有很多网站并未使用`QUIC`，为解决兼容问题，目前的浏览器访问一般网站时都是先基于`TCP TLS`协议栈握手以后再由服务器通知浏览器发起`QUIC`连接的。这样在使用浏览器时并不能发挥`QUIC`的`0-RTT`应有的优势，仅仅是利用了`QUIC`的数据并行能力（`TCP TLS HTTP/2`同样能做到数据流并行，但是长远看来新协议栈会有优势。此外专用软件如APP可以不用考虑这样的兼容问题）
 >
-> 由于`QUIC`基于`UDP`，它在未得到广泛应用之前部分网络设施对`UDP`数据流的处理方式不太友好。这会限制`QUIC`的性能发挥
+> 由于`QUIC`基于`UDP`，运营商网络设施对`UDP`数据流的处理方式不太友好。这会限制`QUIC`的性能发挥
 
 虽然`QUIC`是传输层协议，但是`QUIC`实际上包含了以往`HTTP`应用体系中传输层和应用层的部分功能。下图截自Wikipedia
 
@@ -4805,6 +4805,9 @@ RFC9002
 ### 5.7.2 数据包保护
 
 
+## 5.8 KCP
+
+
 
 ## 6 应用层
 
@@ -4832,7 +4835,7 @@ RFC9002
 >
 > **缓存**是一种特殊的代理，它的主要作用是缓存常用的资源，使得客户端访问速度更快，同时减轻服务器负担
 >
-> **网关**gateway是一种特殊的代理，它主要用于协议的转换，例如接收`HTTP`请求并使用`FTP`协议到其他服务器获取资源
+> **网关**gateway是一种特殊的代理，它主要用于协议的转换，例如接收`HTTP`请求并使用`FTP`协议到其他服务器获取资源，Web服务器主要就提供了网关的功能
 >
 > **隧道**tunnel也可以算一种特殊的代理，通常需要两台中间服务器。两台服务器之间的数据相当于在原有的数据流上再添加了一层`HTTP`包装（它们分别负责打包和还原），这样就可以使得`TLS`流量流过仅允许`HTTP`流量的线路了
 >
@@ -4860,7 +4863,7 @@ magnet:?xt=urn:btih:8402E328F819AADD68A333A75729DE890F8...
 
 `HTTP`报文主要由`start line`，`header`，`body`**三大部分**组成。而`HTTP`报文按照方向分为`Inbound`和`Outbound`，是相对于服务器而言的。而数据发送方永远位于接收方上游`Upstream`，相反接收方位于发送方下游`Downstream`
 
-在`HTTP/1.1`中，`start line`起始行以及`header`都是直接使用**字符行**形式，每一项都以`\r\n`（`\x0d\x0a`）回车换行结尾。而`body`就是该`HTTP`数据包搭载的必要数据（实体）。客户端发送的请求中，通常只有`POST`和`PUT`会拥有`body`
+在`HTTP/1.1`中，`start line`起始行以及`header`都是直接使用**字符行**形式，每一项都以`\r\n`（`\x0d\x0a`）回车换行结尾。而`body`就是该`HTTP`数据包搭载的必要数据（实体）。客户端发送的请求中，通常只有`POST`和`PUT`会拥有`body`，而有`body`的`GET`数据包是不符合规范的
 
 **客户端的请求报文**
 
@@ -4881,7 +4884,7 @@ magnet:?xt=urn:btih:8402E328F819AADD68A333A75729DE890F8...
 >
 > `headers`中的一个值可以拥有多个**延续行**（为了可读性），该延续行开头必须要有` `空格或`\t`制表符
 >
-> `headers`分为通用，请求，响应，Body，扩展共五大类
+> `headers`按含义和作用分为通用，请求，响应，Body，扩展共五大类
 
 **服务器的响应报文**
 
@@ -5019,7 +5022,9 @@ magnet:?xt=urn:btih:8402E328F819AADD68A333A75729DE890F8...
 
 `DNS`全称`Domain Name System`，负责域名到地址的解析
 
-IP地址难以记忆。且如果一个网站更换了IP，访问它的客户端就不得不更改访问配置。`DNS`应运而生，并且已经成为了最老的应用层协议之一。此外`DNS`也可以起到负载均衡的作用（在分布式系统中）
+IP地址难以记忆。且如果一个网站更换了IP，访问它的客户端就不得不更改访问配置。`DNS`应运而生，并且已经成为了最老的应用层协议之一。此外`DNS`也可以起负载均衡的作用
+
+为了方便理解DNS数据包格式，可以结合Wireshark抓包观察
 
 ### 6.3.1 域名基本概念
 
@@ -5035,47 +5040,37 @@ IP地址难以记忆。且如果一个网站更换了IP，访问它的客户端�
 
 `DNS`系统由**边缘服务器**（称为`Recursive Server`或`Caching Server`），**权威服务器**（称为`Authoritative Server`或`Iterative Server`）以及**客户端**（`Client`）三大角色构成。客户端向边缘DNS服务器发送域名查询请求，如果边缘服务器没有在缓存中查找到对应信息，就需要代客户端向权威服务器发送请求，获取到信息以后回复给客户端
 
-权威服务器有主服务器`Master`和从服务器`Slave`之分。每台服务器都会存储一张信息表，称为`Resource Records`（`RR`），其中包含该服务器知晓的域名信息，一台服务器的`RR`的集合称为一个`Zone`。更高级别的服务器中包含的`RR`可能指向更低级别服务器地址，告知边缘服务器询问该更低级别的权威服务器（等级是相对的，实际应用中等级并没有绝对的高低之分。上述步骤称为下放`delegation`）
+权威服务器有主服务器`Master`（或`Primary`）和从服务器`Slave`（或`Secondary`）之分。每台服务器都会存储一张信息表，称为`Resource Records`（`RR`），其中包含该服务器知晓的域名信息，一台服务器的`RR`的集合称为一个`Zone`。更高级别的服务器中包含的`RR`可能指向更低级别服务器地址，告知边缘服务器询问该更低级别的权威服务器（等级是相对的，两台服务器的等级不一定有绝对的高低之分。高等级服务器将`RR`信息传送给低等级服务器的行为称为下放`delegation`）
 
 世界上存在最高等级的`DNS`服务器，这就是根服务器。它们必须知晓所有的顶级域信息（无论是IP地址还是指向其他`DNS`服务器），例如`.com .org`等
 
-边缘服务器在接收到客户端的`DNS`请求后，首先会查找缓存是否有已有的记录。如果没有，再按从高级权威服务器到低级权威服务器的顺序进行询问，直到有权威服务器给出具体的IP地址
+边缘服务器在接收到客户端的`DNS`请求后，首先会查找缓存是否已经有对应的记录。如果没有，再按一定顺序（例如从高级权威服务器到低级权威服务器的顺序）进行询问，直到有权威服务器给出具体的IP地址
 
-> `DNS`服务器监听`TCP`和`UDP`的`53`端口，其中通过`UDP`传输的数据包不超过`512`字节，更大的数据包需要使用`TCP`传输。通常**边缘服务器**和**客户端**之间优先使用`UDP`进行数据传输（大小不够再使用`TCP`），而**边缘服务器**和**权威服务器**之间的数据交换经常使用`TCP`传输
+> 递归查询需要由边缘DNS服务器执行全部任务，最终将结果发送回客户端。一次查询过程中，客户端和边缘服务器之间只有一来一回两个数据包。同时边缘服务器也承担了缓存查询结果的任务，以尽量降低权威服务器的压力
+>
+> **权威服务器通常不会同时提供递归查询服务**，客户端也就无法直接询问权威服务器。每一台权威服务器都只能回答有限的问题
 
+> `DNS`服务器监听`TCP`和`UDP`的`53`端口，由于`UDP`数据包不能超过`512`字节，更大的数据包需要使用`TCP`传输。通常**边缘服务器**和**客户端**之间都是使用`UDP`进行数据传输，而**边缘服务器**和**权威服务器**之间的数据会使用`TCP`传输
+
+这里我们只讨论客户端和边缘服务器之间交换的数据。而DNS协议本身是设计成可以同时用于客户端-边缘服务器、边缘服务器-权威服务器之间的数据传输
 
 ### 6.3.3 Resource Records
 
-一条`RR`数据包含如下内容
+在DNS协议中，一条`RR`数据可以看成是由如下内容组成的（这里描述的不是数据包格式。格式见下一小节）
 
 |  |  |
 | :- | :- |
 | `owner` | 域名，即`Name` |
-| `type` | `RR`数据类型，可以为`A`IPv4地址，`AAAA`IPv6地址，`PTR`反向解析（地址到域名），`CNAME`别名（获取到真正域名后需要再次请求并返回结果），`MX`该域名相关的邮件服务域名+优先级，`NS`下一级`DNS`服务器地址（域名形式），`SOA`列表起始，`TXT`普通字符，`HINFO`处理器和系统类型 |
+| `type` | `RR`数据类型，可以为`A`IPv4地址，`AAAA`IPv6地址，`PTR`反向解析（地址到域名），`CNAME`别名（别名，先请求一次获取到的真正域名，之后再次请求并返回结果），`MX`为该域名相关的邮件服务域名+优先级，`NS`为下一级`DNS`服务器地址（域名形式），`SOA`表示`Authority Zone`起始（`Start Of a zone of Authority`），`TXT`表示普通字符，`HINFO`为处理器和系统类型 |
 | `class` | 永远为`IN`，指`Internet` |
-| `TTL` | `Time to live`，该`RR`的有效期，单位秒 |
-| `RDATA` | 数据，内容取决于`type` |
+| `TTL` | `Time to live`，该`RR`的有效期，单位秒。不同的`RR`会有不同的`TTL` |
+| `RDATA` | 数据存储区，内容取决于`type` |
 
-> `PTR`反向解析需要使用`in-addr.arpa`作为`Name`
-
-Linux下可以使用`dig`命令向指定`DNS`服务器发送请求
-
-```
-dig @10.80.192.1 github.com A
-```
-
-部分测试结果
-
-```
-owner           TTL     class   type    RDATA
-
-github.com.		9	    IN      A       140.82.121.3
-github.com.		3600	IN      MX      1 aspmx.l.google.com.
-pixiv.net.		240     IN      A       210.140.92.193
-netflix.com.	51      IN      AAAA    2a05:d018:76c:b683:a2cd:4240:8669:6d4
-```
+> `PTR`反向解析需要在`RR`中使用固定的`in-addr.arpa`作为`Name`
 
 ### 6.3.4 DNS数据包格式
+
+DNS数据包中，通常只有边缘服务器回复的数据包会使用`RR`（放在`Answer`，`Authority`，`Additional`中）搭载信息；而客户端发送的请求数据包会将请求要素都记录在`Question`中，客户端发送的数据包经常是没有`RR`的
 
 `DNS`数据包格式如下
 
@@ -5093,17 +5088,19 @@ netflix.com.	51      IN      AAAA    2a05:d018:76c:b683:a2cd:4240:8669:6d4
     +---------------------+
 ```
 
-> 所有的`DNS`数据包都有数据头，而之后的`Question` `Answer` `Authority` `Additional Information`都是可选的，视具体情况而定
+> 所有的`DNS`数据包都有数据头`Header`，而之后的`Question`，`Answer`，`Authority`，`Additional Information`区域都是可选的，视具体情况而定
 >
-> `Question`包含了查询请求的`QTYPE` `QCLASS`和`QNAME`。而后面的三个格式相同，都由`RR`组成
+> `Question`包含了查询请求的`QTYPE`，`QCLASS`和`QNAME`
 >
-> `Answer`包含了直接对应`Question`请求内容的回复（`RR`），可以是`MX`（指出域名邮件服务对应的域名）
+> 后面的三个域`Answer`，`Authority`，`Additional`格式相同，都由`RR`组成
 >
-> `Authority`通常用于搭载`NS`的`RR`（给出下一级`DNS`的域名），可能包含`SOA`
+> `Answer`用于存放直接对应`Question`询问内容的回复列表（`RR`）。这里的`RR`类型可以是`MX`（指出域名对应的邮件域名）
 >
-> `Additional information`搭载额外的有用信息，通常对应上面`MX`或`NS`的补充性信息，例如下一级`DNS`服务器域名对应的IP地址（类型`A`或`AAAA`）
+> `Authority`通常用于给出`NS`信息（给出下一级`DNS`的域名），可能包含`SOA`
+>
+> `Additional information`搭载额外的有用信息，通常对应上面`MX`或`NS`的补充性信息，例如下一级`DNS`服务器域名对应的IP地址（类型为`A`或`AAAA`）
 
-其中`Header`格式如下
+数据包开头的`Header`格式如下，请求和回复数据包都使用这个格式
 
 ```
                                     1  1  1  1  1  1
@@ -5127,16 +5124,16 @@ netflix.com.	51      IN      AAAA    2a05:d018:76c:b683:a2cd:4240:8669:6d4
 
 | 域 | 作用 |
 | :- | :- |
-| `ID` | `Transaction ID`，每次请求和对应的回复使用相同的`Transaction ID` |
+| `ID` | `Transaction ID`，**每一对**请求和回复使用相同的`Transaction ID` |
 | `QR` | `0`表示请求，`1`表示回复 |
 | `Opcode` | 操作类型，`0`为正向解析请求，`1`为反向解析请求，`2`为状态请求（`2`不常用） |
-| `AA` | 指示位`Authoritative Answer`，**权威服务器**回复的数据包（服务器有该请求域名对应的`RR`项）中该位通常会置位 |
-| `TC` | 指示位`TrunCation`，表示信息长度超过`UDP`的`512`字节限制，需要重新使用`TCP`传输 |
-| `RD` | 指示位`Recursion Desired`，通知**边缘服务器**进行递归式请求。在**客户端**和**边缘服务器**间的数据包中常见（请求对应的回复也要置位） |
-| `RA` | 指示位`Recursion Available`，在服务器的回复中表示是否支持递归式解析 |
+| `AA` | Flag位`Authoritative Answer`，**权威服务器**回复的数据包（服务器有该请求域名对应的`RR`项）中该位通常会置位。由于我们请求的是边缘服务器，在抓包中基本不出现 |
+| `TC` | Flag位`TrunCation`，表示信息长度超过`UDP`的`512`字节限制，需要重新使用`TCP`传输。同上，基本不出现 |
+| `RD` | Flag位`Recursion Desired`，通知**边缘服务器**进行递归式请求。大部分请求都会置位（对于一个`RD`置位的请求，其对应的回复中`RD`也要置位） |
+| `RA` | 指示位`Recursion Available`，在服务器的回复中表示它自己是否支持递归式解析 |
 | `Z` | 保留 |
 | `RCODE` | 回复状态码。`0`正常，`1`请求格式错误`Format error`，`2`服务器错误`Server failure`，`3`权威服务器未找到域名`Name error`，`4`不支持的请求`Not implemented`，`5`服务器拒绝请求`Refused` |
-| `QDCOUNT ANCOUNT NSCOUNT ARCOUNT` | 分别表示`Question Answer Authority Addtional`的入口数量 |
+| `QDCOUNT ANCOUNT NSCOUNT ARCOUNT` | 分别表示`Question Answer Authority Addtional`的**入口数量** |
 
 ### 6.3.5 Question数据格式
 
@@ -5154,15 +5151,15 @@ netflix.com.	51      IN      AAAA    2a05:d018:76c:b683:a2cd:4240:8669:6d4
     +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
 ```
 
-> 在`DNS`域名的数据表示中，每一个`label`都有一个字符串长度前缀（占`1`字节）。`www.metal-archives.com`在`DNS`中使用`[3]www[14]metal-archives[3]com[0]`表示，长度`24`字节
+> 在域名的数据表示中，每一个`label`（每一个由`.`分隔的域）都有一个字符串长度前缀（占`1`字节）。`www.metal-archives.com`在`DNS`中使用`\x03www\x0Emetal-archives\x03com\x00`表示，长度`24`字节
 >
 > 长度前缀只能取`0x00`到`0x3F`，`192`及以上的前缀为特殊前缀`0xC0`开始
 
 > `QNAME`为上述格式的域名数据。长度可以是奇数，且无需对齐
 >
-> `QTYPE`同`RR`的`type`，定义见下
+> `QTYPE`同`RR`的`type`，表示请求边缘服务器回复的数据类型，定义见下
 >
-> `QCLASS`同`RR`的`class`，为`IN`（`1`）
+> `QCLASS`同`RR`的`class`，恒定为`IN`（`1`）
 
 | QTYPE号 | 定义 |
 | :- | :- |
@@ -5170,7 +5167,7 @@ netflix.com.	51      IN      AAAA    2a05:d018:76c:b683:a2cd:4240:8669:6d4
 | `2` | `NS`，下一级`DNS`服务器地址（域名形式） |
 | `3` | 淘汰 |
 | `4` | 淘汰 |
-| `5` | `CNAME`，别名，获取到真正域名后需要再次请求并返回结果 |
+| `5` | `CNAME`，Canonical Name，别名，获取到真正域名后需要再次请求并返回结果。可以将一个提供单一服务的子域名映射到一个更高级的域名，例如将`git.example.com`映射到`example.com`，由该主机提供服务 |
 | `6` | `SOA`，zone列表的起始 |
 | `7` | 实验 |
 | `8` | 实验 |
@@ -5190,7 +5187,7 @@ netflix.com.	51      IN      AAAA    2a05:d018:76c:b683:a2cd:4240:8669:6d4
 
 ### 6.3.6 RR数据格式
 
-该数据格式用于`Answer` `Authority`和`Addtional`，是这些数据域的基本组成单元
+该数据格式用于`Answer`，`Authority`和`Additional`，是这些数据域的基本组成单元
 
 ```
                                     1  1  1  1  1  1
@@ -5215,9 +5212,9 @@ netflix.com.	51      IN      AAAA    2a05:d018:76c:b683:a2cd:4240:8669:6d4
     +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
 ```
 
-> 定义和[之前介绍的](#633-resource-records)相同。相比添加了`RDLENGTH`表明`RDATA`数据域的长度
+> 前面部分定义和[Question格式](#633-resource-records)相同。相比添加了`TTL`表示`RR`的寿命，而`RDLENGTH`表明`RDATA`数据域的长度
 
-`A`和`AAAA`类型数据长度分别`4`字节和`16`字节
+`A`和`AAAA`类型数据长度分别`4`字节和`16`字节（IPv4长度和IPv6长度）
 
 `HINFO`格式如下
 
@@ -5271,20 +5268,117 @@ netflix.com.	51      IN      AAAA    2a05:d018:76c:b683:a2cd:4240:8669:6d4
 同样的域名在一个`DNS`数据包中通常只需出现一次即可。这使用到了[之前](#635-question数据格式)介绍域名表示格式时的长度前缀特殊值。这个特殊值之后的`1`字节表示域名字符串的起始位置，可以通过下面的抓包理解
 
 ```
-dig @10.80.192.1 netflix.com
+$ dig @10.80.192.1 netflix.com
 ```
 
 `netflix.com`第一次出现的位置
 
 ![](images/221112a045.png)
 
-第二次出现的位置，直接使用`0xc0 0x0c`代替。`0x0c`正是字符串`netflix.com`开头的`0x07`在`DNS`数据中的地址
+第二次出现的位置，直接使用`0xc0 0x0c`代替。`0x0c`正是字符串`netflix.com`开头的`0x07`在`DNS`数据中的偏移地址
 
 ![](images/221112a046.png)
 
-### 6.3.7 DNS抓包
+### 6.3.7 使用命令行发送DNS请求与抓包
 
-使用`host`命令，会请求IPv4、IPv6以及邮件
+**使用**`dig`**命令**
+
+Linux下可以使用`dig`命令向指定`DNS`服务器发送请求
+
+```
+$ dig @8.8.8.8 github.com A
+```
+
+得到如下结果
+
+![](images/221112a078.png)
+
+`dig`发送的请求数据包
+
+![](images/221112a079.png)
+
+服务器`8.8.8.8`回复的数据包
+
+![](images/221112a080.png)
+
+使用`dig`命令，默认只会请求IPv4，也就是说`RR`类型为`A`
+
+```
+$ dig @10.80.192.1 github.com
+```
+
+![](images/221112a047.png)
+
+也可以请求其他类型的`RR`，示例
+
+```
+$ dig @8.8.8.8 github.com NS
+
+; <<>> DiG 9.18.21 <<>> @8.8.8.8 github.com NS
+...
+;; flags: qr rd ra; QUERY: 1, ANSWER: 8, AUTHORITY: 0, ADDITIONAL: 1
+...
+;; QUESTION SECTION:
+;github.com.			IN	NS
+
+;; ANSWER SECTION:
+github.com.		3153	IN	NS	dns1.p08.nsone.net.
+github.com.		3153	IN	NS	dns2.p08.nsone.net.
+github.com.		3153	IN	NS	dns3.p08.nsone.net.
+github.com.		3153	IN	NS	dns4.p08.nsone.net.
+github.com.		3153	IN	NS	ns-1283.awsdns-32.org.
+github.com.		3153	IN	NS	ns-1707.awsdns-21.co.uk.
+github.com.		3153	IN	NS	ns-421.awsdns-52.com.
+github.com.		3153	IN	NS	ns-520.awsdns-01.net.
+...
+
+$ dig @8.8.8.8 github.com AAAA
+
+; <<>> DiG 9.18.21 <<>> @8.8.8.8 github.com AAAA
+...
+;; flags: qr rd ra; QUERY: 1, ANSWER: 0, AUTHORITY: 1, ADDITIONAL: 1
+...
+;; QUESTION SECTION:
+;github.com.			IN	AAAA
+
+;; AUTHORITY SECTION:
+github.com.		1469	IN	SOA	dns1.p08.nsone.net. hostmaster.nsone.net.
+...
+```
+
+> 上述我们请求的`AAAA`并没有得到直接回答，是一次失败请求，只是通过`SOA`给出了权威服务器的域名，最后的`Additional`中会包含出错原因
+
+**使用**`nslookup`**命令**
+
+`nslookup`默认会请求`A`（IPv4）和`AAAA`（IPv6）
+
+```
+$ nslookup github.com 8.8.8.8
+```
+
+同样可以和`dig`一样指定请求内容
+
+```
+$ nslookup -type=NS github.com 8.8.8.8
+Server:		8.8.8.8
+Address:	8.8.8.8#53
+
+Non-authoritative answer:
+github.com	nameserver = dns1.p08.nsone.net.
+github.com	nameserver = dns2.p08.nsone.net.
+github.com	nameserver = dns3.p08.nsone.net.
+github.com	nameserver = dns4.p08.nsone.net.
+github.com	nameserver = ns-1283.awsdns-32.org.
+github.com	nameserver = ns-1707.awsdns-21.co.uk.
+github.com	nameserver = ns-421.awsdns-52.com.
+github.com	nameserver = ns-520.awsdns-01.net.
+
+...
+```
+
+**使用**`host`**命令**
+
+`host`默认会请求IPv4、IPv6以及邮件
 
 ```
 host github.com
@@ -5292,14 +5386,153 @@ host github.com
 
 ![](images/221112a048.png)
 
-使用`dig`命令，默认只会请求IPv4
+
+### 6.3.8 现代操作系统环境的DNS查询流程
+
+受博客文章 https://nova.moe/rethink-type-url-dns/ 启发，结合一些实际考据，进行复述
+
+**有关NSS：一些事实**
+
+首先需要说明，`glibc`集成了NSS（Name Service Switch facility），它为这个操作系统的应用提供了各种名字服务的调用方法，例如主机名，网络域名，用户名等。NSS可以访问`/etc/passwd`，`/etc/group`，`/etc/hosts`等本地文件，也可以直接发起DNS解析请求（使用`nss-dns`插件）
+
+所有基于`glibc`的Linux发行版，以及FreeBSD，NetBSD（基于或曾经基于`glibc`），会依赖NSS，它们都有一个`/etc/nsswitch.conf`文件，其中指定了各项服务对应的数据库，例如`group`名字服务对应`file`数据库实际是查询`/etc/group`；而`hosts`名字服务（主机名解析服务）对应`resolve`数据库是向`systemd-resolved`发送查询请求
+
+对于DNS域名解析支持，`glibc`给了`getaddrinfo()`供应用程序调用，而`glibc`的域名解析服务会读取`/etc/resolv.conf`来确定DNS服务器地址，从而发起请求
+
+> 操作系统的网络管理守护进程可能会根据配置自动更改`/etc/nsswitch.conf`和`/etc/resolv.conf`
+
+ArchLinux下可以使用`getent`命令来调用`/etc/nsswitch.conf`中列出的名字服务
 
 ```
-dig @10.80.192.1 github.com
+$ getent group root
+root:x:0:brltty,root
+
+$ getent hosts github.com
+64:ff9b::8c52:7903 github.com
+
+$ getent hosts localhost
+::1             localhost
 ```
 
-![](images/221112a047.png)
+**浏览器的DNS记录缓存**
 
+对于DNS解析结果，现在的浏览器可以支持缓存（host resolver cache），在Chromium中最多会缓存1000条DNS记录
+
+根据实际测试，以`github.com`为例，我们的DNS服务器返回的`A`记录的`TTL`为`37`秒，如下
+
+![](images/221112a081.png)
+
+此次刷新页面`37`秒后，我们再次刷新页面，通过Wireshark发现浏览器又发送了一次DNS请求查询`github.com`的地址。而如果在DNS给出的`TTL`时间之内刷新，则不会出现新的DNS请求
+
+![](images/221112a082.png)
+
+`chromium`浏览器的DNS缓存记录可以通过页面`chrome://net-export`导出，并按照指示查看
+
+**NSS的查询功能**
+
+浏览器只有DNS缓存没有命中，才会调用`glibc`函数`getaddrinfo()`来发起DNS请求，此时这个请求就会被Wireshark捕获到（如果通过`nss-dns`或`nss-resolve`发起）。这里开始就涉及到`getaddrinfo()`是如何查询域名的问题
+
+不同的Linux主机因为会使用不同的网络管理程序，网络配置，会安装不同的软件（例如容器、虚拟机），`/etc/nsswitch.conf`也是不同的
+
+以下是博客作者`nsswitch.conf`的`hosts`行配置
+
+```
+hosts: files myhostname mdns4_minimal [NOTFOUND=return] resolve [!UNAVAIL=return] dns
+```
+
+而在本机上`nsswitch.conf`的`hosts`行配置如下
+
+```
+hosts: mymachines resolve [!UNAVAIL=return] files myhostname dns
+```
+
+> `mymachines`是查询本机已经注册的虚拟机/容器名，`resolve`表示向`systemd-resolved`发起请求，`files`会直接查询本地文件例如`/etc/hosts`，`myhostname`表示查询本机主机名，`dns`表示由`glibc`的`nss-dns`插件直接发起DNS请求
+
+更早期的`glibc`中是使用`gethostbyname()`（deprecated）。而较新的`getaddrinfo()`在解决`gethostbyname()`不可重入问题的同时，也集成了`getservbyname()`的功能（`man getaddrinfo`）
+
+`getaddrinfo()`使用`struct addrinfo`存储`socket`相关信息。以下Demo程序使用`getaddrinfo()`发起对域名`github.com`的查询，输出对应的IPv4地址
+
+```
+#include <stdio.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <netdb.h>
+
+static const char name[] = "github.com";
+static const struct addrinfo hint = {
+    .ai_flags = AI_V4MAPPED | AI_ADDRCONFIG,
+    .ai_family = AF_INET,
+    .ai_socktype = SOCK_STREAM,
+    .ai_protocol = 0,
+    .ai_addrlen = 0,
+    .ai_addr = NULL,
+    .ai_canonname = NULL,
+    .ai_next = NULL 
+};
+
+int
+main(int argc, char* argv[]) {
+    struct addrinfo *ai_arr, *p;
+    char *addr;
+    if (getaddrinfo(name, NULL, &hint, &ai_arr)) {
+        fprintf(stderr, "Error occurred while getting address\n");
+        return 1;
+    }
+    p = ai_arr;
+    while (p != NULL) {
+        if (p->ai_family == AF_INET) {
+            addr = p->ai_addr->sa_data;
+            fprintf(stdout, "IPv4 address: ");
+            for (int i = 2; i < 6; i++) {
+                fprintf(stdout, "%d ", (uint8_t)addr[i]);
+            }
+            fprintf(stdout, "\n");
+            break;
+        } else {
+            p = p->ai_next;
+        }
+    }
+    freeaddrinfo(ai_arr);
+    return 0;
+}
+```
+
+`nsswitch.conf`**配置文件中各个数据源的含义**
+
+这里将本机配置再放一遍
+
+```
+hosts: mymachines resolve [!UNAVAIL=return] files myhostname dns
+```
+
+> 在`systemd`没有造出`systemd-resolved`这个轮子之前，`glibc`使用`nss-dns`（配置文件中为`dns`）插件来直接发起DNS查询请求。而在`systemd-resolved`出现以后，`glibc`给它专门设计了一个`nss-resolve`模块，如果在`/etc/nsswitch.conf`中配置了查询`resolve`，在查询过程执行到这里时就会向`systemd-resolved`发起请求。应用程序可以通过D-Bus向该守护进程发送请求，可以通过`nss-resolve`访问，也可以直接向地址`127.0.0.53`发送请求
+>
+> 考虑到`systemd-resolved`未启动的情况，`[!UNAVAIL=return]`可以及时返回，执行后面的查询
+>
+> 在配置文件中，`resolve`应当放在较前的位置（在`files dns`之前），因为通过`files`直接读`/etc/hosts`文件速度较慢（尤其在文件较大的情况下）；而`systemd-resolved`不仅可以发起DNS查询请求，也会读取`/etc/hosts`以及查询本机`hostname`，同时也提供了缓存功能；`dns`放在靠后的位置是作为最终的解决方案
+
+> `mymachines`通常放在`resolve`之前。`systemd`提供了一个`systemd-machined`服务，虚拟机或容器管理工具可以将本机创建的实例的名称注册到`systemd-machined`。这样就可以在本机通过NSS得到这些容器/虚拟机实例的地址了。放在`resolve`之前是为了优先查找本地的这些实例
+
+> `myhostname`的功能已经被`systemd-resolved`包含。NSS可以通过直接调用`gethostname`获取本机主机名（`/etc/hostname`中配置的名称）、`/etc/hosts`中`localhost`、`_gateway`、`_outbound`对应的IP地址。这里依旧包含`myhostname`同样是考虑`systemd-resolved`未启动的情况，它的行为和`systemd-resolved`查询结果一致。它通常放在`dns`之前，`files`之后
+
+**总结**
+
+如果是通过浏览器发起一次DNS查询请求，首先需要经过浏览器的DNS查询结果缓存
+
+如果浏览器缓存未命中，浏览器会调用`glibc`的NSS功能，根据`/etc/nsswitch.conf`中`hosts`项配置的顺序逐个进行查询，直到获得有效的回复。查询的途径包括：
+
+> 本机的虚拟机/容器实例名
+>
+> `systemd-resolved`提供的查询服务（包含DNS请求，`/etc/hosts`文件，本机主机名等，有缓存功能）
+>
+> 直接读取本地`/etc/hosts`等文件
+>
+> 通过`gethostname`得到本机主机名，`localhost`等名称，并查询对应的地址
+>
+> 直接的DNS查询请求
 
 ## 6.4 DHCP
 
