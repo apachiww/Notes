@@ -17,6 +17,22 @@ ARMv7-M体系结构笔记[传送门](201020a_stm32.md)
 
 从普通爱好者角度，可以折腾的ARM SoC
 
+**一些可能感兴趣的信息与项目**
+
+ARM SoC mainline进展：参照[postmarketOS](https://wiki.postmarketos.org/wiki/Mainlining) [RK3588主线化](https://gitlab.collabora.com/hardware-enablement/rockchip-3588/notes-for-rockchip-3588/-/blob/main/mainline-status.md) [sunxi主线化](https://linux-sunxi.org/Linux_mainlining_effort)
+
+开源GPU驱动：[Mesa](https://gitlab.freedesktop.org/mesa/mesa) 支持的GPU: Lima (ARM Mali Utgard) Panfrost (ARM Mali Midgard and later) Imagination (Imagination Rogue) Etnaviv (Vivante) Freedreno (Qualcomm Adreno) Tegra (NVIDIA Tegra)
+
+Imagination GPU相关：[Wikipedia](https://en.wikipedia.org/wiki/PowerVR)
+
+为自己的ARM SoC编译构建Alpine：参照[Alpine wiki](https://wiki.alpinelinux.org/wiki/DIY_Fully_working_Alpine_Linux_for_Allwinner_and_Other_ARM_SOCs)
+
+Linux From Scratch：见[LFS](https://www.linuxfromscratch.org/)
+
+交叉工具链构建工具：[crosstool-NG](https://github.com/crosstool-ng/crosstool-ng)
+
+构建系统：[Buildroot](https://buildroot.org/) [Armbian构建系统](https://github.com/armbian/build) [OpenWrt构建系统](https://openwrt.org/docs/guide-developer/toolchain/use-buildsystem) [yocto](https://www.yoctoproject.org/)
+
 **中国厂商**
 
 御三家
@@ -26,6 +42,7 @@ ARMv7-M体系结构笔记[传送门](201020a_stm32.md)
     + 开发者论坛 https://bbs.aw-ol.com/
     + sunxi wiki https://linux-sunxi.org/Main_Page
     + 部分新产品文档 https://gitee.com/aw-sunxi/awesome-sunxi
+    + A523/A527/T523(?)/T527/MR527 (8xA55+1xRISCV(E906), sun55i new product 2023, 22nm)
     + A40i/V40/R40/T3 (4xA7, SATA, T3 no HDMI, 40nm)
     + T113-s3/T113-s4/R528 (2xA7 with 128MB/256MB SIP DDR3, T113-s3/s4 are eLQFP128 packaged, 22nm)
     + T113-i (2xA7+1xRISCV(C906), 22nm)
@@ -37,24 +54,23 @@ ARMv7-M体系结构笔记[传送门](201020a_stm32.md)
     + H3/H2+ (4xA7, 40nm)
     + V3s (1xA7 with 64MB DDR2, eLQFP128)
     + F1C100/200s (1xARM9 with DDR)
-    + 以下是未来会出的中高端型号（仅供参考）
-    + A523/A527/T523/T527/MR527/R828(?) (8xA55+1xRISCV(E906), A523 MR527 no HDMI, sun55i new product 2023, 22nm)（A523 A527 T527各有两个版本，只有T527(H02)为完整功能）
-    + A513 (4xA55, new product 2023/2024, 22nm)
-    + R923 (4xA73+4xA53+1xRISCV(E906), sun60i new product 2023/2024, 12nm)
-    + A736/T736 (2xA76+6xA55, IMG BXM GPU, sun60i new product 2023/2024, 12nm)
+    + 以下是未来（可能）会出的中高端型号（仅供参考）
+    + A513(?) (4xA55, new product 2023/2024, 22nm)
+    + R923(?) (4xA73+4xA53+1xRISCV(E906), sun60i new product 2024 Est. , 12nm)
+    + A736/T736 (2xA76+6xA55, IMG BXM GPU, sun60i new product 2024 Est. , 12nm)
     + A737/T737 (2xA78+6xA55, IMG BXM GPU, 12nm)
-    + 以下是sun50i系列。尽管为64位ARMv8，为减小芯片Die size，内部数据总线只有32位宽，可能遇到瓶颈
+    + 以下是sun50i系列，内部总线减配
     + A133/R818 (4xA53, IMG GE8300 GPU, 28nm)
     + H616/H618/T507 (4xA53, 28nm)
 + Rockchip 瑞芯微（福州）
     + Datasheet & TRM [Repo](https://github.com/DeciHD/rockchip_docs)
     + wiki https://opensource.rock-chips.com/wiki_Main_Page
     + RK3588/RK3588S (4xA76+4xA55+3xM0, 8nm)
-    + RK3576 (4xA72+4xA53, G52MC3 GPU, new product 2023/2024)
+    + RK3576 (4xA72+4xA53, G52MC3 GPU, new product 2024)
     + RK3566/RK3568/RK3568B2/RK3568J (4xA55+1xRISCV(RV32IMC), 22nm)
-    + RK3567 (4xA55, new product 2023/2024)
+    + RK3567 (4xA55)
     + RK3562 (4xA53, new product 2023)
-    + RK3528 (4xA53, new product 2023, Allwinner sun50i counterpart)
+    + RK3528 (4xA53, new product 2023, sun50i counterpart)
     + RK3399 (2xA72+4xA53+2xM0, 28nm)
     + RK3328 (4xA53, 28nm)
     + RK3326/PX30 (4xA35, 28nm)
@@ -75,7 +91,7 @@ ARMv7-M体系结构笔记[传送门](201020a_stm32.md)
     + S905X2/S905Y2 (4xA53, 12nm)
     + S905D/S905L/S905X (4xA53, 28nm)
 
-> 同一厂商参数相近的SoC经常会使用同一个Die，开启或屏蔽部分功能。通过配置特性或命名就能推测
+> 同一厂商参数相近的SoC经常会使用同一个Die，开启或屏蔽部分功能。根据CPU，GPU等关键配置就可以推测
 
 **国际厂商**
 
@@ -85,7 +101,8 @@ ARMv7-M体系结构笔记[传送门](201020a_stm32.md)
     + STM32MP2
 + NXP 恩智浦半导体
     + 文档开放
-    + i.MX
+    + i.MX6
+    + i.MX8
 + TI 德州仪器
     + 文档开放（需要注册）
     + Sitara AMxxxx
@@ -96,18 +113,18 @@ ARMv7-M体系结构笔记[传送门](201020a_stm32.md)
     + ATSAMA5
 + AMD Xilinx 赛灵思
     + FPGA+ARM混合。文档开放
-    + ZYNQ-7000
+    + ZYNQ-7000 XC7Z0XX
 + Qualcomm 高通
     + https://wiki.postmarketos.org/wiki/Mainlining
-    + MSM8916 (Snapdragon 410)/APQ8016 https://github.com/msm8916-mainline 
-    + MSM8939 (Snapdragon 615/616)
+    + MSM8916 (Snapdragon 410)/APQ8016 https://github.com/msm8916-mainline
     + SDM845 (Snapdragon 845)
 + Nvidia 英伟达
     + 文档开放（需要注册）
+    + Tegra K1 (2024 EoL)
 + Samsung 三星半导体
     + 大部分原有产品已停产。不推荐
 
-> 国际大厂ST，NXP，TI，Renesas的SoC通常性能一般，并且价格较高，但是文档开放，软件支持更好，稳定性优，更适合工业或车规产品，以及初学入门。而除手机、平板、电视外的商业消费电子，包括收银机、广告屏、机顶盒等基本由御三家方案主导。由于成本优势，近几年御三家的产品在工控和车载领域也已经有很多应用
+> 国际大厂ST，NXP，TI，Renesas的SoC通常性能一般，价格较高，但稳定性优，资料（相对）较全面，更适合工业或车规产品。很多Linux学习板都使用这些厂商的产品。而除手机、平板、电视外的商业消费电子，包括收银机、广告屏、机顶盒、便携式播放器等，基本由御三家方案主导。由于成本优势以及（相对的）性能进步，近几年全志和瑞芯微的产品在工控和汽车领域也有了更多应用
 
 
 ## 1 简介
@@ -146,7 +163,11 @@ MPCore，单个Cluster结构
 >
 > Cortex-A9使用AMBA3 AXI连接到L2缓存。L2不属于Cortex-A9的组成部分，但是几乎所有的SoC都会配备有L2
 >
-> 其他MPCore处理器除核心外，组成结构基本类似。ARM会推出拥有相近指令特性但能耗特性不同的MPCore处理器来组成big.LITTLE大小核。ARMv7中使用Cortex-A7和Cortex-A15组成大小核。而ARMv8常见的有Cortex-A53（高频）+Cortex-A53（低频）组合，Cortex-A53+Cortex-A57组合，Cortex-A53+Cortex-A72组合，Cortex-A53+Cortex-A73组合，Cortex-A55+Cortex-A76组合，Cortex-A55+Cortex-A77组合等。最新的ARMv9有Cortex-A510+Cortex-A710，X系列超大核也开始普及
+> 其他MPCore处理器除核心外，组成结构基本类似。支持的指令集或总线版本可能会有所不同
+>
+> ARM会推出拥有相近指令特性但能耗特性不同的CPU核来组成大小核，较早的大小核使用ARM的`big.LITTLE`技术（ARMv8.2以前的CPU核），它限定了一个Cluster至多只能有`4`个同类型核心；而ARMv8.2及以后的CPU核基本都支持新的`DynamIQ`大小核技术（从Cortex-A55，Cortex-A75开始，因此不会有类似A53配A75这样的组合），一个Cluster可以多于`4`个核，同时一个Cluster内可以存放任意数量组合的大小核心，并且不局限于同类型核心
+>
+> ARMv7中使用Cortex-A7和Cortex-A15组成大小核。而ARMv8常见的有Cortex-A53（高频）+Cortex-A53（低频）组合，Cortex-A53+Cortex-A72组合，Cortex-A53+Cortex-A73组合，Cortex-A55+Cortex-A76组合，Cortex-A55+Cortex-A77组合等。最新的ARMv9有Cortex-A510+Cortex-A710，X系列超大核也开始普及
 
 ## 1.4 其他关键特性
 
