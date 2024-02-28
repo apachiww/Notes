@@ -13,12 +13,15 @@
 | [ARMv7-M指令集](201020a_stm32.md#16-isa详解指令集) |
 | [ELF文件格式，程序链接与运行原理](220429a_compiler.md#1-elf文件结构) [ld链接脚本](201020a_stm32.md#4-ld链接器脚本) |
 | [Shell脚本](201219a_shell.md#2-shell脚本基础) |
-| [Awk字符串处理，正则表达式](201219a_shell.md#31-awk编程) |
+| [Awk脚本，正则表达式](201219a_shell.md#31-awk编程) |
 | [Tcl编程](201219a_shell.md#33-tcl编程) |
 | [Git教程](201219a_shell.md#35-git使用) |
+| [GPG与数据加密](201219a_shell.md#1130-gpg) |
 | [Docker](230709a_container.md#2-docker) [LXD](230709a_container.md#1-lxd) |
 | [iptables配置](210130a_install-notice.md#11-防火墙iptables) |
 | [IEEE754浮点数](200920c_verilog.md#51-IEEE754浮点数标准) |
+| [SELinux](210130a_install-notice.md#5-安全专题selinux) [AppArmor](210130a_install-notice.md#6-安全专题apparmor)|
+| [RS232串口](210524a_8051.md#8-补充rs232串口通信) |
 
 ## 列表
 
@@ -37,7 +40,7 @@
 | [201002b](201002b_calculus.md) | 高数，数学分析 | 0% |
 | [201002c](201002c_complex.md) | 复变函数 | 0% |
 | [201020a](201020a_stm32.md) | ARMv7-M体系结构以及STM32单片机开发 | 70% |
-| [201219a](201219a_shell.md) | Linux命令行，Shell脚本，Awk字符串处理，Tcl编程，Expect | 100% |
+| [201219a](201219a_shell.md) | Linux命令行，Shell脚本，Awk字符串处理，Tcl编程，Expect，Git教程 | 100% |
 | [201219b](201219b_makefile.md) | Makefile的用法，基于cmake和GNU make | 90% |
 | [201220a](201220a_mcu-ide.md) | MCU开发环境构建 | 10% |
 | [201220b](201220b_crack.md) | CTF相关实用技能摘录 | 0% |
