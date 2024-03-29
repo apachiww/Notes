@@ -51,15 +51,15 @@
 | [210110a](210110a_computer-arch.md) | 计算机体系结构以及处理器的设计 | 1% |
 | [210111a](210111a_qt.md) | Qt应用开发 | 0% |
 | [210115a](210115a_freebsd.md) | FreeBSD日常使用 | 80% |
-| [210130a](210130a_install-notice.md) | 各种类Unix的管理维护以及安全优化 | 10% |
+| [210130a](210130a_install-notice.md) | 类Unix管理维护以及安全优化，SELinux | 40% |
 | [210316a](210316a_computer-graphics.md) | 计算机图形学，Vulkan，OpenGL（GLSL） | 0% |
-| [210317a](210317a_parallel.md) | Linux并发编程，C++11线程库 | 0% |
+| [210317a](210317a_parallel.md) | Linux并发编程，C++11线程库，CUDA | 0% |
 | [210320a](210320a_3drebuild.md) | 卫星遥感 | 100% |
 | [210409a](210409a_haskell.md) | 函数式编程，Haskell | 30% |
 | [210501a](210501a_famitracker.md) | 计算机音乐，编曲作曲，（爵士）和声，FamiTracker，经典计算机音乐集成电路解析 | 0% |
 | [210515c](210515c_nginx.md) | Nginx/Apache/H2O Web服务原理以及部署 | 0% |
 | [210524a](210524a_8051.md) | 8051单片机 | 100% |
-| [210625a](210625a_uefi.md) | UEFI开发 | 10% |
+| [210625a](210625a_uefi.md) | UEFI | 10% |
 | [210702a](210702a_avr.md) | AVR单片机开发 | 50% |
 | [210729a](210729a_ai.md) | 机器学习，深度学习，强化学习，常用模型、框架和算法 | 0% |
 | [210731a](210731a_llvm.md) | 编译原理与LLVM | 0% |
@@ -71,7 +71,6 @@
 | [211211a](211211a_codestyle-and-licence.md) | 代码规范，开源协议 | 50% |
 | [220420a](220420a_tribblix.md) | Tribblix、Slackware安装与日常使用 | 0% |
 | [220429a](220429a_compiler.md) | 二进制ELF文件格式，链接器原理 | 100% |
-| [220502a](220502a_psychoanalysis.md) | 精神分析学 | 0% |
 | [221019a](221019a_bsd-impl.md) | FreeBSD设计与实现 | 0% |
 | [221112a](221112a_network.md) | 计算机网络 | 80% |
 | [221116a](221116a_wacom.md) | Wacom数位板手动配置 | 100% |
@@ -79,7 +78,7 @@
 | [230411a](230411a_unix-programming.md) | Linux/Unix系统编程 | 0% |
 | [230513a](230513a_texlive.md) | Texlive安装与使用 | 0% |
 | [230526a](230526a_driver.md) | Linux驱动开发，设备树 | 0% |
-| [230709a](230709a_container.md) | Linux容器和虚拟化工具，LXD（Incus），Docker，CRI-O，Kata Containers，VirtualBox，QEMU（+KVM），K8s，Vagrant等工具的使用 | 30% |
+| [230709a](230709a_container.md) | Linux容器和虚拟化工具，LXD（Incus），Docker，CRI-O，Kata Containers，VirtualBox，QEMU（+KVM），K8s/K3s，Vagrant等工具的使用，cgroup | 30% |
 | [230719a](230719a_js.md) | 基于Node.js和React全栈开发 | 0% |
 | [230813a](230813a_auto.md) | 自动控制算法 | 0% |
 | [231101a](231101a_riscv.md) | RISC-V体系结构，SBI | 0% |
@@ -124,7 +123,7 @@
 
 ## Recipe
 
-🍥 C C++ Go Java Rust Ruby Python Lua Node.js Zig Dart
+🍥 C C++ Go Java Rust Ruby Python Lua Node.js Zig Scala Dart
 
 🍣 Haskell | Erlang OCaml Agda
 
@@ -134,6 +133,8 @@
 
 🍱 Verilog
 
+🍓 Vulkan OpenGL | GLSL
+
 🍡 MySQL PostgreSQL SQLite
 
 🍢 MongoDB Redis Geode
@@ -142,15 +143,13 @@
 
 🍒 WebAssembly
 
-🍈 Docker LXD Kubernetes
+🍈 Docker LXD Kubernetes QEMU
 
 🍎 React Vue
 
 🍐 Makefile
 
 🥥 Matlab
-
-🍓 Vulkan OpenGL | GLSL
 
 🍉 Qt wxWidgets SDL
 
@@ -160,4 +159,4 @@
 
 🍌 KiCAD FreeCAD
 
-🍍 ArchLinux ArtixLinux AlpineLinux Slackware FreeBSD Tribblix
+🍍 ArchLinux ArtixLinux AlpineLinux Debian Fedora Slackware FreeBSD Tribblix
