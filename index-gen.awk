@@ -27,7 +27,7 @@ BEGIN {
 }
 
 ## If headings detected
-/^#+ / && (FNR != 1) && ($2 != "目录") && (in_block != 1) {
+/^#+ / && (FNR != 1) && (in_block != 1) {
     # Convert headings to index link
     index_link = gensub(/^#+ /, "", "g", tolower($0))
     gsub(/ /, "-", index_link)
@@ -76,15 +76,15 @@ END {
         #                                         #\n\
         ###########################################\n\
     "
-    print "Reports:"
+    print "Report:"
     if (index_err_cnt) {
-        printf "%d headings not printed at:\n", index_err_cnt
+        printf "%d headings ignored at:\n", index_err_cnt
         for (i in index_err) {
             printf "Line %d\n", index_err[i]
         }
         exit 0
     } else {
-        print "No error"
+        print "All headings printed"
         exit 0
     }
 }
