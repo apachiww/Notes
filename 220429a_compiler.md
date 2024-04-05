@@ -44,9 +44,11 @@
         + [**2.6.1**](#261-编译时打桩) 编译时打桩
         + [**2.6.2**](#262-链接时打桩) 链接时打桩
         + [**2.6.3**](#263-运行时打桩) 运行时打桩
-+ [**3**](#3-补充) 补充
-    + [**3.1**](#31-intel-hex文件格式) Intel hex文件格式
-
++ [**3**](#3-dwarf调试信息数据格式) DWARF调试信息数据格式
++ [**4**](#4-补充) 补充
+    + [**4.1**](#41-intel-hex文件格式) Intel hex文件格式
+    + [**4.2**](#42-size命令) size命令
+    + [**4.3**](#43-ldd命令) ldd命令
 
 ## 0 序言
 
@@ -317,7 +319,6 @@ FreeBSD中定义如下
 ## 1.4 Sections
 
 Section是目标文件的基本组成部分。每一个Section在`Section header table`中只有1个header描述它，并且不是所有header都会对应1个Section。一个Section在文件中永远是连续的，且各自之间不能重叠。一个文件中可以有多个同名Section。目标文件中可能有一些空间没有被利用，这些空间称之为`inactive space`（程序开发者可以在这些`inactive space`中隐藏一些彩蛋）
-
 
 ### 1.4.1 Section头
 
@@ -1368,9 +1369,11 @@ LD_PRELOAD="./myfree.so"
 ./main
 ```
 
-## 3 补充
+## 3 DWARF调试信息数据格式
 
-## 3.1 Intel hex文件格式
+## 4 补充
+
+## 4.1 Intel hex文件格式
 
 Intel hex文件格式顾名思义最早由Intel设计，一开始用于其MDS，一般用来编程ROM，PROM，EPROM，EEPROM等存储器，本质是一个ASCII文本文件，直接用记事本打开就可以看。现在绝大多数单片机都使用这种文件格式进行程序的烧写，样例如下
 
@@ -1413,3 +1416,107 @@ Intel hex文件格式顾名思义最早由Intel设计，一开始用于其MDS，
 | `03` | Start Segment Address | 在8086中表示开始执行的地址，一般用不上。**字节数量**固定为`04`，**地址**无效固定为`0000` |
 | `04` | Extended Linear Address | 类似`02`，16位基址，**字节数量**固定为`02`，**地址**无效固定为`0000`。在32位平台使用时左移16位作为高2字节地址，和`00`记录中的低2字节地址结合成为32位地址，可寻址4GB |
 | `05` | Start Linear Address | 类似`03`，表示32位处理器中的起始执行地址，一般用不上。**字节数量**固定为`04`，**地址**无效固定为`0000` |
+
+## 4.2 size命令
+
+`elf`文件中各个`section`的位置和大小可以使用`size`命令查看
+
+```
+$ size -A /usr/lib/libserialport.so
+/usr/lib/libserialport.so  :
+section               size    addr
+.note.gnu.property      48     680
+.note.gnu.build-id      36     728
+.gnu.hash              940     768
+.dynsym               3072    1712
+.dynstr               2075    4784
+.gnu.version           256    6860
+.gnu.version_r         128    7120
+.rela.dyn             1416    7248
+.init                   27   12288
+.text                34501   12320
+.fini                   13   46824
+.rodata               7392   49152
+.eh_frame_hdr          724   56544
+.eh_frame             5720   57272
+.init_array              8   68720
+.fini_array              8   68728
+.dynamic               432   68736
+.got                   464   69168
+.data                   16   69632
+.bss                     8   69648
+.comment                18       0
+Total                57302
+```
+
+> 使用`-x`可以十六进制格式显示，使用`--common`可以显示`COMMON`符号所占大小
+
+## 4.3 ldd命令
+
+`ldd`命令可以显示一个程序依赖的`.so`动态链接库
+
+```
+$ ldd /bin/iptables
+	linux-vdso.so.1 (0x00007ffd1a133000)
+	libxtables.so.12 => /usr/lib/libxtables.so.12 (0x000077360094e000)
+	libmnl.so.0 => /usr/lib/libmnl.so.0 (0x0000773600946000)
+	libnftnl.so.11 => /usr/lib/libnftnl.so.11 (0x0000773600912000)
+	libc.so.6 => /usr/lib/libc.so.6 (0x0000773600730000)
+	/lib64/ld-linux-x86-64.so.2 => /usr/lib64/ld-linux-x86-64.so.2 (0x0000773600a37000)
+```
+
+> `-u`可以显示未使用到的依赖库，`-d`进行数据重定位，`-f`进行数据和函数重定位
+
+显示更详细的库版本信息
+
+```
+$ ldd -v /bin/iptables
+	linux-vdso.so.1 (0x00007ffeca97b000)
+	libxtables.so.12 => /usr/lib/libxtables.so.12 (0x00007a30d4af6000)
+	libmnl.so.0 => /usr/lib/libmnl.so.0 (0x00007a30d4aee000)
+	libnftnl.so.11 => /usr/lib/libnftnl.so.11 (0x00007a30d4aba000)
+	libc.so.6 => /usr/lib/libc.so.6 (0x00007a30d48d8000)
+	/lib64/ld-linux-x86-64.so.2 => /usr/lib64/ld-linux-x86-64.so.2 (0x00007a30d4bdf000)
+
+	Version information:
+	/bin/iptables:
+		libmnl.so.0 (LIBMNL_1.0) => /usr/lib/libmnl.so.0
+		libc.so.6 (GLIBC_2.3) => /usr/lib/libc.so.6
+		libc.so.6 (GLIBC_2.7) => /usr/lib/libc.so.6
+		libc.so.6 (GLIBC_2.14) => /usr/lib/libc.so.6
+		libc.so.6 (GLIBC_2.15) => /usr/lib/libc.so.6
+		libc.so.6 (GLIBC_2.4) => /usr/lib/libc.so.6
+		libc.so.6 (GLIBC_2.34) => /usr/lib/libc.so.6
+		libc.so.6 (GLIBC_2.2.5) => /usr/lib/libc.so.6
+		libc.so.6 (GLIBC_2.3.4) => /usr/lib/libc.so.6
+		libnftnl.so.11 (LIBNFTNL_13) => /usr/lib/libnftnl.so.11
+		libnftnl.so.11 (LIBNFTNL_12) => /usr/lib/libnftnl.so.11
+		libnftnl.so.11 (LIBNFTNL_11) => /usr/lib/libnftnl.so.11
+	/usr/lib/libxtables.so.12:
+		libc.so.6 (GLIBC_2.3) => /usr/lib/libc.so.6
+		libc.so.6 (GLIBC_2.15) => /usr/lib/libc.so.6
+		libc.so.6 (GLIBC_2.7) => /usr/lib/libc.so.6
+		libc.so.6 (GLIBC_2.14) => /usr/lib/libc.so.6
+		libc.so.6 (GLIBC_2.4) => /usr/lib/libc.so.6
+		libc.so.6 (GLIBC_2.33) => /usr/lib/libc.so.6
+		libc.so.6 (GLIBC_2.34) => /usr/lib/libc.so.6
+		libc.so.6 (GLIBC_2.2.5) => /usr/lib/libc.so.6
+		libc.so.6 (GLIBC_2.3.4) => /usr/lib/libc.so.6
+	/usr/lib/libmnl.so.0:
+		libc.so.6 (GLIBC_2.3) => /usr/lib/libc.so.6
+		libc.so.6 (GLIBC_2.3.4) => /usr/lib/libc.so.6
+		libc.so.6 (GLIBC_2.14) => /usr/lib/libc.so.6
+		libc.so.6 (GLIBC_2.4) => /usr/lib/libc.so.6
+		libc.so.6 (GLIBC_2.2.5) => /usr/lib/libc.so.6
+	/usr/lib/libnftnl.so.11:
+		libmnl.so.0 (LIBMNL_1.0) => /usr/lib/libmnl.so.0
+		libc.so.6 (GLIBC_2.3) => /usr/lib/libc.so.6
+		libc.so.6 (GLIBC_2.14) => /usr/lib/libc.so.6
+		libc.so.6 (GLIBC_2.4) => /usr/lib/libc.so.6
+		libc.so.6 (GLIBC_2.2.5) => /usr/lib/libc.so.6
+		libc.so.6 (GLIBC_2.3.4) => /usr/lib/libc.so.6
+	/usr/lib/libc.so.6:
+		ld-linux-x86-64.so.2 (GLIBC_2.2.5) => /usr/lib64/ld-linux-x86-64.so.2
+		ld-linux-x86-64.so.2 (GLIBC_2.3) => /usr/lib64/ld-linux-x86-64.so.2
+		ld-linux-x86-64.so.2 (GLIBC_PRIVATE) => /usr/lib64/ld-linux-x86-64.so.2
+```
