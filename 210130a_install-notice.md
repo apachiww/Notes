@@ -11,7 +11,6 @@
     + [**1.5**](#15-日志) 日志
     + [**1.6**](#16-常用配置) 常用配置
     + [**1.7**](#17-nat配置) NAT配置
-    + [**1.8**](#18-ufw) ufw
 + [**2**](#2-存储与文件系统) 存储与文件系统
     + [**2.1**](#21-lvm逻辑卷管理) LVM逻辑卷管理
     + [**2.2**](#22-存储安全数据加密) 存储安全：数据加密
@@ -128,6 +127,8 @@
         + [**5.23.12**](#52312-database) Database
 + [**6**](#6-安全专题apparmor) 安全专题：AppArmor
 + [**7**](#7-运维工具ansible) 运维工具：Ansible
++ [**8**](#8-安全专题防火墙nftables) 安全专题：防火墙nftables
++ [**9**](#9-安全专题防火墙前端ufw) 安全专题：防火墙前端ufw
 + [**FreeBSD**](#freebsd)
 + [**1**](#1-防火墙) 防火墙
 + [**2**](#2-存储与文件系统-1) 存储与文件系统
@@ -469,12 +470,6 @@ iptables -t filter -A FW_OPEN -d 192.168.0.5 -p tcp --dport 22 -j ACCEPT
 
 > 上述配置中特殊目标`DNAT`就实现了端口映射功能。第一行配置指定`eth4`公网接口访问`22`端口的请求全部NAT转换IP后转发到`192.168.0.5`（相当于本机会监听22端口并在连接请求到来时转发）。第二行配置允许（NAT后的数据包）访问`192.168.0.5`的`22`端口
 
-## 1.8 ufw
-
-`ufw`（Uncomplicated Firewall）是一个适用于`iptables`或`nftables`的防火墙前端
-
-TODO
-
 ## 2 存储与文件系统
 
 ## 2.1 LVM逻辑卷管理
@@ -484,6 +479,8 @@ TODO
 ## 2.2 存储安全：数据加密
 
 见[GPG](201219a_shell.md#1130-gpg)
+
+实际应用中，仅仅依靠现有的一些软硬件方案通常还是无法保证数据安全的，相关的取证方案一直都在发展。取证的方法也可以应用于数据偷窃。类似GPG这样的软件加密只是再加上一层保险。保护数据安全也需要良好习惯，做好密钥备份
 
 ## 3 服务
 
@@ -595,6 +592,8 @@ light -A 5 # 调亮5
 light -U 5 # 降低5
 ```
 
+查看目前可用的显示器，可以使用`xrandr`
+
 ## 5 安全专题：SELinux
 
 可以在Fedora或RHEL（注册开发者后免费使用）下尝试SELinux
@@ -609,9 +608,11 @@ light -U 5 # 降低5
 
 ### 5.1.1 SELinux是什么
 
-SELinux是Linux内核的一个安全扩展，全称**Security Enhanced Linux**，在Linux内核中提供MAC（Mandatory Access Control）支持，限制程序的资源访问。但是并没有提供程序运行时的内存防护等措施
+SELinux是Linux内核的一个安全扩展，全称**Security Enhanced Linux**，在Linux内核中提供**MAC**（Mandatory Access Control）支持，限制程序的资源访问，包括但不限于普通文件，设备文件，网络接口，socket，消息队列，共享内存，数据库等。但是SELinux并没有提供特性丰富的程序运行时防护机制，例如随机链接地址ASLR等，但是它可以限制程序将自己的堆区、栈区等区域设定为可执行
 
-区别于Linux中传统的基于用户身份和文件权限设定的DAC（Discretionary Access Control）访问控制，MAC可以提供更为细粒化的额外访问控制。从Discretionary和Mandatory的含义来看，Discretionary是较为宽松的访问控制，系统内拥有高访问权限的用户例如`root`几乎可以自由访问任何资源；而Mandatory是较为严格的访问控制，用户或进程能否访问资源不仅决定于他们本身的身份和权限，还取决于内核安全模块例如SELinux的决定，即便是`root`也是不能自由访问任意资源的
+区别于Linux中传统的**DAC**（Discretionary Access Control）访问控制，**MAC**可以提供更为细粒化的额外访问控制。从Discretionary和Mandatory的含义来看，Discretionary是较为宽松的访问控制，它主要基于用户本身的`uid`，`gid`以及文件的`u`，`g`，`o`，`rwx`权限，加上扩展的[ACL](201219a_shell.md#1126-权限管理进阶acl)等进行判定，系统内拥有高访问权限的用户例如`root`几乎可以自由访问任何资源；而Mandatory是较为严格的访问控制，用户或进程能否访问资源不仅决定于他们本身的身份和权限，还独立取决于内核安全模块例如SELinux的决定，即便是`root`也是不能自由访问任意资源的
+
+SELinux的MAC鉴权位于DAC之后，也就是说如果DAC就没有允许访问，那么就不会再过SELinux
 
 ### 5.1.2 SELinux的争议和类似项目
 
@@ -623,27 +624,27 @@ SELinux的争议在于NSA参与了开发。很多非企业级Linux发行版都�
 
 > 安卓默认也开启了SELinux
 
-此外还有一个收费的[grsecurity](https://grsecurity.net/)，在[Gentoo Wiki](https://wiki.gentoo.org/wiki/Hardened/Grsecurity2_Quickstart)有页面。这是除SELinux、AppArmor以外的又一个Linux安全扩展，除了MAC以外它还提供了程序运行时的内存防护。它提供了PaX（包含NOEXEC禁止执行，ASLR链接地址随机化功能），RBAC（基于Role的MAC）这些主要的安全功能模块。它以Linux内核`patch`的形式发布，用户需要自行下载补丁应用到内核源码后重新编译内核才能使用。而SELinux和AppArmor已经包含在Linux源码包中
+此外还有一个收费的[grsecurity](https://grsecurity.net/)，在[Gentoo Wiki](https://wiki.gentoo.org/wiki/Hardened/Grsecurity2_Quickstart)有页面。这是除SELinux、AppArmor以外的又一个Linux安全扩展，除了MAC以外它还提供了程序运行时的内存防护。它提供了PaX（包含NOEXEC禁止执行，ASLR链接地址随机化功能），RBAC（基于Role的MAC）这些主要的安全功能模块。它以Linux内核`patch`的形式发布，用户需要自行下载补丁应用到内核源码后重新编译内核才能使用。而SELinux和AppArmor已经是Linux官方支持的安全扩展
 
-如果是想要免费的ASLR等运行时安全防护，可以看看[linux-hardened](https://github.com/anthraxx/linux-hardened)。这也是ArchLinux的`linux-hardened`内核使用到的项目
+如果是想要免费的ASLR等运行时保护特性，可以看看[linux-hardened](https://github.com/anthraxx/linux-hardened)。这也是ArchLinux的`linux-hardened`内核使用到的项目
 
-> 检查自己系统对抗这些常见运行时风险的能力，可以使用`paxtest`测试，ArchLinux下可以通过`pacman -S paxtest`安装
+> 检查自己系统对抗这些攻击的能力，可以使用`paxtest`测试，ArchLinux下可以通过`pacman -S paxtest`安装
 
 ### 5.1.3 基本工作原理
 
-SELinux使用`policy`定义进程之间、进程和资源之间的访问限制，`policy`由`rule`组成。SELinux本质上是以白名单的形式进行过滤的。任何不符合`policy`规定的资源访问都会被拦截并禁止。SELinux中`policy`需要编译为二进制格式，并以**模块**形式存在，可以加载卸载或安装删除，灵活扩展
+SELinux使用`policy`定义进程之间、进程和资源之间的访问限制，`policy`由`rule`组成。SELinux本质上是以白名单的形式进行过滤的。任何不符合`policy`规定的资源访问都会被拦截并禁止。SELinux中`policy`需要编译为二进制格式，可以以`base`和`module`等形式存在，其中模块`policy`可以加载卸载或安装删除，灵活扩展
 
 SELinux的MAC是在DAC后进行的。也就是说如果DAC环节就没有允许访问，那么也就不会执行MAC检查
 
 > 在设计`policy`时需要非常谨慎，最好要经过完整的验证，而一般的需求直接使用系统提供的`policy`就可以了
 
-SELinux基于上下文`context`判断是否允许访问，上下文格式为`user:role:type:sX:cX`五元组。使用SELinux的发行版例如RHEL会至少提供两种主要的预设`policy`，分别为`targeted`和`mls`，二者只能选一个（默认`targeted`），其中`targeted`就是普通的基于`type`的`policy`，上下文中的`sX`不起作用；而`mls`基于BLP分层安全模型，需要使用到`sX`域，只在军事机关等要求极高安全性的场合会使用。MCS只是主`policy`的附加机制，使用`targeted`和`mls`时MCS都是默认开启的，但是需要额外配置后`cX`域才会真正起作用
+SELinux基于上下文`context`判断是否允许访问，上下文格式为`user:role:type:sX:cX`五元组。使用SELinux的发行版例如RHEL会至少提供两种预设`policy`，分别为`targeted`和`mls`，二者只能选一个（默认`targeted`），其中`targeted`就是普通的基于`type`的`policy`，上下文中的`sX`不起作用；而`mls`基于BLP分层安全模型，需要使用到`sX`域，只在军事机关等要求极高安全性的场合会使用。MCS只是上述两种主`policy`的附加机制，使用`targeted`和`mls`时MCS都是默认开启的，但是需要额外配置后`cX`域才会真正起作用
 
 > **Type Enforcement**就是对应`targeted`策略，进程都运行在自己的`domain`下，`policy`以`type`为根据限制它们，它和SELinux的**RBAC**共同构成基本的MAC机制。**MLS**对应`mls`策略
 
-被SELinux监管的每一个对象都有自己的`context`（无论进程，文件等）。通过统一格式的上下文，SELinux可以将所有这些受管辖的对象充分抽象化，同时规避了基于访问路径方案会带来的二义性问题（例如同一个文件可能因为文件系统的挂载或目录软链接，会有多个路径）
+被SELinux监管的每一个对象都有自己的`context`（通常叫`label`，无论进程，文件等）。通过统一格式的上下文，SELinux可以将所有这些受管辖的对象充分抽象化，同时规避了基于访问路径方案会带来的二义性问题（例如同一个文件可能因为文件系统的挂载或目录软链接，会有多个路径）
 
-SELinux可以根据上下文将每个进程限制在它自己的域`domain`中，使其正常工作并给予最小的访问权限
+SELinux可以根据上下文将每个进程限制在合适的`domain`中，使其正常工作并给予最小的访问权限
 
 > SELinux只是为系统提供了资源访问的安全保护措施。**它能做的仅仅是防止数据进一步泄漏，并不能从根源上解决软件的安全漏洞**
 
@@ -6226,7 +6227,7 @@ PostgreSQL用户空间的`class`
 
 ## 6 安全专题：AppArmor
 
-AppArmor相比SELinux的繁文缛节来说要简洁明了的多，对于用户来说更加友好。SELinux饱受诟病有历史包袱的原因。而在现实应用中，如果人力有限，直观的设定实际上可以降低疏漏发生的概率，反而是有利的
+AppArmor相比SELinux的繁文缛节来说要简洁明了的多，对于用户来说更加友好。SELinux饱受诟病有本身设计的问题，也有历史包袱的原因。在现实应用中，如果人力有限，直观的设定实际上可以降低疏漏发生的概率，反而是有利的
 
 TODO
 
@@ -6234,7 +6235,9 @@ TODO
 
 TODO
 
-## 8 安全专题：nftables
+## 8 安全专题：防火墙nftables
+
+## 9 安全专题：防火墙前端ufw
 
 # FreeBSD
 

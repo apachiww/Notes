@@ -56,7 +56,7 @@
 | [210317a](210317a_parallel.md) | Linux并发编程，C++11线程库，CUDA | 0% |
 | [210320a](210320a_3drebuild.md) | 卫星遥感 | 100% |
 | [210409a](210409a_haskell.md) | 函数式编程，Haskell | 30% |
-| [210501a](210501a_famitracker.md) | 计算机音乐，编曲作曲，（爵士）和声，FamiTracker，经典计算机音乐集成电路解析 | 0% |
+| [210501a](210501a_famitracker.md) | 计算机音乐，和声理论，FamiTracker，经典计算机音乐集成电路解析 | 0% |
 | [210515c](210515c_nginx.md) | Nginx/Apache/H2O Web服务原理以及部署 | 0% |
 | [210524a](210524a_8051.md) | 8051单片机 | 100% |
 | [210625a](210625a_uefi.md) | UEFI | 10% |
