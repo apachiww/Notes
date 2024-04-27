@@ -6,4 +6,4 @@ Linux驱动开发入门，李山文
 
 Linux Device Driver Development (2nd Edition), John Madieu
 
-学习之前需要先学习Linux内核的构建以及在ARM平台的运行
+需要先学习Linux内核的交叉构建以及在ARM平台的运行

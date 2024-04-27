@@ -515,11 +515,11 @@ iptables -t filter -A FW_OPEN -d 192.168.0.5 -p tcp --dport 22 -j ACCEPT
 
 ## 3 服务
 
-## 3.1 基于systemd
+## 3.1 systemd
 
 TODO
 
-## 3.2 基于openrc
+## 3.2 openrc
 
 TODO
 
@@ -639,7 +639,7 @@ light -U 5 # 降低5
 
 ### 5.1.1 SELinux是什么
 
-SELinux是Linux内核的一个安全扩展，全称**Security Enhanced Linux**，在Linux内核中提供**MAC**（Mandatory Access Control）支持，限制程序的资源访问，包括但不限于普通文件，设备文件，网络接口，socket，消息队列，共享内存，数据库等。但是SELinux并没有提供特性丰富的程序运行时防护机制，例如随机链接地址ASLR等，但是它可以限制程序将自己的堆区、栈区等区域设定为可执行
+SELinux是Linux内核的一个安全扩展，全称**Security Enhanced Linux**，在Linux内核中提供**MAC**（Mandatory Access Control）支持，限制程序的资源访问，包括但不限于普通文件，设备文件，网络接口，socket，消息队列，共享内存，数据库等。SELinux并没有提供特性丰富的程序运行时防护机制，例如随机链接地址ASLR等，但是它可以限制程序将自己的堆区、栈区等区域设定为可执行
 
 区别于Linux中传统的**DAC**（Discretionary Access Control）访问控制，**MAC**可以提供更为细粒化的额外访问控制。从Discretionary和Mandatory的含义来看，Discretionary是较为宽松的访问控制，它主要基于用户本身的`uid`，`gid`以及文件的`u`，`g`，`o`，`rwx`权限，加上扩展的[ACL](201219a_shell.md#1126-权限管理进阶acl)等进行判定，系统内拥有高访问权限的用户例如`root`几乎可以自由访问任何资源；而Mandatory是较为严格的访问控制，用户或进程能否访问资源不仅决定于他们本身的身份和权限，还独立取决于内核安全模块例如SELinux的决定，即便是`root`也是不能自由访问任意资源的
 
@@ -6981,14 +6981,12 @@ Redhat系发行版通常使用`firewalld`
 
 TODO
 
-## 2 存储与文件系统
+## 2 ZFS
 
-## 2.1 ZFS
+## 3 容器jails
 
-TODO
-
-## 3 服务管理
+## 4 服务
 
 TODO
 
-## 4 容器jails
+## 5 MAC
