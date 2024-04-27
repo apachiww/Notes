@@ -1,6 +1,8 @@
 # ARMv7-A ARMv8-A体系结构
 
-ARMv7-M体系结构笔记[传送门](201020a_stm32.md)
+[ARMv7-M笔记](201020a_stm32.md)
+
+[RISC-V笔记](231101a_riscv.md)
 
 ## 参考
 
@@ -12,18 +14,45 @@ ARMv7-M体系结构笔记[传送门](201020a_stm32.md)
 
 [GNU ARM Assembler Quick Reference](src/200920a01/gnu-arm-directives.pdf)
 
+## 目录
 
-## 0 常见SoC厂商与产品
++ [**ARMv7**](#armv7)
++ [**1**](#1-简介) 简介
+    + [**1.1**](#11-说明) 说明
+    + [**1.2**](#12-armv7-a系列特性概览) ARMv7-A系列特性概览
+    + [**1.3**](#13-系统架构概览以cortex-a9为例) 系统架构概览：以Cortex-A9为例
+    + [**1.4**](#14-armv7-a其他关键特性) ARMv7-A其他关键特性
++ [**2**](#2-运行模式与寄存器) 运行模式与寄存器
+    + [**2.1**](#21-运行模式) 运行模式
+    + [**2.2**](#22-寄存器) 寄存器
+        + [**2.2.1**](#221-通用寄存器和cpsr) 通用寄存器和CPSR
+        + [**2.2.2**](#222-协处理器简介) 协处理器简介
+        + [**2.2.3**](#223-系统控制协处理器cp15) 系统控制：协处理器CP15
+        + [**2.2.4**](#224-vfp与neon-simd寄存器) VFP与NEON SIMD寄存器
++ [**3**](#3-内存架构vmsa) 内存架构：VMSA
+    + [**3.1**](#31-cache) Cache
+    + [**3.2**](#32-mmu) MMU
++ [**4**](#4-中断与异常gicv2) 中断与异常：GICv2
++ [**5**](#5-指令集) 指令集
++ [**6**](#6-通用定时器) 通用定时器
++ [**7**](#7-小结) 小结
++ [**ARMv8**](#armv8)
+
+## 常见SoC厂商与产品
 
 从普通爱好者角度，可以折腾的ARM SoC
 
 **一些可能感兴趣的信息与项目**
 
-ARM SoC mainline进展：参照[postmarketOS](https://wiki.postmarketos.org/wiki/Mainlining) [RK3588主线化](https://gitlab.collabora.com/hardware-enablement/rockchip-3588/notes-for-rockchip-3588/-/blob/main/mainline-status.md) [sunxi主线化](https://linux-sunxi.org/Linux_mainlining_effort)
+ARM SoC mainline进展（会有滞后）：参照[postmarketOS](https://wiki.postmarketos.org/wiki/Mainlining) [RK3588主线化](https://gitlab.collabora.com/hardware-enablement/rockchip-3588/notes-for-rockchip-3588/-/blob/main/mainline-status.md) [sunxi主线化](https://linux-sunxi.org/Linux_mainlining_effort)
 
-开源GPU驱动：[Mesa](https://gitlab.freedesktop.org/mesa/mesa) 支持的GPU: Lima (ARM Mali Utgard) Panfrost (ARM Mali Midgard and later) Imagination (Imagination Rogue) Etnaviv (Vivante) Freedreno (Qualcomm Adreno) Tegra (NVIDIA Tegra)
+开源GPU驱动：[Mesa](https://gitlab.freedesktop.org/mesa/mesa) Mesa主要负责Gallium3D用户态部分，而内核态DRM驱动见[kernel.org](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/)
+
+Lima (ARM Mali Utgard) Panfrost (ARM Mali Midgard and later) Imagination (Imagination Rogue) Etnaviv (Vivante GC) Freedreno (Qualcomm Adreno) Tegra (NVIDIA Tegra K1/X1)
 
 Imagination GPU相关：[Wikipedia](https://en.wikipedia.org/wiki/PowerVR)
+
+> 绝大部分ARM SoC中GPU不负责视频解码，也不负责显示输出，只是一个单纯的3D加速器。视频解码由单独的VPU解码单元负责
 
 为自己的ARM SoC编译构建Alpine：参照[Alpine wiki](https://wiki.alpinelinux.org/wiki/DIY_Fully_working_Alpine_Linux_for_Allwinner_and_Other_ARM_SOCs)
 
@@ -32,6 +61,8 @@ Linux From Scratch：见[LFS](https://www.linuxfromscratch.org/)
 交叉工具链构建工具：[crosstool-NG](https://github.com/crosstool-ng/crosstool-ng)
 
 构建系统：[Buildroot](https://buildroot.org/) [Armbian构建系统](https://github.com/armbian/build) [OpenWrt构建系统](https://openwrt.org/docs/guide-developer/toolchain/use-buildsystem) [yocto](https://www.yoctoproject.org/)
+
+[RK3588 ffmpeg](https://github.com/nyanmisaka/ffmpeg-rockchip)
 
 **中国厂商**
 
@@ -42,7 +73,7 @@ Linux From Scratch：见[LFS](https://www.linuxfromscratch.org/)
     + 开发者论坛 https://bbs.aw-ol.com/
     + sunxi wiki https://linux-sunxi.org/Main_Page
     + 部分新产品文档 https://gitee.com/aw-sunxi/awesome-sunxi
-    + A523/A527/T523(?)/T527/MR527 (8xA55+1xRISCV(E906), sun55i new product 2023, 22nm)
+    + A523/A527/T523(?)/T527/MR527 (8xA55+1xRISCV(E906), 22nm)
     + A40i/V40/R40/T3 (4xA7, SATA, T3 no HDMI, 40nm)
     + T113-s3/T113-s4/R528 (2xA7 with 128MB/256MB SIP DDR3, T113-s3/s4 are eLQFP128 packaged, 22nm)
     + T113-i (2xA7+1xRISCV(C906), 22nm)
@@ -57,20 +88,21 @@ Linux From Scratch：见[LFS](https://www.linuxfromscratch.org/)
     + 以下是未来（可能）会出的中高端型号（仅供参考）
     + A513(?) (4xA55, new product 2023/2024, 22nm)
     + R923(?) (4xA73+4xA53+1xRISCV(E906), sun60i new product 2024 Est. , 12nm)
-    + A736/T736 (2xA76+6xA55, IMG BXM GPU, sun60i new product 2024 Est. , 12nm)
-    + A737/T737 (2xA78+6xA55, IMG BXM GPU, 12nm)
-    + 以下是sun50i系列，内部总线减配
+    + A736/T736(?) (2xA76+6xA55, IMG BXM GPU, sun60i new product 2024 Est. , 12nm)
+    + A737/T737(?) (2xA78+6xA55, IMG BXM GPU, 12nm)
+    + 以下是sun50i系列，内部AMBA总线减配
     + A133/R818 (4xA53, IMG GE8300 GPU, 28nm)
     + H616/H618/T507 (4xA53, 28nm)
 + Rockchip 瑞芯微（福州）
     + Datasheet & TRM [Repo](https://github.com/DeciHD/rockchip_docs)
     + wiki https://opensource.rock-chips.com/wiki_Main_Page
-    + RK3588/RK3588S (4xA76+4xA55+3xM0, 8nm)
-    + RK3576 (4xA72+4xA53, G52MC3 GPU, new product 2024)
+    + RK3688 (?)
+    + RK3588/RK3588S/RK3588S2 (4xA76+4xA55+3xM0, 8nm)
+    + RK3576 (4xA72+4xA53, G52MC3 GPU)
     + RK3566/RK3568/RK3568B2/RK3568J (4xA55+1xRISCV(RV32IMC), 22nm)
     + RK3567 (4xA55)
-    + RK3562 (4xA53, new product 2023)
-    + RK3528 (4xA53, new product 2023, sun50i counterpart)
+    + RK3562 (4xA53, Mali G52)
+    + RK3528 (4xA53, Mali450)
     + RK3399 (2xA72+4xA53+2xM0, 28nm)
     + RK3328 (4xA53, 28nm)
     + RK3326/PX30 (4xA35, 28nm)
@@ -85,7 +117,6 @@ Linux From Scratch：见[LFS](https://www.linuxfromscratch.org/)
     + A311D2 (4xA73+4xA53, 12nm)
     + A311D (4xA73+2xA53, 12nm)
     + S922X (4xA73+2xA53, 12nm)
-    + S928X (1xA76+4xA55, new product 2023, 12nm)
     + S905X4 (4xA55, 12nm)
     + S905X3/D3 (4xA55, 12nm)
     + S905X2/S905Y2 (4xA53, 12nm)
@@ -111,6 +142,9 @@ Linux From Scratch：见[LFS](https://www.linuxfromscratch.org/)
     + RZ MPU
 + Microchip 微芯半导体
     + ATSAMA5
++ Nvidia 英伟达
+    + 文档开放（需要注册）
+    + Tegra K1 (2024 EoL)
 + AMD Xilinx 赛灵思
     + FPGA+ARM混合。文档开放
     + ZYNQ-7000 XC7Z0XX
@@ -118,26 +152,38 @@ Linux From Scratch：见[LFS](https://www.linuxfromscratch.org/)
     + https://wiki.postmarketos.org/wiki/Mainlining
     + MSM8916 (Snapdragon 410)/APQ8016 https://github.com/msm8916-mainline
     + SDM845 (Snapdragon 845)
-+ Nvidia 英伟达
-    + 文档开放（需要注册）
-    + Tegra K1 (2024 EoL)
 + Samsung 三星半导体
-    + 大部分原有产品已停产。不推荐
+    + 大部分原有产品早已停产。不推荐
 
-> 国际大厂ST，NXP，TI，Renesas的SoC通常性能一般，价格较高，但稳定性优，资料（相对）较全面，更适合工业或车规产品。很多Linux学习板都使用这些厂商的产品。而除手机、平板、电视外的商业消费电子，包括收银机、广告屏、机顶盒、便携式播放器等，基本由御三家方案主导。由于成本优势以及（相对的）性能进步，近几年全志和瑞芯微的产品在工控和汽车领域也有了更多应用
+> 国际大厂ST，NXP，TI，Renesas的SoC通常性能一般，价格较高，但稳定性优，资料（相对）较全面，更适合工业或车规产品。很多初学者用Linux学习板都使用这些厂商的产品。而除手机、平板、电视外的商业消费电子，包括收银机、广告屏、机顶盒、便携式播放器等，基本由御三家方案主导。由于成本优势以及（相对的）性能进步，近几年全志和瑞芯微的产品在工控和汽车领域也有了更多应用
 
+**RISC-V SoC**
+
++ StarFive 赛昉科技
+    + JH7110
++ Sophgo 算能科技（比特大陆）
+    + SG2380 (New product 2024, Milk-V Oasis首发)
++ Microchip 微芯半导体
+    + MPFSxxxT (PolarFire)
+
+**Other**
+
++ Ingenic 北京君正
+    + X/JZ Series (MIPS) https://github.com/Ingenic-community/datasheets
+
+# ARMv7
 
 ## 1 简介
 
-ARMv7 Cortex-A和R、M两个系列不同，它面向完整的现代操作系统应用，拥有更强大的性能与功能，最大的特性是具备MMU。同时，ARMv7-A系列通常还具备较长的流水线，更高的运行频率，并配备有Cache。多数内核支持超标量和乱序执行。除Cortex-A8以外其他处理器都原生支持多核配置，每个Cluster可以配备1到4个核心（现在部分ARMv8新产品已经不再限制4核。Cluster主要是为了核间通信，Cache一致性等多核系统存在的问题而设计，也方便了SoC厂商集成）。同时为满足多媒体运算需求，ARMv7 Cortex-A核心通常会配备有VFP以及NEON SIMD扩展
+ARMv7 Cortex-A和R、M两个系列不同，它面向完整的现代操作系统应用，拥有更强大的性能与功能，最大的特性是具备MMU。同时，ARMv7-A系列通常还具备较长的流水线，更高的运行频率，并配备有Cache。多数内核支持超标量，部分内核支持乱序执行。除Cortex-A8以外其他处理器都原生支持多核配置，每个Cluster可以配备1到4个核心（现在部分ARMv8新产品已经不再限制4核。Cluster主要是为了核间通信，Cache一致性，中断控制等多核系统的需求而设计，方便了SoC厂商模块化集成）。同时为满足多媒体运算需求，ARMv7 Cortex-A核心通常会配备有VFP以及NEON SIMD扩展
 
 ## 1.1 说明
 
-本笔记主要分析ARMv7-A体系结构，ARMv8-A作为补充说明。ARMv9本质就是ARMv8，主要添加了一些高性能运算，访存，虚拟化，安全相关的扩展而已，不像ARMv7到ARMv8那样直接设计了一个新的ISA，位宽从32位变为64位
+本笔记主要分析ARMv7-A体系结构，ARMv8-A作为补充说明。ARMv9本质就是ARMv8，主要添加了一些高性能运算，访存，虚拟化，安全相关的扩展而已，不像ARMv7到ARMv8那样直接设计了一个新的ISA，添加64位支持
 
-本笔记仅对重要的基本指令进行讲解，系统应用以外的指令如NEON和VFP指令只会简略讲解。重点在于内存架构、中断异常和多核，这是ARMv7-A区别于R、M两种核心的重要特性
+本笔记重点在于内存架构、中断异常、多核和PSCI，这是ARMv7-A区别于R、M两种核心的重要特性。ARMv8出于兼容ARMv7的目的，大部分IP依旧保留了对32位程序的支持
 
-ARMv7-A的体系规范不包含DMA。ARM提供DMA330，DMA350等IP
+ARMv7-A的体系规范不包含DMA，DMA是ISA无关的部件。ARM提供DMA330，DMA350等IP
 
 ARMv7-A部分指令和ARMv7-M工作原理相同，例如`IT`指令，这里不再详细讲述，具体内容可以看[ARMv7-M体系结构笔记](201020a_stm32.md)
 
@@ -147,9 +193,11 @@ ARMv7-A部分指令和ARMv7-M工作原理相同，例如`IT`指令，这里不�
 
 > 后来推出的Cortex-A17是Cortex-A12的改进版
 
-## 1.3 微架构概览：以Cortex-A9为例
+## 1.3 ARMv7 MPCore系统架构概览
 
-Cortex-A9是ARM推出的第一款多核ARMv7处理器，拥有9-12级可变长度流水线，动态分支预测，双发射乱序执行结构
+> 首先以Cortex-A9为例
+
+Cortex-A9是ARM推出的第一款支持多核配置的ARMv7 MPCore处理器，拥有9-12级可变长度流水线，动态分支预测，双发射乱序执行结构
 
 ![](images/200920a002.png)
 
@@ -157,46 +205,46 @@ MPCore，单个Cluster结构
 
 ![](images/200920a003.png)
 
-> Cortex-A9 MPCore可以配备1至4个核心，且核心的功能只包含指令的执行、数据的运算和存取，每个核心包含了自己的L1指令和数据缓存（L1i和L1d），以及MMU等独享部件
+> Cortex-A9 MPCore可以配备1至4个核心，且单个核心的功能只包含指令的执行、数据的运算和存取，每个核心包含了自己的L1指令和数据缓存（L1i和L1d），以及MMU等独享部件
 >
-> 其他部件相当于处理器核心的外壳，每一个核心可以拥有一个私有的定时器以及看门狗。其他的部件，如全局定时器，访存并行加速器ACP，中断控制GIC，AXI总线接口等，都是由4个核心共享的。4个处理器的中断都是由一个GIC进行分配和控制。而SCU主要负责多个核心之间L1缓存的同步
+> 其他部件相当于处理器核心的外壳，每一个核心可以拥有一个私有的定时器以及看门狗。其他的部件，如全局定时器，访存并行加速器ACP，AXI总线接口，SCU，L2二级缓存等，都是所有CPU核共享的。这个系统内的中断由一个GIC进行分配和控制，一个GICv2中断控制器可以连接8个CPU核
 >
-> Cortex-A9使用AMBA3 AXI连接到L2缓存。L2不属于Cortex-A9的组成部分，但是几乎所有的SoC都会配备有L2
->
-> 其他MPCore处理器除核心外，组成结构基本类似。支持的指令集或总线版本可能会有所不同
->
-> ARM会推出拥有相近指令特性但能耗特性不同的CPU核来组成大小核，较早的大小核使用ARM的`big.LITTLE`技术（ARMv8.2以前的CPU核），它限定了一个Cluster至多只能有`4`个同类型核心；而ARMv8.2及以后的CPU核基本都支持新的`DynamIQ`大小核技术（从Cortex-A55，Cortex-A75开始，因此不会有类似A53配A75这样的组合），一个Cluster可以多于`4`个核，同时一个Cluster内可以存放任意数量组合的大小核心，并且不局限于同类型核心
->
-> ARMv7中使用Cortex-A7和Cortex-A15组成大小核。而ARMv8常见的有Cortex-A53（高频）+Cortex-A53（低频）组合，Cortex-A53+Cortex-A72组合，Cortex-A53+Cortex-A73组合，Cortex-A55+Cortex-A76组合，Cortex-A55+Cortex-A77组合等。最新的ARMv9有Cortex-A510+Cortex-A710，X系列超大核也开始普及
+> 其他MPCore处理器除核心外，组成结构基本类似。支持的指令集或总线版本会有所不同
 
-## 1.4 其他关键特性
+大小核
 
-双指令集，支持32位定长指令ARM模式以及16/32位变长指令Thumb-2模式
+> ARM会推出拥有相近指令特性但能耗特性不同的CPU核来组成大小核，较早的大小核使用ARM的`big.LITTLE`技术（ARMv8.2以前的CPU核），采用该技术的系统中，通常一个Cluster至多只能有`4`个同类型核心；而ARMv8.2及以后的CPU核基本都使用新的`DynamIQ`大小核技术（从Cortex-A55，Cortex-A75开始），克服了以往`big.LITTLE`系统的一些限制
+>
+> ARMv7中使用A7+A15，或A7+A17组成大小核。而ARMv8常见的有A53（高频）+A53（低频）组合，A53+A72组合，A53+A73组合，A55（高频）+A55（低频）组合，A55+A76组合，A55+A77组合等。最新的ARMv9有Cortex-A510+Cortex-A710。此外X系列超大核也开始普及
+
+## 1.4 ARMv7-A其他关键特性
+
+双指令集，支持32位定长指令`ARM`模式以及16/32位变长指令`Thumb-2`模式
 
 MMU硬件实现的地址查表转换
 
-TLB快表
+支持大小端模式
 
-大小端模式支持
-
-页面可配置大小：4KB，64KB，1MB，16MB
+内存页可配置大小：4KB，64KB，1MB，16MB
 
 TrustZone安全扩展
 
-虚拟化扩展
+虚拟化扩展（Virtualization）
+
+大内存扩展（LPAE），在32位架构上支持大于4GB的内存地址空间
 
 可选的VFP浮点扩展，NEON SIMD扩展
 
-> 许多ARMv7-A处理器中，旧有的Jazelle以及ThumbEE支持是可选的。有些SoC厂商会选择不配备这些扩展
+> ARMv7-A处理器中，Jazelle以及ThumbEE支持是可选的。有些SoC厂商会选择不配备这些扩展
 
 
-## 2 工作模式与寄存器
+## 2 运行模式与寄存器
 
-## 2.1 工作模式
+## 2.1 运行模式
 
 Cortex-A的运行模式和Cortex-M完全不同
 
-带有**虚拟化扩展**以及**TrustZone安全扩展**的ARMv7-A处理器支持以下工作模式
+带有**虚拟化扩展**以及**TrustZone安全扩展**的ARMv7-A处理器支持以下工作模式，共计`PL0 PL1 PL2`三种模式
 
 ![](images/200920a004.png)
 
@@ -204,15 +252,15 @@ Cortex-A的运行模式和Cortex-M完全不同
 
 | 模式 | 全称 | CPSR.M[4:0] | 等级 | 说明 | 安全模式（如果处理器支持TrustZone） |
 | :-: | :-: | :-: | :-: | :-: | :-: |
-| USR | User 用户模式 | `10000` | `PL0` | 用户程序代码的工作模式，受限访问MMU等敏感部件的配置寄存器 | `Secure/Non-secure` |
-| SYS | System 系统模式 | `11111` | `PL1` | 操作系统代码的工作模式，可以访问MMU，GIC等部件 | `Secure/Non-secure` |
-| FIQ | 快速中断 | `10001` | `PL1` | 执行快速中断的工作模式。快速中断一般用于实时性要求较高的场合 | `Secure/Non-secure` |
-| IRQ | 普通中断 | `10010` | `PL1` | 执行普通中断的工作模式 | `Secure/Non-secure` |
-| SVC | Supervisor | `10011` | `PL1` | CPU复位或执行`SVC`指令后进入的模式。`SVC`指令一般由用户程序执行来请求系统调用 | `Secure/Non-secure` |
-| ABT | Abort 访存异常 | `10111` | `PL1` | 访存异常后进入的模式 | `Secure/Non-secure` |
-| UND | Undef 未定义指令 | `11011` | `PL1` | 执行未定义指令后进入的模式 | `Secure/Non-secure` |
-| HYP | Hypervisor | `11010` | `PL2` | 支持虚拟化的处理器中，Hypervisor代码运行的模式，用以支持同时运行多操作系统 | `Non-secure` |
-| MON | Monitor 监视模式 | `10110` | `PL1` | 在支持TrustZone扩展的处理器中的特殊模式，通常用于切换Secure模式 | `Secure` |
+| `USR` | User 用户模式 | `10000` | `PL0` | 用户程序代码的工作模式，受限访问MMU等敏感部件的配置寄存器 | `Secure/Non-secure` |
+| `SYS` | System 系统模式 | `11111` | `PL1` | 操作系统代码的工作模式，可以访问MMU，GIC等部件 | `Secure/Non-secure` |
+| `FIQ` | 快速中断 | `10001` | `PL1` | 执行快速中断的工作模式。**快速中断一般用于实时性要求较高的场合，在寄存器压栈等方面做出了改进**，提供相比`IRQ`更快的响应性能 | `Secure/Non-secure` |
+| `IRQ` | 普通中断 | `10010` | `PL1` | 执行普通中断的工作模式 | `Secure/Non-secure` |
+| `SVC` | Supervisor | `10011` | `PL1` | CPU复位或执行`SVC`指令后进入的模式。`SVC`指令一般由用户程序执行来请求系统调用 | `Secure/Non-secure` |
+| `ABT` | Abort 访存异常 | `10111` | `PL1` | 访存异常后进入的模式 | `Secure/Non-secure` |
+| `UND` | Undef 未定义指令 | `11011` | `PL1` | 执行未定义指令后进入的模式 | `Secure/Non-secure` |
+| `HYP` | Hypervisor | `11010` | `PL2` | 支持虚拟化的处理器中，Hypervisor代码运行的模式，用以支持同时运行多操作系统 | `Non-secure` |
+| `MON` | Monitor 监视模式 | `10110` | `PL1` | 在支持TrustZone扩展的处理器中的特殊模式，**用于切换**`Secure` `Non-secure`**模式** | `Secure` |
 
 在支持TrustZone安全扩展的处理器中，运行状态的`Secure`或`Non-secure`模式（TrustZone）和`PL`模式是互相独立的，两者没有必然联系。运行在`Non-secure`模式下的处理器无法访问`Secure`模式下使用的内存，包括外设。`MON`模式就是用于切换处理器运行的`Secure`和`Non-secure`模式，如下
 
@@ -362,51 +410,20 @@ ARMv7-A依然沿用了协处理器，使用专用的协处理器指令如`MRC` `
 
 ### 2.2.4 VFP与NEON SIMD寄存器
 
-## 3 内存架构
+## 3 内存架构：VMSA
 
 ## 3.1 Cache
 
 ## 3.2 MMU
 
-## 4 中断与异常
+## 4 中断与异常：GICv2
 
 ## 5 指令集
 
-## 6 GNU汇编
+## 6 通用定时器
 
-GNU汇编源代码使用`.s`文件后缀。每一行代码的基本格式如下
+## 7 小结
 
-```arm
-label: instruction @ comment
-```
+# ARMv8
 
-每一行汇编代码中，这三者不一定都出现
-
-其中`label`后面必须接`:`，用于给一段代码、函数或一段数据命名，之后在汇编指令中可以使用这些`label`进行程序的跳转，函数的调用，以及变量、只读数据的访问等。汇编器会自动计算`label`的地址
-
-`instruction`可以是一条汇编指令，也可以是directives（以`.`开头），用于给汇编器提供必要的解释性信息
-
-| Directives | 作用 |
-| :-: | :-: |
-| `.code16 .thumb` `.code32 .arm` | 规定使用的指令集 |
-| `.include "<filename>"` | 包含的文件 |
-| `.end` | 汇编文件的结束，通常不使用 |
-| `.equ <name>, <value>` | 为一个symbol赋值 |
-| `.set` |  |
-| `.req` |  |
-| `.section` |  |
-| `.global` |  |
-| `.byte <byte1>{, <byte2>...}` | 字节数据 |
-| `.hword <short1>{, <short2>...}` | 半字数据（2字节） |
-| `.word <word1>{, <word2>...}` | 单字数据（4字节） |
-| `.ascii "<string>"` `.asciz "<string>"` | 字符串数据，通常放在数据Section中。`.asciz`在末尾自动加上`NULL` |
-| `.balign 2{, <fill_value>{, <max_padding>}}` | 按`2`字节对齐，也可以其他`2^n`字节。可以设置占位数据，以及padding限制（超过就不会进行对齐） |
-| `.space` |  |
-| `.if .else .endif .ifdef .ifndef` | 条件编译 |
-| `.err` |  |
-| `.macro .exitm .endm` |  |
-| `.rept .endr` |  |
-| `.irp .endr` |  |
-
-
-## 7 ARMv8-A
+# ARM EBBR

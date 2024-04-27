@@ -75,7 +75,7 @@
         + [**2.7.5**](#275-网络配置) 网络配置
         + [**2.7.6**](#276-卷) 卷
 + [**3**](#3-kubernetes) Kubernetes
-+ [**4**](#4-cri-o) CRI-O
++ [**4**](#4-containerd) containerd
 + [**5**](#5-kata-containers) Kata Containers
 + [**6**](#6-qemu) QEMU
     + [**6.1**](#61-先行检查) 先行检查
@@ -89,6 +89,10 @@
 + [**7**](#7-virtualbox) VirtualBox
 + [**8**](#8-vagrant) Vagrant
 + [**9**](#9-libvirt) libvirt
++ [**10**](#10-podman) Podman
++ [**11**](#11-专题sr-iov) 专题：SR-IOV
++ [**12**](#12-专题linux-cgroup) 专题：Linux cgroup
++ [**13**](#13-ioi的容器工具isolate) IOI的容器工具：isolate
 
 ## 1 LXD
 
@@ -100,7 +104,11 @@ https://wiki.archlinux.org/title/LXD
 
 https://documentation.ubuntu.com/lxd/en/latest/
 
-> LXD已经被商业公司Canonical接管。正如MySQL被Sun收购一样（现Oracle），历史再次重演，LXD的自由软件版本Incus已经诞生（[2023.8.7](https://linuxcontainers.org/incus/)）。截至2023.10.11，Incus 0.1已经进入ArchLinux AUR，在以后将会替换LXD。而仓库的LXD已经不再更新
+> LXD已经被商业公司Canonical接管。正如MySQL被Sun收购一样（现Oracle），历史再次重演，LXD的Fork版本Incus已经诞生（[2023.8.7](https://linuxcontainers.org/incus/)）。截至2023.10.11，Incus 0.1已经进入ArchLinux AUR，在以后将会替换LXD。而仓库的LXD已经不再更新
+>
+> 更新：Incus已经进入extra，可以直接通过Arch仓库安装
+>
+> [ArchWiki](https://wiki.archlinux.org/title/Incus)给出了迁移到Incus的方法以及一些初始配置。Incus的用法和LXD基本相同，不再讲述
 
 ## 1.1 安装与配置
 
@@ -2056,7 +2064,7 @@ journalctl -xu docker.service
 
 ### 2.3.5 安全
 
-如果有必要，可以配置`docker`服务器不以`root`运行，原先的配置都是以`root`运行`docker`服务器（容器以非`root`运行），需要`sudo systemctl`
+如果有必要，可以配置`docker`服务器不以`root`运行，原先的配置都是以`root`运行`docker`服务器（容器以非`root`运行）
 
 首先确保配置了`/etc/subuid /etc/subgid`
 
@@ -3332,7 +3340,7 @@ K8s K3s
 
 TODO
 
-## 4 CRI-O
+## 4 containerd
 
 TODO
 
@@ -3342,9 +3350,9 @@ TODO
 
 ## 6 QEMU
 
-运行QEMU，利用KVM
+运行QEMU，利用KVM。这里只关注x86平台运行x86系统
 
-KVM是集成于Linux内核的一个虚拟化模块。QEMU的传统模式使用纯软件模拟一个计算机系统，而启用了KVM以后可以利用CPU的虚拟化扩展，提高同架构虚拟机运行效率
+KVM是集成于Linux内核的一个虚拟化模块。QEMU的传统模式使用纯软件模拟一个计算机系统，而启用了KVM以后可以利用CPU的虚拟化扩展，提高虚拟机运行效率
 
 ## 6.1 先行检查
 
@@ -3578,7 +3586,7 @@ qemu-system-x86_64 \
 intel_iommu=on
 ```
 
-AMD和Intel平台需要加上以下内核参数，防止Linux内核触碰不支持穿透的硬件设备。之后执行一下`grub-mkconfig`并重启，参考[笔记](201219a_shell.md#1210-内核参数)
+AMD和Intel平台需要加上以下内核参数，防止Linux内核触碰不支持穿透的硬件设备。之后执行一下`grub-mkconfig`并重启，参考[使用内核参数](201219a_shell.md#1210-内核参数)
 
 ```
 iommu=pt
@@ -3832,7 +3840,7 @@ echo 2 > /sys/kernel/mm/hugepages/hugepages-1048576kB/nr_hugepages
 
 ## 6.3 QEMU命令行完整参考
 
-TODO
+仅`x86_64`
 
 ## 7 VirtualBox
 
@@ -3846,4 +3854,44 @@ TODO
 
 TODO
 
-## 10 专题：SR-IOV
+## 10 Podman
+
+Podman和Docker十分类似，包括命令行用法也相近。上手过Docker以后很容易就可以上手Podman。主要的一个区别是Podman不是基于daemon的，从设计上看更加简单一些
+
+## 11 专题：SR-IOV
+
+## 12 专题：Linux cgroup
+
+## 12.1 cgroup基本概念
+
+查看内核提供的`cgroups`介绍
+
+```
+$ man cgroups
+```
+
+`cgroup`是Linux下的一个虚拟文件系统
+
+## 12.2 cgroup v1
+
+## 12.3 cgroup v2
+
+## 12.4 namespaces
+
+查看内核提供的`namespaces`介绍
+
+```
+$ man namespaces
+```
+
+## 12.5 使用cgroup
+
+Arch通过AUR安装`libcgroup`
+
+Alpine下安装`cgroup-tools`
+
+```
+$ doas apk add cgroup-tools
+```
+
+## 13 IOI容器工具：isolate

@@ -8,19 +8,60 @@
 
 ## 快速传送门
 
+### Linux运维
+
+|  |
+| :- |
+| [Shell脚本](201219a_shell.md#2-shell脚本基础) |
+| [文件管理](201219a_shell.md#11-文件管理) |
+| [系统管理](201219a_shell.md#12-系统管理) |
+| [Awk脚本，正则表达式](201219a_shell.md#31-awk编程) |
+| [Tcl编程](201219a_shell.md#33-tcl编程) |
+| [iptables](210130a_install-notice.md#1-安全专题防火墙iptables) |
+| [nftables](210130a_install-notice.md#8-安全专题防火墙nftables) |
+| [ufw](210130a_install-notice.md#9-安全专题防火墙前端ufw) |
+| [firewalld](210130a_install-notice.md#10-安全专题防火墙前端firewalld) |
+| [SELinux](210130a_install-notice.md#5-安全专题selinux) |
+| [AppArmor](210130a_install-notice.md#6-安全专题apparmor) |
+| [Ansible](210130a_install-notice.md#7-运维工具ansible) |
+| [cgroup](230709a_container.md#12-专题linux-cgroup) |
+
+### 容器与虚拟化
+
+|  |
+| :- |
+| [Docker](230709a_container.md#2-docker) |
+| [LXD](230709a_container.md#1-lxd) |
+| [Kubernetes](230709a_container.md#3-kubernetes) |
+| [podman](230709a_container.md#10-podman) |
+| [QEMU KVM](230709a_container.md#6-qemu) |
+
+### 嵌入式
+
 |  |
 | :- |
 | [ARMv7-M指令集](201020a_stm32.md#16-isa详解指令集) |
-| [ELF文件格式，程序链接与运行原理](220429a_compiler.md#1-elf文件结构) [ld链接脚本](201020a_stm32.md#4-ld链接器脚本) |
-| [Shell脚本](201219a_shell.md#2-shell脚本基础) |
-| [Awk脚本，正则表达式](201219a_shell.md#31-awk编程) |
-| [Tcl编程](201219a_shell.md#33-tcl编程) |
+| [LFS](200908b_qemu-arm.md#基于lfs) |
+
+### 通用底层
+
+|  |
+| :- |
+| [ELF文件格式，程序链接与运行原理](220429a_compiler.md#1-elf文件结构) |
+| [ld链接脚本](201020a_stm32.md#4-ld链接器脚本) |
+| [IEEE754浮点数](200920c_verilog.md#51-IEEE754浮点数标准) |
+
+### 工具
+
+|  |
+| :- |
 | [Git教程](201219a_shell.md#35-git使用) |
 | [GPG与数据加密](201219a_shell.md#1130-gpg) |
-| [Docker](230709a_container.md#2-docker) [LXD](230709a_container.md#1-lxd) |
-| [iptables配置](210130a_install-notice.md#11-防火墙iptables) |
-| [IEEE754浮点数](200920c_verilog.md#51-IEEE754浮点数标准) |
-| [SELinux](210130a_install-notice.md#5-安全专题selinux) [AppArmor](210130a_install-notice.md#6-安全专题apparmor)|
+
+### 硬件
+
+|  |
+| :- |
 | [RS232串口](210524a_8051.md#8-补充rs232串口通信) |
 
 ## 列表

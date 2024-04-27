@@ -128,7 +128,13 @@
 + [**6**](#6-安全专题apparmor) 安全专题：AppArmor
 + [**7**](#7-运维工具ansible) 运维工具：Ansible
 + [**8**](#8-安全专题防火墙nftables) 安全专题：防火墙nftables
+    + [**8.1**](#81-基本概念) 基本概念
+    + [**8.2**](#82-表) 表
+    + [**8.3**](#83-规则链) 规则链
+    + [**8.4**](#84-规则) 规则
+        + [**8.4.1**](#841-规则格式) 规则格式
 + [**9**](#9-安全专题防火墙前端ufw) 安全专题：防火墙前端ufw
++ [**10**](#10-安全专题防火墙前端firewalld) 安全专题：防火墙前端firewalld
 + [**FreeBSD**](#freebsd)
 + [**1**](#1-防火墙) 防火墙
 + [**2**](#2-存储与文件系统-1) 存储与文件系统
@@ -169,7 +175,7 @@ sudo systemctl status ip6tables
 
 ## 1.2 filter表简析
 
-`filter`表默认包含3个链`INPUT OUTPUT FORWARD`，如下
+`filter`表默认包含3个链`INPUT OUTPUT FORWARD`，如下，列出表中所有规则链和其中包含的`rules`
 
 ```shell
 sudo iptables -nvL -t filter
@@ -206,15 +212,15 @@ sudo ip6tables-restore /etc/iptables/ip6tables.rules
 
 ## 1.4 常用命令和操作
 
-常用命令示例（`iptables`命令通常都需要`sudo`执行）
+常用命令示例（`sudo`执行）
 
 创建新规则链
 
 ```shell
-iptables -t filter -N LOGDROP # 创建一个名为LOGDROP的规则链
+iptables -t filter -N LOGDROP # 在filter表创建一个名为LOGDROP的规则链
 ```
 
-列出规则
+列出规则链
 
 ```shell
 iptables -t filter -L
@@ -249,18 +255,18 @@ iptables -t filter -P FORWARD DROP # 将filter中FORWARD规则链的policy设置
 iptables -t filter -A INPUT -p tcp --dport 17500 -j REJECT --reject-with icmp-port-unreachable # -A表示在现有规则链下追加规则，目标为REJECT。接收到的数据包走的传输层协议为tcp，--dport指定数据包目标端口
 ```
 
-> 一条规则需要指定目标（`-j`跳转到）以及各项用于匹配的参数，例如协议（`-p`），端口（`--dport --sport`），接口（`-i`），IP（`-d -s`）等
+> 一条规则需要指定目标（`-j`跳转到）以及各项必需的用于匹配的参数，例如协议（`-p`，常用`tcp`，`udp`或`icmp`），端口（`--dport --sport`），接口（`-i`），IP（`-d -s`）等
 
 插入规则
 
 ```shell
-iptables -t filter -I INPUT 2 -p tcp --dport 17500 -s 10.0.0.85 -j ACCEPT -m comment --comment "Dropbox" # -I表示在指定行数添加规则，该规则链内原有后续规则依次向后移动
+iptables -t filter -I INPUT 2 -p tcp --dport 17500 -s 10.0.0.85 -j ACCEPT -m comment --comment "Dropbox" # -I表示在INPUT表指定行数2添加规则，该规则链内原有后续规则依次向后移动
 ```
 
 替换规则
 
 ```shell
-iptables -t filter -R INPUT 1 -p tcp --dport 17500 ! -s 10.0.0.85 -j REJECT --reject-with icmp-port-unreachable # -R表示替换INPUT中的规则，1表示第一行，!表示仅排除-s指定的特定的IP，除此IP外所有的其他IP都会和该规则匹配并被REJECT。使用iptables -L查看时就显示为!10.0.0.85
+iptables -t filter -R INPUT 1 -p tcp --dport 17500 ! -s 10.0.0.85 -j REJECT --reject-with icmp-port-unreachable # -R表示替换INPUT中的规则，1表示第一行，!表示反选，仅排除-s指定的特定的IP，除此IP外所有的其他IP都会和该规则匹配并被REJECT。使用iptables -L查看时就显示为!10.0.0.85
 ```
 
 删除规则
@@ -288,7 +294,7 @@ iptables -t filter -A LOGDROP -j DROP # 没添加任何匹配规则，无论什�
 
 > `-m`表示`match`，是一个扩展模块，用于检查并匹配数据包的特定属性，例如频度`limit`，连接状态`conntrack`等，后面需要加上该`match`对应的参数
 
-从其他链中想要记录并丢弃数据包时，直接`-j`设置跳转到`LOGDROP`即可
+从其他链中想要记录并丢弃数据包时，直接`-j`设置跳转到`LOGDROP`链即可
 
 日志捕捉记录的数据包可以通过`journalctl`查看
 
@@ -305,7 +311,7 @@ iptables -t filter -N TCP
 iptables -t filter -N UDP
 ```
 
-如果主机不作为路由使用，禁用数据包转发
+如果主机不作为路由使用，设置`FORWARD`链默认动作`DROP`，禁用数据包转发
 
 ```shell
 iptables -t filter -P FORWARD DROP
@@ -317,7 +323,7 @@ iptables -t filter -P FORWARD DROP
 iptables -t filter -P INPUT DROP
 ```
 
-允许已建立连接所属数据包，以及与这些连接有关的ICMP数据包
+允许通过已建立连接所属数据包，以及与这些连接有关的ICMP数据包
 
 ```shell
 iptables -t filter -A INPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
@@ -327,7 +333,7 @@ iptables -t filter -A INPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
 >
 > 所谓`stateful firewall`就是防火墙会跟踪数据包的状态并使用一个状态机维护有效的连接，并判断每个数据包所属的状态。除以上状态，还有`UNTRACKED`状态，以及`SNAT DNAT`两个虚拟状态
 >
-> 注意，`iptables`还有一个不同的`--ctstatus`参数，使用格式和`--ctstate`类似，千万不要混淆
+> 注意，`iptables`还有一个不同的`--ctstatus`参数，使用格式和`--ctstate`类似，不要混淆
 
 允许所有`lo`回环接口的流量
 
@@ -364,7 +370,7 @@ iptables -t filter -A INPUT -p tcp -j REJECT --reject-with tcp-reset
 iptables -t filter -A INPUT -j REJECT --reject-with icmp-proto-unreachable
 ```
 
-> 上述配置中，所有的剩余数据包都会使用恰当的方式进行`REJECT`
+> 上述配置中，所有其他未跳转到`TCP`或`UDP`链的数据包都会使用恰当的方式进行`REJECT`
 
 接下来可以按照需求配置TCP UDP规则，由于是基于白名单的防火墙，配置允许的访问即可
 
@@ -402,7 +408,7 @@ iptables -t filter -A INPUT -p udp -m recent --set --rsource --name UDP-PORTSCAN
 如果配置了TCP UDP防扫端口，需要重新将原先`INPUT`的最后一行放到最后
 
 ```shell
-iptables -t filter  -D INPUT -j REJECT --reject-with icmp-proto-unreachable
+iptables -t filter -D INPUT -j REJECT --reject-with icmp-proto-unreachable
 iptables -t filter -A INPUT -j REJECT --reject-with icmp-proto-unreachable
 ```
 
@@ -620,7 +626,7 @@ SELinux的争议在于NSA参与了开发。很多非企业级Linux发行版都�
 
 相比SELinux需要为每一个文件标记额外属性，另一个流行的解决方案为[AppArmor](#6-安全专题apparmor)，它是基于访问路径设计的，相比SELinux要简单一些
 
-红帽系的发行版例如Fedora，RHEL，Rocky Linux，AlmaLinux和CentOS默认使用SELinux。而其他许多Debian、SUSE系发行版例如Ubuntu，Debian，OpenSUSE，SLES等更加偏好AppArmor。其他面向爱好者做桌面系统的发行版如ArchLinux，ArtixLinux，Gentoo等默认不会使用两者中的任何一个
+SELinux的开发与维护主要受RedHat赞助。红帽系的发行版例如Fedora，RHEL，Rocky Linux，AlmaLinux和CentOS默认使用SELinux。而其他许多Debian、SUSE系发行版例如Ubuntu，Debian，OpenSUSE，SLES等更加偏好AppArmor，因为Canonical赞助了它的开发。其他面向爱好者做桌面系统的发行版如ArchLinux，ArtixLinux，Gentoo等默认不会使用两者中的任何一个
 
 > 安卓默认也开启了SELinux
 
@@ -6237,7 +6243,698 @@ TODO
 
 ## 8 安全专题：防火墙nftables
 
+`nftables`是作为`iptables`的替代品出现的，同样使用netfilter
+
+安装
+
+```
+$ sudo pacman -S nftables
+```
+
+启动服务
+
+```
+$ sudo systemctl start nftables
+```
+
+AlpineLinux
+
+```
+$ doas rc-service nftables start
+```
+
+> 可以像使用`iptables`一样使用`nftables`，安装`iptables-nft`。这里只介绍原生使用方法
+
+## 8.1 基本概念
+
+`nftables`的设计和`iptables`基本相似，同样也是由表`table`包含规则链`chain`，而`chain`中包含了规则。`nftables`不像`iptables`一样有`nat` `filter`这样的内置`table`，它的所有`table`本质上都是一样的，都可以删除
+
+`nftables`只提供了一个`nft`命令用于所有的配置。`nftables`安装以后会提供一个初始配置文件`/etc/nftables.conf`或`/etc/nftables.nft`，每次`nftables`启动时防火墙配置就从该文件加载，其中定义了一张类型为`inet`的表`filter`。它通常还会通过`include`关键字包含`/etc/nftables.d`和`/var/lib/nftables`下的配置文件
+
+使用以下命令显示当前有效的表，规则链以及包含的规则
+
+```
+$ sudo nft list ruleset
+```
+
+仅列出特定类型的`table`
+
+```
+$ sudo nft list ruleset inet
+$ sudo nft list ruleset arp
+```
+
+清空所有`rule`。之后重启服务，会从`/etc/nftables.conf`以及`/etc/nftables.d`重新读入防火墙配置，此时防火墙失效
+
+```
+$ sudo nft flush ruleset
+```
+
+仅重置特定类型的`table`
+
+```
+$ sudo nft flush ruleset inet
+```
+
+> `nft`有一个交互模式`nft -i`。事实上直接从shell使用`nft`时，后面的所有参数就是`nft`的命令。这些命令可以直接在`nft`的交互模式下使用
+
+## 8.2 表
+
+`nftables`中每一张表都是有类型的。有以下几种可用类型
+
+| 类型 | 定义 |
+| :- | :- |
+| `ip` | iptables（适用于IPv4） |
+| `ip6` | ip6tables（适用于IPv6） |
+| `inet` | iptables ip6tables（适用于IPv4 IPv6） |
+| `arp` | arptables（适用于ARP数据包） |
+| `bridge` | ebtables |
+
+以下所有命令需要`sudo`或`root`身份执行
+
+列出表，每一行都表示一张表，依次显示`table`关键字，`table`的类型，以及`table`的名称
+
+```
+$ nft list tables
+table inet filter
+table inet table_name
+...
+```
+
+添加一张表，指定类型
+
+```
+$ nft add table inet table_name
+```
+
+列出表`table_name`中所有的链和规则，注意`nft list`以及`delete` `flush`命令都要加上表的类型
+
+```
+$ nft list table inet table_name
+```
+
+以数字形式显示集合
+
+```
+$ nft -nn list table inet table_name
+```
+
+删除表
+
+```
+$ nft delete table inet table_name
+```
+
+仅删除表内容
+
+```
+$ nft flush table inet table_name
+```
+
+## 8.3 规则链
+
+`nftables`不像`iptables`一样有内置的规则链例如`PREROUTING INPUT FORWARD OUTPUT POSTROUTING`等。类似地，`nftables`中的规则链也都是相同的，可以添加删除
+
+`nftables`中的规则链分为`base`和`regular`两种。`base`基本规则链作为数据包入口使用，同时需要指定`hook`；`regular`普通规则链作为跳转目标使用。只有`base`规则链是直接被关联到一个`hook`的；而`regular`规则链和具体的`hook`是没有直接关联的，这样可以方便一些`rule`的共用
+
+示例，向表`table_name`（类型`inet`）添加一条`base`规则链`chain_name`
+
+```
+$ nft add chain inet table_name chain_name '{ type filter hook input priority 0; comment "Rules for LAN filtering"; }'
+```
+
+或
+
+```
+$ nft create chain inet table_name chain_name '{ type filter hook input priority 0; comment "Rules for LAN filtering"; }' 
+```
+
+> 注意使用`''`将后面的内容括起来，防止shell转译`{}`。也可以将`nft`之后的所有内容括起来
+
+```
+$ nft 'add chain inet table_name chain_name { type filter hook input priority 0; comment "Rules for LAN filtering"; }' 
+```
+
+> `base`规则链都有自己的优先级，通常是一个整数。优先级是针对于该规则链所属`hook`来说的，在同一个`hook`中，优先级数字越小优先级越高，并且可以为负数
+>
+> 此外，`base`和`regular`规则链都可以定义默认的动作`policy`以及可选的注释。后文会讲
+>
+> 使用`create`添加时，如果想要创建的规则链已经存在，会错误返回
+
+向表`table_name`（类型`inet`）添加一条`regular`规则链`chain_name`
+
+```
+$ nft add chain inet table_name chain_name
+```
+
+```
+$ nft add chain inet table_name chain_name '{ policy drop; comment "Rules for port access"; }'
+```
+
+列出规则链`chain_name`中所有的规则
+
+```
+$ nft list chain inet table_name chain_name
+```
+
+`base`规则链有以下几种类型（规则链`{}`中第一行，紧跟`type`）
+
+| 类型 | 定义 |
+| :- | :- |
+| `filter` | 数据包过滤。可用于`ip` `ip6` `inet` `arp`和`bridge`表 |
+| `route` | 数据包路由，作用和`iptables`中的`mangle`表类似，可使用`hook`类型只有`output`。如果使用其他`hook`，请使用`filter`类型的规则链。可用于`ip` `ip6` `inet`表 |
+| `nat` | NAT。特定的经过NAT的数据流只有第一个数据包会经过该链，后续的直接跳过。不可用于数据包过滤。可用于`ip` `ip6` `inet`表 |
+
+`base`规则链有以下可用的规则链`hook`类型（就是指定使用哪个阶段的探针）
+
+| 类型 | 定义 |
+| :- | :- |
+| `ingress` | 最早的`hook`，在`prerouting`之前，可以看成从网卡例如`eth0`进来的原始数据。在`inet`类型的表中使用时至少需要内核版本5.10 |
+| `prerouting` | iptables prerouting，在做出路由决策之前的所有数据包。可以是发到本机或发到其他主机的数据包 |
+| `input` | 应用程序输入之前，是路由决策后发往本机进程的数据包 |
+| `forward` | 转发，是路由决策后不属于本机的数据包。直接绕过本机进程 |
+| `output` | 本机应用程序输出的数据包 |
+| `postrouting` | iptables postrouting，是离开本机前的数据包，包括被转发以及本机应用程序输出的数据包 |
+
+编辑规则链
+
+```
+$ nft chain inet table_name chain_name '{ type filter hook input priority 0; policy drop ; }'
+```
+
+> 上述规则将`policy`由`accept`更改为`drop`。**注意**`nftables`**中规则链的**`policy`**只能支持**`accept`**和**`drop`**两种动作，其他的不支持**
+
+删除规则链
+
+```
+$ nft delete chain inet table_name chain_name
+```
+
+仅删除规则链内容
+
+```
+$ nft flush chain inet table_name chain_name
+```
+
+## 8.4 规则
+
+### 8.4.1 基本增删操作
+
+`base`规则链由一条关键字`type`开头的基本定义以及紧随其后的若干条规则`rule`构成
+
+基本定义`type hook priority`，`policy`以及`comment`后面都有`;`，而每条`rule`后面没有`;`。`base`规则链可以定义`policy`，它和`iptables`中的policy含义一样表示该规则链对数据包默认采取的动作。而`regular`规则链没有`type`开头的基本定义，只有`rule`；`regular`规则链通常作为`jump`跳转到的目标。这里不再单独展示
+
+```
+$ nft list chain inet filter input
+table inet filter {
+    chain input {
+        type filter hook input priority filter; policy drop;
+        iifname "lo" accept comment "Accept any localhost traffic"
+        ct state { established, related } accept comment "Accept traffic originated from us"
+        ...
+    }
+}
+```
+
+列出`rule`与对应的`handle`序号
+
+```
+$ nft --handle --numeric list chain inet table_name chain_name
+...
+        ip saddr 127.0.0.1 accept # handle 12
+... 
+```
+
+或
+
+```
+$ nft -na list chain inet table_name chain_name
+```
+
+示例，向规则链添加规则，其中`rule_statement`就是规则声明，后面章节会讲述其具体内容。如果不指定`handle`序号那么默认追加到规则链末尾
+
+```
+$ nft add rule inet table_name chain_name handle 10 rule_statement
+```
+
+插入规则到`12`之前
+
+```
+$ nft insert rule inet table_name chain_name handle 12 rule_statement
+```
+
+替换规则
+
+```
+$ nft replace rule inet table_name chain_name handle 10 rule_statement
+```
+
+删除规则，使用`handle`指定序号
+
+```
+$ nft delete rule inet table_name chain_name handle 10
+```
+
+删除规则链内所有规则
+
+```
+$ nft flush chain inet table_name chain_name
+```
+
+或
+
+```
+$ nft delete rule inet table_name chain_name
+```
+
+### 8.4.2 规则声明基本格式
+
+规则声明`rule_statement`由两个关键部分构成，分别为匹配项，以及对匹配上的数据包采取的动作（verdict）。此外每条`rule_statement`还可以添加一个可选的注释`comment`
+
+### 8.4.3 集合
+
+`nftables`可以支持集合的使用。集合分为匿名集合与命名集合
+
+匿名集合用例。匿名集合嵌入到`rule`中，不可更改，想要更改必须删除规则后重新添加
+
+```
+$ nft add rule inet filter input tcp dport { telnet, http, https } accept
+```
+
+命名集合定义示例，命名集合直接定义在`table`中
+
+```
+table ip forbidden {
+    ...
+    set banned {
+        type ipv4_addr
+        flags interval
+        elements = {
+            115.23.10.4,
+            136.75.33.135
+        }
+    }
+    ...
+}
+```
+
+> 集合使用`{}`将多个元素括起来，使用`,`分隔多个元素。命名集合可以定义它的`type`和`flags`
+
+对命名集合增删元素使用以下命令，示例
+
+```
+$ nft add element ip forbidden banned {133.32.23.55}
+$ nft delete element ip forbidden banned {133.32.23.55}
+```
+
+命名集合可以使用`@`引用，示例
+
+```
+table ip forbidden {
+    ...
+    set banned {
+        type ipv4_addr
+        flags interval
+        elements = {
+            115.23.10.4,
+            136.75.33.135
+        }
+    }
+
+    chain my_input {
+        type filter hook input priority filter; policy drop;
+        ...
+        ip saddr @banned jump reject_banned_ip comment "Reject connection from banned IPs"
+        ...
+    }
+}
+```
+
+### 8.4.4 规则重载
+
+规则重载实际上就是通过`nft -f`加载新的防火墙配置文件。为了方便在原来的配置基础上修改，可以使用以下方法
+
+首先导出当前`ruleset`，在开头添加一行`flush ruleset`
+
+```
+$ echo "flush ruleset" > new.nft
+$ nft -s list ruleset >> new.nft
+```
+
+修改完成后重载
+
+```
+$ nft -f new.nft
+```
+
+### 8.4.5 监控规则修改
+
+`nft`提供了一个daemon运行模式用于实时监控防火墙配置的修改，并在终端打印。实际应用中可以将这些记录使用`tee`输出到文件
+
+```
+$ nft monitor rules
+```
+
+仅新规则
+
+```
+$ nft monitor new rules
+```
+
+### 8.4.6 nftrace
+
+`nft`可以在防火墙配置中添加`nftrace`，以使用`nft monitor trace`命令进行数据包的追踪与显示，实现数据包的监控
+
+通常的做法是给特定的`hook`阶段添加一个规则链，这个规则链中只有一个使能`nftrace`的声明
+
+假设在`prerouting`这个`hook`添加一个专用规则链`trace_chain`，优先级设为最高
+
+```
+$ nft add chain inet table_name trace_chain '{ type filter hook prerouting priority -1; }'
+$ nft add rule inet table_name trace_chain meta nftrace set 1
+```
+
+> 添加了一条`meta nftrace set 1`启用数据包追踪
+
+也可以匹配特定类型的数据包，只跟踪这些特定的连接
+
+```
+$ nft add rule inet table_name trace_chain ip protocol tcp meta nftrace set 1
+```
+
+之后就可以使用以下命令追踪数据包
+
+```
+$ nft monitor trace
+```
+
+> 上述命令在当前终端输出追踪记录。每一个数据包都会被赋予一个`trace id`
+
+取消跟踪只需删除该链即可
+
+```
+$ nft delete chain inet table_name trace_chain
+```
+
+## 8.5 规则匹配项
+
+前文所述`rule_statement`中的匹配项部分，`rule_statement`的前半部分
+
+### 8.5.1 基于meta元信息
+
+元信息是指数据包本身具备的一些属性，这些属性由本机观测得来，不一定是数据包本身包含的信息
+
+多个`meta`元信息匹配项需要以一个`meta`关键字起头
+
+匹配数据包属性
+
+| 关键字 | 定义 | 注释 |
+| :- | :- | :- |
+| `pkttype` | 数据包类型 | 可以是`unicast broadcast multicast other`，是可设定属性 |
+| `length` | 数据包长度 | 32位整型 |
+| `protocol` | EtherType | 见[以太网](221112a_network.md#312-以太网帧格式) |
+| `nfproto` | 网络协议 | 可以是`ipv4 ipv6`等，仅适用于`inet`表 |
+| `l4proto` | 传输协议 | 可以是`tcp udp`等 |
+
+匹配网络接口
+
+| 关键字 | 定义 | 注释 |
+| :- | :- | :- |
+| `iif` | 输入接口下标 | 32位整型，比`iifname`匹配速度快。接口下标动态分配所以使用时需要注意 |
+| `iifname` | 输入接口名 | 16字节字符串，例如`eth0` |
+| `iiftype` | 输入接口类型 | 16位整型，可以是`ether` `ppp` `ipip` `ipip6` `loopback` `sit` `ipgre`。不常用 |
+| `iifkind` | 输入接口类型名 | 不常用 |
+| `iifgroup` | 输入接口组 | devgroup |
+| `oif` | 输出接口下标 | 32位整型，比`oifname`匹配速度快。接口下标动态分配所以使用时需要注意 |
+| `oifname` | 输出接口名 | 16字节字符串，例如`eth0` |
+| `oiftype` | 输出接口类型 | 同`iiftype`。不常用 |
+| `oifkind` | 输出接口类型名 | 不常用 |
+| `oifgroup` | 输出接口组 | 32位整型，设备devgroup |
+| `ibrname` | 输入网桥接口名 |  |
+| `obrname` | 输出网桥接口名 |  |
+| `ibrvproto` | 输入网桥vlan协议 |  |
+| `ibrpvid` | 输入网桥接口vid | VLAN ID |
+| `sdif` | 从设备接口下标 |  |
+| `sdifname` | 从设备接口名 |  |
+
+示例
+
+```
+$ nft add rule inet table_name chain_name meta iifname lo accept
+```
+
+使用`l4proto`的`th`（transport header）简化对`tcp`和`udp`的重复配置
+
+```
+$ nft 'add rule inet table_name chain_name meta l4proto { tcp, udp } th dport 53 counter accept comment "accept DNS"'
+```
+
+匹配数据包标记，routing class和realm
+
+| 关键字 | 定义 | 注释 |
+| :- | :- | :- |
+| `mark` | 数据包标记 | 是可设定属性 |
+| `priority` | tc数据包优先级 | 是可设定属性 |
+| `rtclassid` | routing realm |  |
+
+示例
+
+```
+$ nft add rule inet table_name chain_name meta mark 123 counter
+```
+
+```
+$ nft add rule inet table_name chain_name meta priority abcd:1234
+```
+
+```
+$ nft add rule inet table_name chain_name meta priority none
+```
+
+匹配socket的UID/GID
+
+| 关键字 | 定义 | 注释 |
+| :- | :- | :- |
+| `skuid` | UID |  |
+| `skgid` | GID |  |
+
+示例
+
+```
+$ nft add rule inet table_name chain_name meta skuid 1000 counter
+```
+
+匹配时间
+
+| 关键字 | 定义 | 注释 |
+| :- | :- | :- |
+| `time` | 时间戳 | 可以是UNIX时间（单位ns）或ISO格式的日期 |
+| `day` | 一周7天日期 | 可以是`0`到`6`，或`Monday`，或`Mon` |
+| `hour` | 一天24小时时间 | 格式`HH:MM:SS`，可省略`SS` |
+
+匹配安全特性
+
+| 关键字 | 定义 | 注释 |
+| :- | :- | :- |
+| `cpu` | 处理该数据包的CPU序号 | 32位整型 |
+| `cgroup` | socket的cgroup ID | 32位整型 |
+| `secmark` | 数据包安全标记 | 32位整型，是可设定属性 |
+| `ipsec` | 数据包是否通过ipsec加密 | 1位布尔 |
+
+其他
+
+| 关键字 | 定义 | 注释 |
+| :- | :- | :- |
+| `nftrace` | nftrace debugging | 1位布尔，是可设定属性 |
+| `random` | 伪随机数 | 32位整型 |
+
+### 8.5.2 基于数据头
+
+较为常用的一些匹配项
+
+匹配Ethernet数据头
+
+> 基于`ether`的匹配只可用于`input`
+
+| 关键字 | 定义 | 注释 |
+| :- | :- | :- |
+| `ether` | 以太网信息 | `saddr`源地址，`daddr`目标地址，`type`为EtherType，可以是`ip` `ip6` `arp` `vlan` |
+
+示例，广播计数
+
+```
+$ nft add rule inet table_name chain_name ether daddr ff:ff:ff:ff:ff:ff counter
+```
+
+匹配ARP数据头
+
+| 关键字 | 定义 | 注释 |
+| :- | :- | :- |
+| `arp` | ARP数据包信息 | 见[ARP](221112a_network.md#44-arp协议)。`htype`数据链路层协议（Ethernet`1`），`ptype`网络层协议，`hlen`链路层地址长度，`plen`网络层地址长度，`operation`操作类型（`1`Request，`2`Reply），`saddr ether`（`SHA`），`daddr ether`（`THA`），`saddr ip`（`SPA`），`daddr ip`（`TPA`） |
+
+示例
+
+```
+$ nft add rule ip table_name chain_name arp operation 1 counter
+```
+
+匹配IPv4数据头
+
+| 关键字 | 定义 | 注释 |
+| :- | :- | :- |
+| `ip` | IPv4数据包信息 | `saddr`源地址，`daddr`目标地址，`protocol`传输层协议（可以是`tcp` `udp`等） |
+
+示例
+
+```
+$ nft add rule ip table_name chain_name ip saddr 192.168.1.12 ip daddr 192.168.1.13 counter
+```
+
+匹配IPv6数据头
+
+| 关键字 | 定义 | 注释 |
+| :- | :- | :- |
+| `ip6` | IPv6数据包信息 | `saddr`源地址，`daddr`目标地址，`nexthdr`传输层协议（next header） |
+
+示例
+
+```
+$ nft add rule ip6 table_name chain_name ip6 nexthdr udp counter
+```
+
+> 这里建议使用`meta`的`l4protocol`进行传输层协议鉴别，它会检查真正的传输层协议
+
+匹配ICMP数据头
+
+| 关键字 | 定义 | 注释 |
+| :- | :- | :- |
+| `icmp` | ICMP(v4)数据包信息 | `type`请求类型，可以是`echo-reply` `destination-unreachable` `source-quench` `redirect` `echo-request` `router-advertisement` `router-solicitation` `time-exceeded` `parameter-problem` `timestamp-request` `timestamp-reply` `info-request` `info-reply` `address-mask-request` `address-mask-reply`。可以通过`nft describe icmp type`查看 |
+| `icmpv6` | ICMPv6数据包信息 | `type`请求类型。通过`nft describe icmpv6 type`查看 |
+
+示例，丢弃所有`echo-request`
+
+```
+$ nft add rule inet table_name chain_name icmp type echo-request drop
+```
+
+示例，ICMPv6
+
+```
+$ nft add rule inet table_name chain_name icmpv6 type { nd-neighbor-solicit, nd-router-advert, nd-neighbor-advert } accept
+```
+
+匹配TCP/UDP/UDPlite数据流
+
+| 关键字 | 定义 | 注释 |
+| :- | :- | :- |
+| `tcp` | TCP | `sport`源端口，`dport`目标端口，`flags`为信号位，包括`fin` `syn` `rst` `psh` `ack` `urg` `ecn` `cwr` |
+| `udp` | UDP | `sport`源端口，`dport`目标端口 |
+
+> 上述数字参数例如`dport`和`sport`是可以使用比较符的。例如`dport ge 1024`，表示源端口大于等于`1024`。所有比较运算有`ge gt eq ne le lt`或`>= > = != <= <`
+
+示例
+
+```
+$ nft add rule inet table_name chain_name tcp flags != syn counter
+```
+
+```
+$ nft add rule inet table_name chain_name tcp dport 1-1024 counter
+```
+
+还可以进行位运算
+
+```
+$ nft add rule inet table_name chain_name tcp flags & (syn | ack) == syn | ack counter
+```
+
+丢弃MSS小于500的TCP SYN数据包
+
+```
+$ nft add rule inet table_name chain_name tcp flags syn tcp option maxseg size 1-500 drop
+```
+
+### 8.5.3 状态跟踪元信息
+
+
+
+### 8.5.4 路由
+
+### 8.5.5 速率限制
+
+## 8.6 规则动作
+
+前文所述`rule_statement`中的动作（verdict）部分，`rule_statement`的后半部分
+
+### 8.6.1 Accept和Drop
+
+| 动作 | 定义 |
+| :- | :- |
+| `accept` | 接受，数据包继续向后传递，经过当前规则链后续的`rule`和同`hook`相关的优先级更低的规则链 |
+| `drop` | 丢弃。数据包不再存在，不会再经过后续的任何`rule` |
+| `queue` | 队列 |
+| `continue` | 下一条 |
+| `return` | 退出 |
+| `jump chain_name` | 跳转 |
+| `goto chain_name` | 跳转 |
+| `counter` |  |
+
+> 注意`drop`和`accept`的后续数据包匹配动作是不一样的。一个数据包被`drop`以后就不会再继续匹配规则链中的后续`rule`，它已经消失，也不会被后续的`hook`捕捉到；而如果数据包被`accept`，它会继续和后面的`rule`匹配，也会继续被后面的`hook`捕捉，除非在后续某个阶段被`drop`
+
+### 8.6.2 Reject
+
+### 8.6.3 规则链跳转
+
+### 8.6.4 计数器
+
+### 8.6.5 记录数据流
+
+### 8.6.6 NAT
+
+### 8.6.7 数据包元信息设定
+
+### 8.6.8 数据包跟踪信息设定
+
+### 8.6.9 修改数据包
+
+### 8.6.10 重复数据包
+
+### 8.6.11 负载均衡
+
+### 8.6.12 队列
+
+## 8.7 nft脚本
+
+`nft`实质上就是有解释器功能的。可以直接将防火墙配置写到文件中，使用`nft`执行。`.nft`脚本格式如下。实际上`/etc/nftables.nft`或`/etc/nftables.conf`也是这样在`nft`启动时被执行的
+
+> 不要使用shell脚本管理`nftables`，因为使用shell对多条规则进行修改是非原子的，如果是较为繁忙的系统会导致潜在的安全问题以及可用性问题
+
+```
+#!/usr/sbin/nft -f
+```
+
+> `nft`脚本有两种格式，一种就是例如`/etc/nftables.conf`这样的配置文件格式，也是我们执行`nft list ruleset`时看到的格式；另一种则是将我们在`nft`交互模式中输入的命令逐行写入到脚本中，例如`add table inet table_name`等。`nft`可以保证这些规则在被执行时以原子形式更新防火墙
+
+使用`include`包含其他文件
+
+```
+include /etc/nftables.d/*
+```
+
+可以定义变量，并在其他地方使用`$`引用
+
+```
+define default_dns = 8.8.8.8
+define aux_dns = { 114.114.114.114, 114.114.115.115 }
+```
+
 ## 9 安全专题：防火墙前端ufw
+
+Debian系发行版通常使用`ufw`
+
+## 10 安全专题：防火墙前端firewalld
+
+Redhat系发行版通常使用`firewalld`
 
 # FreeBSD
 

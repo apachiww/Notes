@@ -500,14 +500,10 @@ kldload ext2fs
 mount -t ext2fs -o ro /dev/adaXpX /mnt
 ```
 
-## 4 jails玩耍简记
-
-`jails`可以算较早出现的容器技术（2000年），为FreeBSD特有功能，且至今仍得到广泛应用
-
-## 5 ZFS使用简记
+## 4 ZFS使用简记
 
 见[210130a](210130a_install-notice.md#22-存储与文件系统)
 
-## 6 服务管理
+## 5 服务管理
 
 见[210130a](210130a_install-notice.md#23-服务)

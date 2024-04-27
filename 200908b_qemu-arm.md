@@ -18,11 +18,17 @@
 + [**6**](#6-制作镜像文件) 制作镜像文件
 + [**7**](#7-启动qemu) 启动QEMU
 + [**基于LFS**](#基于lfs)
-+ [**1**](#1-构建gnu工具链) 构建GNU工具链
-    + [**1.1**](#11-手动编译) 手动编译
-    + [**1.2**](#12-基于crosstool-ng) 基于Crosstool-NG
++ [**1**](#1-需要的软件包) 需要的软件包
++ [**2**](#2-构建gnu工具链) 构建GNU工具链
+    + [**2.1**](#21-手动编译) 手动编译
+    + [**2.2**](#22-基于crosstool-ng) 基于Crosstool-NG
 + [**基于Buildroot**](#基于buildroot)
-+ [**Linux启动流程**](#linux启动流程)
++ [**基于AlpineLinux**](#基于alpinelinux)
++ [**基于ArchLinuxARM**](#基于archlinuxarm)
++ [**基于Debian**](#基于debian)
++ [**U-Boot**](#u-boot)
++ [**其他常用工具**](#其他常用工具)
++ [**1**](#1-命令行串口工具minicom) 命令行串口工具：minicom
 
 # 简易版
 
@@ -227,9 +233,7 @@ LFS 12.0
 
 BLFS 12.0
 
-CLFS 20141010
-
-需要参考[LFS](https://www.linuxfromscratch.org/lfs/)，[BLFS](https://www.linuxfromscratch.org/blfs/)，[CLFS](https://trac.clfs.org/)
+参考[LFS](https://www.linuxfromscratch.org/lfs/)，[BLFS](https://www.linuxfromscratch.org/blfs/)，[CLFS](https://trac.clfs.org/)
 
 首先创建一个`docker`容器`arch-lfs`，并将宿主机目录`~/repos/lfs`挂载到容器的`/home/lfs`
 
@@ -282,8 +286,16 @@ Core: at, batch, cpio, ed, fcrontab, lsb-tools, nspr, nss, pam, pax, sendmail (p
 
 ## 2.2 基于Crosstool-NG
 
-# 基于Buildroot
+# 使用Buildroot
 
-# Linux启动流程
+# AlpineLinux
+
+# Fedora
+
+# Debian
 
 # U-Boot
+
+# 其他常用工具
+
+## 1 命令行串口工具：minicom
