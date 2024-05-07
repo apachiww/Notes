@@ -24,7 +24,6 @@
 | [SELinux](210130a_install-notice.md#5-安全专题selinux) |
 | [AppArmor](210130a_install-notice.md#6-安全专题apparmor) |
 | [Ansible](210130a_install-notice.md#7-运维工具ansible) |
-| [cgroup](230709a_container.md#12-专题linux-cgroup) |
 
 ### 容器与虚拟化
 
@@ -35,18 +34,14 @@
 | [Kubernetes](230709a_container.md#3-kubernetes) |
 | [podman](230709a_container.md#10-podman) |
 | [QEMU KVM](230709a_container.md#6-qemu) |
+| [cgroup](230709a_container.md#12-专题linux-cgroup) |
 
-### 嵌入式
+### 嵌入式与通用底层
 
 |  |
 | :- |
 | [ARMv7-M指令集](201020a_stm32.md#16-isa详解指令集) |
 | [LFS](200908b_qemu-arm.md#基于lfs) |
-
-### 通用底层
-
-|  |
-| :- |
 | [ELF文件格式，程序链接与运行原理](220429a_compiler.md#1-elf文件结构) |
 | [ld链接脚本](201020a_stm32.md#4-ld链接器脚本) |
 | [IEEE754浮点数](200920c_verilog.md#51-IEEE754浮点数标准) |
@@ -56,9 +51,11 @@
 |  |
 | :- |
 | [Git教程](201219a_shell.md#35-git使用) |
+| [Makefile](201219b_makefile.md#1-简介) |
 | [GPG与数据加密](201219a_shell.md#1130-gpg) |
+| [OpenSSL命令行使用与SSL证书](221112a_network.md#556-附加说明openssl) |
 
-### 硬件
+### 硬件通信
 
 |  |
 | :- |
