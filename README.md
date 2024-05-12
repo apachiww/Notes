@@ -16,7 +16,6 @@
 | [文件管理](201219a_shell.md#11-文件管理) |
 | [系统管理](201219a_shell.md#12-系统管理) |
 | [Awk脚本，正则表达式](201219a_shell.md#31-awk编程) |
-| [Tcl编程](201219a_shell.md#33-tcl编程) |
 | [iptables](210130a_install-notice.md#1-安全专题防火墙iptables) |
 | [nftables](210130a_install-notice.md#8-安全专题防火墙nftables) |
 | [ufw](210130a_install-notice.md#9-安全专题防火墙前端ufw) |
@@ -41,7 +40,8 @@
 |  |
 | :- |
 | [ARMv7-M指令集](201020a_stm32.md#16-isa详解指令集) |
-| [LFS](200908b_qemu-arm.md#基于lfs) |
+| [LFS和Buildroot](200908b_qemu-arm.md#基于lfs) |
+| [Tcl编程](201219a_shell.md#33-tcl编程) |
 | [ELF文件格式，程序链接与运行原理](220429a_compiler.md#1-elf文件结构) |
 | [ld链接脚本](201020a_stm32.md#4-ld链接器脚本) |
 | [IEEE754浮点数](200920c_verilog.md#51-IEEE754浮点数标准) |

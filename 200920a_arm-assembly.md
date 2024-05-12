@@ -46,9 +46,9 @@
 
 ARM SoC mainline进展（会有滞后）：参照[postmarketOS](https://wiki.postmarketos.org/wiki/Mainlining) [RK3588主线化](https://gitlab.collabora.com/hardware-enablement/rockchip-3588/notes-for-rockchip-3588/-/blob/main/mainline-status.md) [sunxi主线化](https://linux-sunxi.org/Linux_mainlining_effort)
 
-开源GPU驱动：[Mesa](https://gitlab.freedesktop.org/mesa/mesa) Mesa主要负责Gallium3D用户态部分，而内核态DRM驱动见[kernel.org](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/)
+开源GPU驱动：[Mesa](https://gitlab.freedesktop.org/mesa/mesa) （Gallium3D），内核态DRM部分见[kernel.org](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/)
 
-Lima (ARM Mali Utgard) Panfrost (ARM Mali Midgard and later) Imagination (Imagination Rogue) Etnaviv (Vivante GC) Freedreno (Qualcomm Adreno) Tegra (NVIDIA Tegra K1/X1)
+Lima (ARM Mali Utgard) Panfrost (ARM Mali Midgard and later) Imagination (Imagination Rogue) Etnaviv (Vivante GC) Freedreno (Qualcomm Adreno) Tegra/Nouveau (NVIDIA Tegra K1/X1)
 
 Imagination GPU相关：[Wikipedia](https://en.wikipedia.org/wiki/PowerVR)
 
@@ -161,6 +161,8 @@ Linux From Scratch：见[LFS](https://www.linuxfromscratch.org/)
 
 + StarFive 赛昉科技
     + JH7110
++ SpacemiT 进迭时空
+    + K1
 + Sophgo 算能科技（比特大陆）
     + SG2380 (New product 2024, Milk-V Oasis首发)
 + Microchip 微芯半导体

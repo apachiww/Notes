@@ -15,8 +15,8 @@
     + [**2.1**](#21-lvm逻辑卷管理) LVM逻辑卷管理
     + [**2.2**](#22-存储安全数据加密) 存储安全：数据加密
 + [**3**](#3-服务) 服务
-    + [**3.1**](#31-基于systemd) 基于systemd
-    + [**3.2**](#32-基于openrc) 基于openrc
+    + [**3.1**](#31-systemd) systemd
+    + [**3.2**](#32-openrc) openrc
 + [**4**](#4-其他杂项) 其他杂项
     + [**4.1**](#41-系统初始化显示) 系统初始化显示
     + [**4.2**](#42-sudo与特权用户) sudo与特权用户
@@ -162,10 +162,10 @@
 + [**10**](#10-安全专题防火墙前端firewalld) 安全专题：防火墙前端firewalld
 + [**FreeBSD**](#freebsd)
 + [**1**](#1-防火墙) 防火墙
-+ [**2**](#2-存储与文件系统-1) 存储与文件系统
-    + [**2.1**](#21-zfs) ZFS
-+ [**3**](#3-服务管理) 服务管理
-+ [**4**](#4-容器jails) 容器jails
++ [**2**](#2-zfs) ZFS
++ [**3**](#3-容器jails) 容器jails
++ [**4**](#4-服务) 服务
++ [**5**](#5-mac) MAC
 
 # Linux
 
@@ -631,7 +631,7 @@ light -U 5 # 降低5
 
 单看SELinux的官方手册比较晦涩难懂，建议先看[实战](#522-selinux实战)，有初步了解以后再看概念
 
-> SELinux本身的设计比较混乱，给系统管理员带来了不小的负担。在Linux下实现全功能的MAC这个需求本身就是极度复杂的。但是为了数据安全，在关键的场合最好认真对待，不要禁用SELinux https://stopdisablingselinux.com/
+> SELinux本身的设计比较混乱，给系统管理员带来了不小的负担。在Linux下实现全功能的MAC这个需求本身就是极度复杂的。但是为了数据安全，在关键的场合最好认真对待，不要禁用SELinux https://stopdisablingselinux.com/ 。况且很多其他的MAC解决方案和SELinux也是有很多相似点的，了解了SELinux中的一些基本概念和应用到的原理有利于融会贯通
 >
 > Dan Walsh [博客](https://danwalsh.livejournal.com/)
 
@@ -647,27 +647,29 @@ SELinux的MAC鉴权位于DAC之后，也就是说如果DAC就没有允许访问�
 
 ### 5.1.2 SELinux的争议和类似项目
 
-SELinux的争议在于NSA参与了开发。很多非企业级Linux发行版都默认不使用SELinux，开启SELinux需要一些额外的操作，包括重编译、更换内核，设置参数，以及部分已有软件的重新编译
+SELinux的争议在于NSA参与了开发
 
-相比SELinux需要为每一个文件标记额外属性，另一个流行的解决方案为[AppArmor](#6-安全专题apparmor)，它是基于访问路径设计的，相比SELinux要简单一些
+很多非企业级Linux发行版默认不启用SELinux，开启SELinux需要一些额外的操作，包括重编译、更换内核，设置参数，以及部分已有软件的重新编译
 
-SELinux的开发与维护主要受RedHat赞助。红帽系的发行版例如Fedora，RHEL，Rocky Linux，AlmaLinux和CentOS默认使用SELinux。而其他许多Debian、SUSE系发行版例如Ubuntu，Debian，OpenSUSE，SLES等更加偏好AppArmor，因为Canonical赞助了它的开发。其他面向爱好者做桌面系统的发行版如ArchLinux，ArtixLinux，Gentoo等默认不会使用两者中的任何一个
+相比SELinux需要为每一个文件标记额外属性，另一个流行的解决方案为[AppArmor](#6-安全专题apparmor)，它是基于访问路径设计的，相比SELinux要略简单一些
 
-> 安卓默认也开启了SELinux
+SELinux的开发与维护主要受RedHat赞助。红帽系的发行版例如Fedora，RHEL等默认使用SELinux。而其他许多Debian、SUSE系发行版例如Ubuntu，Debian，OpenSUSE，SLES等更加偏好AppArmor，因为Canonical赞助了它。其他面向爱好者做桌面系统的发行版如ArchLinux，ArtixLinux，Gentoo等默认不会使用两者中的任何一个
+
+> 安卓默认使用SELinux
 
 此外还有一个收费的[grsecurity](https://grsecurity.net/)，在[Gentoo Wiki](https://wiki.gentoo.org/wiki/Hardened/Grsecurity2_Quickstart)有页面。这是除SELinux、AppArmor以外的又一个Linux安全扩展，除了MAC以外它还提供了程序运行时的内存防护。它提供了PaX（包含NOEXEC禁止执行，ASLR链接地址随机化功能），RBAC（基于Role的MAC）这些主要的安全功能模块。它以Linux内核`patch`的形式发布，用户需要自行下载补丁应用到内核源码后重新编译内核才能使用。而SELinux和AppArmor已经是Linux官方支持的安全扩展
 
 如果是想要免费的ASLR等运行时保护特性，可以看看[linux-hardened](https://github.com/anthraxx/linux-hardened)。这也是ArchLinux的`linux-hardened`内核使用到的项目
 
-> 检查自己系统对抗这些攻击的能力，可以使用`paxtest`测试，ArchLinux下可以通过`pacman -S paxtest`安装
+> 检查自己系统对抗这些运行时攻击的能力，可以使用`paxtest`测试，ArchLinux下可以通过`pacman -S paxtest`安装
 
 ### 5.1.3 基本工作原理
 
-SELinux使用`policy`定义进程之间、进程和资源之间的访问限制，`policy`由`rule`组成。SELinux本质上是以白名单的形式进行过滤的。任何不符合`policy`规定的资源访问都会被拦截并禁止。SELinux中`policy`需要编译为二进制格式，可以以`base`和`module`等形式存在，其中模块`policy`可以加载卸载或安装删除，灵活扩展
+SELinux使用`policy`定义进程之间、进程和资源之间的访问限制，`policy`由`rule`组成。SELinux本质上是以白名单的形式进行过滤的。任何不符合`policy`规定的资源访问都会被拦截并禁止（前提是`policy`正确配置）。SELinux中`policy`需要编译为二进制格式，可以以`base`和`module`等形式存在，其中模块`policy`可以加载卸载或安装删除，灵活扩展
 
 SELinux的MAC是在DAC后进行的。也就是说如果DAC环节就没有允许访问，那么也就不会执行MAC检查
 
-> 在设计`policy`时需要非常谨慎，最好要经过完整的验证，而一般的需求直接使用系统提供的`policy`就可以了
+> 在设计或修改`policy`时需要非常谨慎，最好使用后文讲述的方法，经过完整的验证，而一般的需求直接使用系统提供的`policy`就可以了
 
 SELinux基于上下文`context`判断是否允许访问，上下文格式为`user:role:type:sX:cX`五元组。使用SELinux的发行版例如RHEL会至少提供两种预设`policy`，分别为`targeted`和`mls`，二者只能选一个（默认`targeted`），其中`targeted`就是普通的基于`type`的`policy`，上下文中的`sX`不起作用；而`mls`基于BLP分层安全模型，需要使用到`sX`域，只在军事机关等要求极高安全性的场合会使用。MCS只是上述两种主`policy`的附加机制，使用`targeted`和`mls`时MCS都是默认开启的，但是需要额外配置后`cX`域才会真正起作用
 
@@ -677,7 +679,7 @@ SELinux基于上下文`context`判断是否允许访问，上下文格式为`use
 
 SELinux可以根据上下文将每个进程限制在合适的`domain`中，使其正常工作并给予最小的访问权限
 
-> SELinux只是为系统提供了资源访问的安全保护措施。**它能做的仅仅是防止数据进一步泄漏，并不能从根源上解决软件的安全漏洞**
+> SELinux只是为系统提供了资源访问的安全保护措施。**它能做的仅仅是防止数据进一步泄漏，并不能从根源上防范软件的安全漏洞**
 
 ## 5.2 SELinux中常见的术语解释
 
@@ -6881,23 +6883,254 @@ $ nft add rule inet table_name chain_name tcp flags syn tcp option maxseg size 1
 
 ### 8.5.3 状态跟踪元信息
 
-TODO
-
 有关`ct`关键字的用法
 
 匹配连接状态
 
 | 关键字 | 定义 | 注释 |
 | :- | :- | :- |
-| `state` | 连接状态 | `new`表示仅观测到这对主机之间的单向通信，`established`表示观测到这对主机之间有效的双向通信（例如`TCP`三次握手成功以后），`related`，`invalid`，`untracked` |
+| `state` | 连接状态 | `new`表示仅观测到这对主机之间的单向通信，`established`表示观测到这对主机之间有效的双向通信（例如`TCP`三次握手成功以后），`related`表示观测到主连接后触发的次要连接（例如FTP的数据通道），`invalid`表示该连接不符合预期的数据包，`untracked`表示通过`notrack`显式声明不要跟踪的数据包 |
 
 示例
 
 ```
-
+    chain in {
+        type filter hook input priority filter; policy drop;
+        ct state established,related accept
+    }
 ```
 
+匹配特定协议例如`ftp`
+
+| 关键字 | 定义 | 注释 |
+| :- | :- | :- |
+| `helper` | 跟踪特殊协议 |  |
+
+`helper`的用法比较特殊。完整的`ct helper`用法示例
+
+```
+table inet stateful_ftp {
+    ct helper ftp-standard {
+        type "ftp" protocol tcp;
+    }
+    
+    chain PRE {
+        type filter hook prerouting priority filter;
+        tcp dport 21 ct helper set "ftp-standard"
+    }
+    
+    chain IN {
+        type filter hook input priority filter; policy drop;
+        tcp dport 21 ct state new,established accept
+        ct helper "ftp" accept        
+    }
+}
+```
+
+> `helper`专门用于跟踪类似`ftp`这样的多连接协议，可以识别并将相关的网络连接标记为`related`；
+>
+> 要使用`ct helper`首先需要直接在`table`下进行`ct helper`声明，指定`helper`在该`table`中的名字。`type`是内置的，可以是`ftp`等；`protocol`指定传输层协议
+>
+> 其次，需要在某一个阶段为感兴趣的连接设定该`helper`作为动作，nftables会将该连接相关的连接标记为`related`，使用上述示例中`PRE`中的`ct helper set`
+>
+> 最后，需要在后续阶段使用`ct helper`指定`ftp`这个`helper`对应数据包的动作
+
+如果使用FTP Passive模式，最后一条声明可以更改如下，更严格
+
+```
+ct state related ip daddr $ftphost ct helper "ftp" tcp dport { 1024-65535 } accept
+```
+
+> `ct helper`支持跟踪的`type`有`ftp` `tftp` `netbios` `irc` `sip` `h.323` `snmp` `pptp` `sane` `amanda`
+
+匹配状态（注意不是`state`）
+
+> 见Linux内核源码`/include/uapi/linux/netfilter/nf_conntrack_common.h`
+
+| 关键字 | 定义 | 注释 |
+| :- | :- | :- |
+| `status` | 连接状态 | `expected`期望的连接，`seen-reply`该连接已经有数据包发送与对应回复，`assured`该连接跟踪项不可early expire，`confirmed`连接初始数据包离开本地主机，`snat`连接需要SNAT，`dnat`连接需要DNAT，`dying`连接即将结束，从连接跟踪项列表移除 |
+
+示例
+
+```
+    chain in {
+        type filter hook input priority filter; policy drop;
+        ct status snat accept
+    }
+```
+
+> 多个`status`使用集合例如`{expected,dnat}`
+
+匹配`mark`（`mark`需要预先设定）
+
+| 关键字 | 定义 | 注释 |
+| :- | :- | :- |
+| `mark` | 连接标记 |  |
+
+示例
+
+```
+    chain in {
+        type filter hook input priority filter; policy drop;
+        ct mark 123 counter
+    }
+```
+
+匹配`label`（`label`需要预先设定）
+
+| 关键字 | 定义 | 注释 |
+| :- | :- | :- |
+| `label` | 连接标签 | 长`128bit` |
+
+匹配`zone`（`zone`需要预先设定）
+
+| 关键字 | 定义 | 注释 |
+| :- | :- | :- |
+| `zone` | 连接标签 | 是一个数字，需要在数据包被`ct`之前设定 |
+
+示例
+
+```
+table inet zone_demo {
+
+    chain PRE {
+        type filter hook prerouting priority raw;
+        iif eth3 ct zone set 23
+    }
+
+    chain OUT {
+        type filter hook output priority raw;
+        oif eth3 ct zone set 23
+    }
+}
+```
+
+匹配数据包方向
+
+| 关键字 | 定义 | 注释 |
+| :- | :- | :- |
+| `direction` | 数据包方向 | `original`表示和该连接中第一个数据包方向相同，`reply`表示相反 |
+
+匹配连接超时时间
+
+| 关键字 | 定义 | 注释 |
+| :- | :- | :- |
+| `expiration` | 数据包过期时间 | 示例`ct expiration < 2m30s` |
+
+匹配连接数限制
+
+| 关键字 | 定义 | 注释 |
+| :- | :- | :- |
+| `count` | 连接数计数 |  |
+
+示例
+
+```
+table inet connlimit_demo {
+   chain IN { 
+      type filter hook input priority filter; policy drop;
+      tcp dport 22 ct count 10 accept
+   }
+}
+```
+
+> 上述示例表示受跟踪的SSH连接不超过10个。如果有新的SSH连接到来会被丢包
+
+匹配累计数据包数
+
+| 关键字 | 定义 | 注释 |
+| :- | :- | :- |
+| `packets` | 累计数据包计数 | 可以加`original`或`reply`指定数据包方向，仅对指定方向计数 |
+
+示例
+
+```
+   chain IN { 
+      type filter hook input priority filter; policy drop;
+      tcp dport 80 ct original packets < 10000 accept
+   }
+```
+
+> 超过`10000`个包以后开始丢包
+
+匹配累计字节数
+
+| 关键字 | 定义 | 注释 |
+| :- | :- | :- |
+| `bytes` | 累计数据字节数计数 | 同上使用`<` `>`，可以加`original`或`reply` |
+
+匹配平均数据包大小
+
+| 关键字 | 定义 | 注释 |
+| :- | :- | :- |
+| `avgpkt` | 平均数据包大小 | 同上使用`<` `>`，可以加`original`或`reply` |
+
+匹配网络层协议
+
+| 关键字 | 定义 | 注释 |
+| :- | :- | :- |
+| `l3proto` | 网络层协议 | `ip`或`ip6`，可以加`original`或`reply` |
+
+匹配IP地址
+
+| 关键字 | 定义 | 注释 |
+| :- | :- | :- |
+| `ip` `ip6` | IP地址 | 可以加`original`或`reply`，后加`ip saddr`，`ip daddr` |
+
+匹配传输层协议
+
+| 关键字 | 定义 | 注释 |
+| :- | :- | :- |
+| `protocol` | 传输层协议 | 可以加`original`或`reply` |
+
+匹配传输层源与目标（例如端口）
+
+| 关键字 | 定义 | 注释 |
+| :- | :- | :- |
+| `proto-src` `proto-dst` | 传输层源与目标 | 可以加`original`或`reply` |
+
+匹配`conntrack id`
+
+| 关键字 | 定义 | 注释 |
+| :- | :- | :- |
+| `id` | `conntrack id` | 可以加`original`或`reply`，示例`ct original id ct_id` |
+
 ### 8.5.4 路由
+
+关键字`rt`的使用
+
+匹配Next hop（下一跳）
+
+| 关键字 | 定义 | 注释 |
+| :- | :- | :- |
+| `nexthop` | 下一跳路由IP地址 |  |
+
+示例
+
+```
+ip daddr 192.168.1.0/24 rt nexthop != 192.168.0.1 drop
+```
+
+> 上述示例丢弃所有不经过`192.168.0.1`路由的数据包
+
+```
+meter acct { rt nexthop timeout 600s counter }
+```
+
+> 上述示例对经过各个路由的数据包进行计数，超时`600s`删除记录项
+
+匹配输出接口
+
+| 关键字 | 定义 | 注释 |
+| :- | :- | :- |
+| `fib` |  |  |
+
+其他
+
+| 关键字 | 定义 | 注释 |
+| :- | :- | :- |
+| `classid` |  |  |
 
 ### 8.5.5 速率限制
 
