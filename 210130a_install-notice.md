@@ -517,7 +517,11 @@ iptables -t filter -A FW_OPEN -d 192.168.0.5 -p tcp --dport 22 -j ACCEPT
 
 ## 3.1 systemd
 
-TODO
+`systemd`的命令行使用不再讲述
+
+### 3.1.1 基本概念
+
+
 
 ## 3.2 openrc
 
@@ -7124,15 +7128,43 @@ meter acct { rt nexthop timeout 600s counter }
 
 | 关键字 | 定义 | 注释 |
 | :- | :- | :- |
-| `fib` |  |  |
+| `fib` | 根据数据包源地址、目标地址，查询路由表得到输出接口 |  |
 
-其他
+示例
 
-| 关键字 | 定义 | 注释 |
-| :- | :- | :- |
-| `classid` |  |  |
+```
+fib saddr . iif oif eq 0 drop
+```
+
+> 如果数据包`oif`不是走来的时候的接口，则丢包。`.`连接两个或多个域，表示通过数据包的这些属性查询路由表。可以有`saddr daddr iif oif mark`。而查路由表得到的结果有`oif oifname type`
+
+```
+fib saddr . iif oif eq "eth0" accept
+```
+
+> 只允许`oif`走`eth0`的数据包
+
+```
+fib saddr oif accept
+```
+
+> 允许从任何有效接口来的数据包
+
+```
+fib daddr . iif type local accept
+```
+
+> 只允许目的地址符合端口配置地址的数据包
+
+```
+fib saddr . mark oif vmap { "eth0" : drop, "ppp0" : accept }
+```
+
+> 需要同时考虑数据包的`mark`
 
 ### 8.5.5 速率限制
+
+关键字`limit`的使用
 
 ## 8.6 规则动作
 
