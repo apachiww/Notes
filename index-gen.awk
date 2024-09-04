@@ -12,7 +12,7 @@ BEGIN {
     in_block = 0
 }
 
-## Status flag for code block checking
+## Flag for code block detection
 /^```/ {
     switch (in_block) {
     case 0:

@@ -88,7 +88,7 @@
 | [210108a](210108a_autocad.md) | AutoCAD基本操作 | 100% |
 | [210110a](210110a_computer-arch.md) | 计算机体系结构以及处理器的设计 | 1% |
 | [210111a](210111a_qt.md) | Qt应用开发 | 0% |
-| [210115a](210115a_freebsd.md) | FreeBSD日常使用 | 80% |
+| [210115a](210115a_freebsd.md) | FreeBSD安装与日常使用 | 80% |
 | [210130a](210130a_install-notice.md) | 类Unix管理维护以及安全优化，SELinux | 40% |
 | [210316a](210316a_computer-graphics.md) | 计算机图形学，Vulkan，OpenGL（GLSL） | 0% |
 | [210317a](210317a_parallel.md) | Linux并发编程，C++11线程库，CUDA | 0% |
@@ -122,6 +122,8 @@
 | [231101a](231101a_riscv.md) | RISC-V体系结构，SBI | 0% |
 | [231104a](231104a_database.md) | 数据库 | 0% |
 | [231126a](231126a_pcb.md) | 高速PCB设计 | 0% |
+| [240706a](240706a_alpine.md) | AlpineLinux安装与日常使用 | 95% |
+| [240813a](240813a_fat.md) | 磁盘分区表与FAT文件系统 | 80% |
 
 ## 参考书收藏
 

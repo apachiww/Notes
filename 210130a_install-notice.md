@@ -14,8 +14,10 @@
 + [**2**](#2-存储与文件系统) 存储与文件系统
     + [**2.1**](#21-lvm逻辑卷管理) LVM逻辑卷管理
     + [**2.2**](#22-存储安全数据加密) 存储安全：数据加密
+    + [**2.3**](#23-sata-ssd擦除) SATA SSD擦除
 + [**3**](#3-服务) 服务
     + [**3.1**](#31-systemd) systemd
+        + [**3.1.1**](#311-基本概念) 基本概念
     + [**3.2**](#32-openrc) openrc
 + [**4**](#4-其他杂项) 其他杂项
     + [**4.1**](#41-系统初始化显示) 系统初始化显示
@@ -160,6 +162,11 @@
     + [**8.7**](#87-nft脚本) nft脚本
 + [**9**](#9-安全专题防火墙前端ufw) 安全专题：防火墙前端ufw
 + [**10**](#10-安全专题防火墙前端firewalld) 安全专题：防火墙前端firewalld
++ [**11**](#11-常用包管理) 常用包管理
+    + [**11.1**](#111-redhat系) RedHat系
+    + [**11.2**](#112-apt) apt
+    + [**11.3**](#113-pacman) pacman
+    + [**11.4**](#114-alpine-linux) Alpine Linux
 + [**FreeBSD**](#freebsd)
 + [**1**](#1-防火墙) 防火墙
 + [**2**](#2-zfs) ZFS
@@ -513,6 +520,40 @@ iptables -t filter -A FW_OPEN -d 192.168.0.5 -p tcp --dport 22 -j ACCEPT
 
 实际应用中，仅仅依靠现有的一些软硬件方案通常还是无法保证数据安全的，相关的取证方案一直都在发展。取证的方法也可以应用于数据偷窃。类似GPG这样的软件加密只是再加上一层保险。保护数据安全也需要良好习惯，做好密钥备份
 
+## 2.3 SATA SSD擦除
+
+SATA SSD可以通过ATA指令集的`SECURITY ERASE UNIT`或`ENHANCED SECURITY ERASE UNIT`进行擦除与恢复出厂
+
+为了方便操作，建议使用外接硬盘盒或eSATA线连接SATA SSD，可以省略解锁的步骤。使用下述命令查看是否`frozen`，应当显示`not frozen`方可继续
+
+```
+hdparm -I /dev/sda | grep frozen
+```
+
+通过设定密码触发安全模式（任意简单密码就行）
+
+```
+hdparm --user-master u --security-set-pass 123 /dev/sda
+```
+
+再看一下安全模式是否`enabled`
+
+```
+hdparm -I /dev/sda
+```
+
+通常使用`--security-erase`进行全盘擦除（如果进行更彻底的擦除，使用`--security-erase-enhanced`）
+
+```
+hdparm --user-master u --security-erase 123 /dev/sda
+```
+
+擦除过后安全模式自动关闭，无需密码（应当显示`not enabled`）
+
+```
+hdparm -I /dev/sda
+```
+
 ## 3 服务
 
 ## 3.1 systemd
@@ -669,7 +710,7 @@ SELinux的开发与维护主要受RedHat赞助。红帽系的发行版例如Fedo
 
 ### 5.1.3 基本工作原理
 
-SELinux使用`policy`定义进程之间、进程和资源之间的访问限制，`policy`由`rule`组成。SELinux本质上是以白名单的形式进行过滤的。任何不符合`policy`规定的资源访问都会被拦截并禁止（前提是`policy`正确配置）。SELinux中`policy`需要编译为二进制格式，可以以`base`和`module`等形式存在，其中模块`policy`可以加载卸载或安装删除，灵活扩展
+SELinux使用`policy`定义进程之间、进程和资源之间的访问限制，`policy`由`rule`组成。SELinux本质上是以白名单的形式进行过滤的。任何不符合`policy`规定的资源访问都会被拦截并禁止（前提是`policy`正确配置）。SELinux中`policy`需要编译为二进制格式，可以以`base`和`module`等形式存在，其中`module`可以加载卸载或安装删除，灵活扩展
 
 SELinux的MAC是在DAC后进行的。也就是说如果DAC环节就没有允许访问，那么也就不会执行MAC检查
 
@@ -741,7 +782,7 @@ SELinux的核心组件关系框图如下
 >
 > 用户空间的应用程序可以通过`libsepol`或`libsemanage`直接访问`policy`数据库以获取、修改、管理信息，例如`ls`扩展的`ls -Z`参数，以及SELinux常用的管理命令`semanage` `semodule`等也会使用这些库。`libsepol`和`libsemanage`主要用于管理SELinux本身的设定，而`libselinux`才是给应用调用实现受控访问的
 >
-> 类似于设备树，开发者编写的`policy`源码需要编译为二进制格式才能被系统使用，这在上图的顶端有所体现。SELinux可以支持像其他普通的编程语言一样模块化构建`policy`，同时支持灵活的加载卸载或添加删除这些`module`，而无需将所有规则写到一个文件中。kernel policy language不适用于编写大型的`policy`，常用的其他方案有CIL
+> 类似于设备树，开发者编写的`policy`源码需要编译为二进制格式才能被系统使用，这在上图的顶端有所体现。SELinux可以像其他普通的编程语言一样模块化构建`policy`，同时支持灵活的加载卸载或添加删除这些`module`，而无需将所有规则写到一个文件中。kernel policy language最为常用，但不适用于编写过于复杂的`policy`，常用的其他方案有CIL
 >
 > SELinux的基本配置文件（包括`targeted`与`mls`相关的配置数据）位于`/etc/selinux`，SELinux filesystem的路径在`/sys/fs/selinux`，`policy`的二进制文件以及其他详细配置位于`/var/lib/selinux`
 >
@@ -775,7 +816,7 @@ Users: 8
     xguest_u
 ```
 
-> 这里还是要理清一个概念，SELinux中的`user`身份是对于`subject`来说的（虽然这些`subject`也可能以`object`身份出现），观察上述`user`名的字面意义就可以明白了。这里的`user`可以是`guest`，`staff`，`xxxadm`管理员等，而并不存在针对`object`定义的`user`
+> 这里还是要理清一个概念，SELinux中的`user`身份是对于`subject`来说的（虽然这些`subject`也可能以`object`身份出现），观察上述`user`名的字面意义就可以明白了。这里的`user`可以是`guest`，`staff`，`xxxadm`管理员等，而并不存在针对`object`定义的`user`（虽然例如`unconfined_u`可以用于`object`）
 >
 > 这涉及到了上下文的本质性问题。对于`object`来说上下文的作用和`subject`并不相同，`user`域并不会表示`object`本身的属性（例如是端口或文件）
 
@@ -1921,7 +1962,7 @@ test_overlay_defaultrange   400             cil
 
 除上述文件以外，`active`目录下还可能有一个`file_contexts.local`文件，里面也是`file_contexts`格式一样的内容。它是用户通过自定义`.fc`文件添加的不属于核心`policy`的附加部分，同样由`semanage`生成（使用`semanage fcontext`命令），并且被复制到`/etc`下相同的配置目录下面
 
-添加本地自定义`label`示例
+添加本地自定义`label`示例（`-a`表示添加一条记录）
 
 ```
 # semanage fcontext -a -t newlabel_t /path/to/file
@@ -4728,6 +4769,8 @@ $ sudo semanage fcontext -a -e /var/www /var/test_www
 $ sudo semanage fcontext -a -t httpd_sys_content_t "/var/test_www"
 ```
 
+> 临时修改文件的安全上下文使用`chcon`（重启失效），示例`chcon -t httpd_sys_content_t file`
+
 之后需要重标记一次`/var`
 
 ```
@@ -7166,34 +7209,278 @@ fib saddr . mark oif vmap { "eth0" : drop, "ppp0" : accept }
 
 关键字`limit`的使用
 
+按数据包数量限制
+
+示例
+
+```
+icmp type echo-request limit rate 10/second accept
+```
+
+或
+
+```
+icmp type echo-request limit rate over 10/second drop
+```
+
+> 上述两条等价
+
+按字节数限制
+
+示例
+
+```
+limit rate 10 mbytes/second accept
+```
+
+还可以添加一个`burst`关键字，指定可以超出限制多少，示例
+
+```
+limit rate 10 mbytes/second burst 9000 kbytes accept
+```
+
 ## 8.6 规则动作
 
 前文所述`rule_statement`中的动作（verdict）部分，`rule_statement`的后半部分
 
 ### 8.6.1 Accept和Drop
 
-| 动作 | 定义 |
-| :- | :- |
-| `accept` | 接受，数据包继续向后传递，经过当前规则链后续的`rule`和同`hook`相关的优先级更低的规则链 |
-| `drop` | 丢弃。数据包不再存在，不会再经过后续的任何`rule` |
-| `queue` | 队列 |
-| `continue` | 下一条 |
-| `return` | 退出 |
-| `jump chain_name` | 跳转 |
-| `goto chain_name` | 跳转 |
-| `counter` |  |
+最基本的接受与丢包操作
+
+示例
+
+```
+ip saddr 192.168.1.12 ip daddr 192.168.1.13 accept
+ip saddr 192.168.1.12 ip daddr 192.168.1.14 drop
+```
 
 > 注意`drop`和`accept`的后续数据包匹配动作是不一样的。一个数据包被`drop`以后就不会再继续匹配规则链中的后续`rule`，它已经消失，也不会被后续的`hook`捕捉到；而如果数据包被`accept`，它会继续和后面的`rule`匹配，也会继续被后面的`hook`捕捉，除非在后续某个阶段被`drop`
 
 ### 8.6.2 Reject
 
+不添加任何参数，默认使用ICMP port unreachable回复
+
+```
+ip saddr 192.168.1.12 ip daddr 192.168.1.13 reject
+```
+
+指定ICMP数据包类型，使用`icmp`关键字（`icmpv6`指定ICMPv6数据包类型）
+
+```
+ip saddr 192.168.1.12 reject with icmp type host-unreachable
+```
+
+`icmp`可用类型
+
+| 类型 |
+| - |
+| `net-unreachable` |
+| `host-unreachable` |
+| `prot-unreachable` |
+| `port-unreachable` |
+| `net-prohibited` |
+| `host-prohibited` |
+| `admin-prohibited` |
+
+`icmpv6`可用类型
+
+| 类型 |
+| - |
+| `no-route` |
+| `admin-prohibited` |
+| `addr-unreachable` |
+| `port-unreachable` |
+
 ### 8.6.3 规则链跳转
+
+`jump`关键字用法示例
+
+```
+ip protocol tcp jump tcp-chain
+```
+
+`goto`用法格式相同
+
+```
+ip protocol tcp jump tcp-chain
+```
+
+> `jump`和`goto`是不一样的。`jump`在跳转到其他规则链以后执行到规则链结束还会返回到原来的规则链，而`goto`在跳转以后不会再返回
 
 ### 8.6.4 计数器
 
+匿名计数器只可对单条`rule`起作用，对该单条`rule`捕获到的数据包进行计数，示例
+
+```
+ip protocol tcp counter
+```
+
+命名计数器直接在`table`中定义，示例
+
+```
+table inet named_counter_demo {
+
+    counter cnt_http {
+        comment "count both http and https packets"
+    }
+
+    counter cnt_smtp {
+    }
+
+    chain IN {
+        type filter hook input priority filter; policy drop;
+
+        tcp dport   25 counter name cnt_smtp
+        tcp dport   80 counter name cnt_http
+        tcp dport  443 counter name cnt_http
+   }
+}
+```
+
+可以通过`nft`命令行读取计数器，使用`list`，示例
+
+显示所有计数器
+
+```
+$ nft list counters
+```
+
+显示特定`table`中的指定命名计数器
+
+```
+$ nft list counter inet named_counter_table cnt_http
+```
+
+显示特定`table`的所有计数器
+
+```
+$ nft list counters inet named_counter_table
+```
+
+复位计数器。复位特定`table`中命名计数器的操作同上。不会复位匿名计数器
+
+```
+$ nft reset counter inet named_counter_table cnt_http
+```
+
 ### 8.6.5 记录数据流
 
+关键字`log`的用法。`nftables`使用`rsyslog`记录日志
+
+`nftables`允许一条`rule`中出现两个动作。一条`rule`中可以同时出现`log`，后加`accept`
+
+示例
+
+```
+tcp dport 22 log prefix \"SSH packet \" accept
+```
+
+> 记录在表`input_table`处所有目标端口为`22`的数据包，`log`并接受。通过`prefix`指定在日志中以什么字符串开头
+
+示例
+
+```
+iif lo log tcp dport 22 accept
+```
+
+> 以上示例对接口`lo`进来的所有数据包进行记录，同时接受目标端口为`22`的数据包
+
+`log`还可以通过`flags`使能一些其他信息的记录
+
+```
+tcp dport 22 log flags tcp sequence,options
+```
+
+```
+tcp dport 22 log flags ip options
+```
+
+```
+log flags skuid # Socket uid
+```
+
+```
+log flags ether # MAC address
+```
+
+```
+log flags all
+```
+
 ### 8.6.6 NAT
+
+`nftables`内置了一个NAT引擎，它会记录NAT中端口地址的绑定。只有第一个NAT数据包会经过`rule`的匹配，后续的数据包不会再经过`rule`
+
+可以为私有网络内传来的数据包设定NAT后使用的源IP地址（相当于NAT网关的公网地址）
+
+在`postrouting`添加一张表`nat`
+
+```
+$ nft add table nat
+$ nft add chain nat chain_name { type nat hook postrouting priority 100 ; }
+```
+
+**NAT源IP**
+
+在表`nat`中添加以下`rule`，采取`snat`动作（假设公网地址`113.113.113.113`）
+
+```
+ip saddr 192.168.1.0/24 oif eth0 snat to 113.113.113.113
+```
+
+NAT功能也可以支持多公网IP（NAT pooling），示例
+
+```
+snat ip to 10.0.0.2/31
+```
+
+```
+snat ip to 10.0.0.4-10.0.0.127 
+```
+
+```
+ip protocol tcp snat ip to 10.0.0.1-10.0.0.100:3000-4000
+```
+
+> 上述第一条表示使用`10.0.0.2`到`10.0.0.3`这些地址。最后一条也可以指定`tcp`端口范围
+
+**NAT目标IP**
+
+NAT功能还可以支持destination NAT（目标IP）。作用类似于端口映射
+
+```
+iif eth0 tcp dport { 80, 443 } dnat to 192.168.1.120
+```
+
+> 注意，`dnat`需要在`hook`为`prerouting`的表使用
+
+**自动NAT模式**
+
+`masquerade`表示自动获取公网端口的IP，并自动将源IP修改为该IP
+
+```
+masquerade
+```
+
+> `masquerade`动作只用于`hook`为`postrouting`，`type`为`nat`的表
+
+前文所述的`snat`以及`masquerade`模式还可以在最后加上NAT策略参数
+
+```
+masquerade random,persistent
+```
+
+> `random`表示仅随机化源端口，`persistent`表示固定分配地址与端口，`fully-random`表示全随机化
+
+**重定向至本机**
+
+使用`redirect`可以将数据包重定向到本机或本机指定端口，示例
+
+```
+tcp dport 22 redirect to 2222
+```
+
+> `redirect`动作只用于`hook`为`prerouting`，`output`以及`type`为`nat`的表
 
 ### 8.6.7 数据包元信息设定
 
@@ -7239,6 +7526,16 @@ Debian系发行版通常使用`ufw`
 ## 10 安全专题：防火墙前端firewalld
 
 Redhat系发行版通常使用`firewalld`
+
+## 11 常用包管理
+
+## 11.1 RedHat系
+
+## 11.2 apt
+
+## 11.3 pacman
+
+## 11.4 Alpine Linux
 
 # FreeBSD
 

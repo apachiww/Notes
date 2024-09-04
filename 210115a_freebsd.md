@@ -23,9 +23,13 @@
 + [**1**](#1-下载镜像) 下载镜像
 + [**2**](#2-基本安装) 基本安装
     + [**2.1**](#21-磁盘分区) 磁盘分区
+        + [**2.1.1**](#211-分区与格式化) 分区与格式化
+        + [**2.1.2**](#212-编辑fstab与安装) 编辑fstab与安装
+        + [**2.1.3**](#213-在fstab中使用uuid) 在fstab中使用UUID
     + [**2.2**](#22-启动引导) 启动引导
         + [**2.2.1**](#221-单系统引导) 单系统引导
         + [**2.2.2**](#222-双系统多系统引导) 双系统/多系统引导
+        + [**2.2.3**](#223-refind引导配置) rEFInd引导配置
     + [**2.3**](#23-个人设置偏好参考不代表建议的选择) 个人设置偏好参考（不代表建议的选择）
 + [**3**](#3-安装后杂项) 安装后杂项
     + [**3.1**](#31-改镜像源) 改镜像源
@@ -40,9 +44,9 @@
     + [**3.5**](#35-声音配置声卡驱动) 声音配置，声卡驱动
     + [**3.6**](#36-输入法) 输入法
     + [**3.7**](#37-添加ext文件系统支持) 添加ext文件系统支持
-+ [**4**](#4-jails玩耍简记) jails玩耍简记
-+ [**5**](#5-zfs使用简记) ZFS使用简记
-+ [**6**](#6-服务管理) 服务管理
+    + [**3.8**](#38-doas) doas
++ [**4**](#4-zfs使用简记) ZFS使用简记
++ [**5**](#5-服务管理) 服务管理
 
 ## 平台配置
 
@@ -80,6 +84,8 @@ UEFI模式安装的主要难点在于磁盘分区和启动引导的解决，但�
 
 
 ## 2.1 磁盘分区
+
+### 2.1.1 分区与格式化
 
 bsdinstall自带的磁盘分区界面不太友好，这里提供使用Shell分区的方法，便于灵活操作分区
 
@@ -123,6 +129,8 @@ swap分区可以通过`swapon`挂载，这里先不必挂载
 swapon /dev/ada0p3
 ```
 
+### 2.1.2 编辑fstab与安装
+
 最后使用`ee`编辑fstab，文件位于`/tmp/bsdinstall_etc/fstab`
 
 附：个人fstab参考。内存小所以分了swap
@@ -145,46 +153,48 @@ mount /dev/ada1p1 /mnt/home
 
 `exit`退出Shell，bsdinstall即开始自动安装
 
+### 2.1.3 在fstab中使用UUID
+
+使用`gpart`查看UUID，其中的rawuuid就是我们想要的UUID
+
+```
+gpart list /dev/ada0 | less
+```
+
+删除原来的入口，添加UUID入口
+
+```
+/dev/gptid/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx  /   ufs   rw      0 1
+```
+
+开启内核启动参数，使能对UFS的UUID的识别
+
+```
+kern.geom.label.ufsid.enable="1"
+```
 
 ## 2.2 启动引导
 
 启动引导问题可以到所有安装都结束以后再进入Shell处理，只要有ESP分区就可以
 
-将`loader.efi`拷贝到ESP分区下`EFI/FreeBSD/BOOTX64.efi`，也可以叫其他的
+将`loader.efi`拷贝到ESP分区下的`EFI/FreeBSD`，也可以叫其他的文件名
 
 ```shell
 mount -t msdosfs /dev/ada0p1 /mnt
 mkdir -p /mnt/EFI/FreeBSD
-cp /boot/loader.efi /mnt/EFI/FreeBSD/BOOTX64.efi
+cp /boot/loader.efi /mnt/EFI/FreeBSD
 ```
-
 
 ### 2.2.1 单系统引导
 
-使用`efibootmgr`将其注册到BIOS的启动项中，名字这里叫`FreeBSDBoot`，也可以叫其他的
-
-```shell
-efibootmgr -c -l /mnt/EFI/FreeBSD/BOOTX64.efi -L FreeBSDBoot
-```
-
-这时候`efibootmgr`会输出创建启动项的序号，比如0001，需要将0001设为active态（由*标记）
-
-```shell
-efibootmgr -B 0001
-```
-
-卸载ESP分区
-
-```shell
-umount /mnt
-```
+使用`efibootmgr`将`loader.efi`注册到BIOS的启动项中。`efibootmgr`用法见[Alpine](240706a_alpine.md#191-refind)
 
 
 ### 2.2.2 双系统/多系统引导
 
 大部分用户一般都会在已经安装了其他操作系统的电脑上安装FreeBSD作为尝试
 
-硬盘原来已经安装了ArchLinux，这里用最笨但是好用的方法，用GRUB来chainload FreeBSD的bootloader（原理和UEFI模式手动配置Windows双启动基本相同。试过`os-prober`检测不到FreeBSD）
+硬盘原来已经安装了ArchLinux，这里用GRUB来chainload FreeBSD的bootloader（原理和UEFI模式手动配置Windows双启动相同）
 
 重启进ArchLinux配置`/etc/grub.d/40_custom`添加启动入口如下，将XXXX-XXXX替换为ESP分区的UUID（可以通过`blkid`命令获取），**而hints参数对于不同机器配置可能会不一样**，其他hints的获取具体可以参考[ArchWiki](https://wiki.archlinux.org/index.php/GRUB#Windows_installed_in_UEFI/GPT_mode)
 
@@ -207,6 +217,16 @@ grub-mkconfig -o /boot/grub/grub.cfg
 
 重启进入GRUB界面就应该看到`FreeBSD Bootloader`选项了，可以正常引导FreeBSD
 
+### 2.2.3 rEFInd引导配置
+
+配置`refind.conf`添加一个入口。假设`loader.efi`在`/EFI/freebsd/`
+
+```
+menuentry "FreeBSD" {
+    icon /EFI/refind/icons/os_freebsd.png
+    loader /EFI/freebsd/loader.efi
+}
+```
 
 ## 2.3 个人设置偏好参考（不代表建议的选择）
 
@@ -235,7 +255,7 @@ FreeBSD使用ports和pkg两种方法安装软件包，pkg是已经编译好的�
 
 几个国内的非官方镜像站：
 
-+ 中科大镜像 mirrors.ustc.edu.cn 有pkg和ports，但是只有Release安装镜像（首选）
++ 中科大镜像 mirrors.ustc.edu.cn 有pkg和ports，有Release安装镜像（首选）
 
 + 网易镜像 mirrors.163.com 有pkg和ports，有Release安装镜像
 
@@ -249,7 +269,7 @@ FreeBSD使用ports和pkg两种方法安装软件包，pkg是已经编译好的�
 
 ```
 # 使用freebsd.cn，最新latest，否则quarterly
-freebsdcn:{
+freebsdcn: {
   url: "pkg+http://pkg.freebsd.cn/${ABI}/latest", 
   mirror_type: "srv",
   signature_type: "none",
@@ -258,12 +278,29 @@ freebsdcn:{
 }
 
 # 禁用原/etc/pkg/FreeBSD.conf
-FreeBSD:{
+FreeBSD: {
   enabled: no
 }
 ```
 
-首次使用`pkg`会自动安装，安装完成以后运行`pkg update -f`更新索引
+2024.08.10更新：freebsd.cn已经关闭，使用中科大镜像源。直接创建`/usr/local/etc/pkg/repos/ustc.conf`，在FreeBSD 14中配置如下。需要事先安装`security/ca_root_nss`
+
+```
+ustc: {
+  url: "https://mirrors.ustc.edu.cn/freebsd-pkg/${ABI}/latest",
+  signature_type: "none",
+  fingerprints: "/usr/share/keys/pkg",
+  enabled: yes
+}
+
+FreeBSD: {
+  enabled: no
+}
+```
+
+USTC Ports配置见 https://mirrors.ustc.edu.cn/help/freebsd-ports.html
+
+首次使用`pkg`会自动安装。改镜像源以后必须运行`pkg update -f`更新索引
 
 修改ports源`/etc/make.conf`，4为使用的线程数，根据需要更改
 
@@ -498,6 +535,27 @@ pkg install fusefs-ext2
 ```
 kldload ext2fs
 mount -t ext2fs -o ro /dev/adaXpX /mnt
+```
+
+## 3.8 doas
+
+安装`doas`
+
+```
+pkg install doas
+```
+
+创建并编辑`/usr/local/etc/doas.conf`
+
+```
+cp /usr/local/etc/doas.conf.sample /usr/local/etc/doas.conf
+ee /usr/local/etc/doas.conf
+```
+
+只保留`wheel`组的`doas`权限
+
+```
+permit nopass :wheel
 ```
 
 ## 4 ZFS使用简记
