@@ -449,7 +449,7 @@ showtools shutdown
 Intel核显3D与编解码驱动。平台Haswell，Thinkpad T440p
 
 ```
-apk add mesa mesa-vulkan-intel libva-intel-driver libva-utils linux-firmware-i915 mesa-dri-gallium mesa-va-gallium igt-gpu-tools
+apk add mesa mesa-utils mesa-vulkan-intel libva-intel-driver libva-utils linux-firmware-i915 mesa-dri-gallium mesa-va-gallium igt-gpu-tools
 ```
 
 将用户加入`video`组。后续可执行`vainfo`查看是否可访问视频编解码
@@ -561,7 +561,7 @@ exec dbus-run-session sway
 
 ### 2.3.3 配置
 
-swaywm配置教程见 https://github.com/swaywm/sway/wiki，基于`/etc/sway/config`示例配置简单更改就可以使用
+swaywm配置教程见 https://github.com/swaywm/sway/wiki ，基于`/etc/sway/config`示例配置简单更改就可以使用
 
 粘贴板配置
 
@@ -721,8 +721,6 @@ export QT_IM_MODULE=fcitx
 ```
 
 ## 2.4 图形界面：Wayfire
-
-
 
 显卡和声卡配置基本同前
 
