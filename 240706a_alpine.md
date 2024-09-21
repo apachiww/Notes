@@ -171,6 +171,8 @@ mkfs.ext4 /dev/sda2
 
 挂载分区
 
+> 可以先不挂载ESP分区，可以到`setup-disk`以后安装UEFI引导时再挂载，否则`setup-disk`会将ESP挂载点也添加到`/etc/fstab`
+
 ```
 mount -t ext4 /dev/sda2 /mnt
 mkdir -p /mnt/boot/efi
@@ -452,6 +454,8 @@ Intel核显3D与编解码驱动。平台Haswell，Thinkpad T440p
 apk add mesa mesa-utils mesa-vulkan-intel libva-intel-driver libva-utils linux-firmware-i915 mesa-dri-gallium mesa-va-gallium igt-gpu-tools
 ```
 
+> AMD显卡平台（从GCN开始）安装`mesa-vulkan-ati`提供Vulkan支持，还需要`libva`，`linux-firmware-amdgpu`（GCN前的显卡安装`linux-firmware-radeon`，且没有Vulkan支持）。此外GCN1需要在内核启动命令行添加参数`radeon.si_support=0 amdgpu.si_support=1`，GCN2需要添加参数`radeon.cik_support=0 amdgpu.cik_support=1`，否则`radeon`驱动会先于`amdgpu`加载，导致无法使用Vulkan。使用`lspci -k`可以查看当前使用的驱动
+
 将用户加入`video`组。后续可执行`vainfo`查看是否可访问视频编解码
 
 ```
@@ -524,7 +528,7 @@ rc-update add dbus
 安装其他一些基础功能与附加小组件，包括字体，图标等。使用`doas`替代`sudo`
 
 ```
-apk add man-db man-pages bash bash-completion font-jetbrains-mono font-droid-sans-mono-nerd font-noto-emoji font-wqy-zenhei adwaita-icon-theme papirus-icon-theme fuzzel mako waybar doas doasedit foot-extra-terminfo nemo
+apk add man-db man-pages bash bash-completion font-jetbrains-mono font-droid-sans-mono-nerd font-noto-emoji font-wqy-zenhei adwaita-icon-theme papirus-icon-theme fuzzel mako waybar doas doasedit foot-extra-terminfo nemo wpa_supplicant usbutils pciutils
 ```
 
 修改shell为`bash`
@@ -647,10 +651,16 @@ rfkill block 1
 rfkill unblock 1
 ```
 
-开`wlan0`
+开`wlan0`。再次执行`ip link`可以看到`<>`中出现`UP`
 
 ```
 ip link set wlan0 up
+```
+
+此时可以使用`iw`扫描AP
+
+```
+iw dev wlan0 scan
 ```
 
 使用`wpa_passphrase`存储无线密码配置到`/etc/wpa_supplicant/wpa_supplicant.conf`。如果有必要，可以删除其中的密码明文
