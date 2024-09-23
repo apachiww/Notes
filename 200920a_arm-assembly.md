@@ -38,11 +38,7 @@
 + [**7**](#7-小结) 小结
 + [**ARMv8**](#armv8)
 
-## 常见SoC厂商与产品
-
-从普通爱好者角度，可以折腾的ARM SoC
-
-**一些可能感兴趣的信息与项目**
+## 一些可能感兴趣的信息与项目
 
 ARM SoC mainline进展（会有滞后）：参照[postmarketOS](https://wiki.postmarketos.org/wiki/Mainlining) [RK3588主线化](https://gitlab.collabora.com/hardware-enablement/rockchip-3588/notes-for-rockchip-3588/-/blob/main/mainline-status.md) [sunxi主线化](https://linux-sunxi.org/Linux_mainlining_effort)
 
@@ -63,115 +59,6 @@ Linux From Scratch：见[LFS](https://www.linuxfromscratch.org/)
 构建系统：[Buildroot](https://buildroot.org/) [Armbian构建系统](https://github.com/armbian/build) [OpenWrt构建系统](https://openwrt.org/docs/guide-developer/toolchain/use-buildsystem) [yocto](https://www.yoctoproject.org/)
 
 [RK3588 ffmpeg](https://github.com/nyanmisaka/ffmpeg-rockchip)
-
-**中国厂商**
-
-御三家
-
-+ Allwinner 全志科技（珠海）
-    + Datasheet & TRM [Repo](https://github.com/DeciHD/allwinner_docs)
-    + 开发者论坛 https://bbs.aw-ol.com/
-    + sunxi wiki https://linux-sunxi.org/Main_Page
-    + 部分新产品文档 https://gitee.com/aw-sunxi/awesome-sunxi
-    + A523/A527/T523(?)/T527/MR527 (8xA55+1xRISCV(E906), 22nm)
-    + A40i/V40/R40/T3 (4xA7, SATA, T3 no HDMI, 40nm)
-    + T113-s3/T113-s4/R528 (2xA7 with 128MB/256MB SIP DDR3, T113-s3/s4 are eLQFP128 packaged, 22nm)
-    + T113-i (2xA7+1xRISCV(C906), 22nm)
-    + A64 (4x53, 40nm)
-    + V853/V851/V853s/V851s/V851se (1xA7+1xRISCV(E907), s variants feature 64MB SIP DDR, e variants feature SIP EPHY)
-    + R128 (RISCV+xtensa DSP+ARM with 8/16MB DRAM and WIFI/Bluetooth, QFN)
-    + V833/V831 (1xA7)
-    + A33/R16 (4xA7, 28nm)
-    + H3/H2+ (4xA7, 40nm)
-    + V3s (1xA7 with 64MB DDR2, eLQFP128)
-    + F1C100/200s (1xARM9 with DDR)
-    + 以下是未来（可能）会出的中高端型号（仅供参考）
-    + A513(?) (4xA55, new product 2023/2024, 22nm)
-    + R923(?) (4xA73+4xA53+1xRISCV(E906), sun60i new product 2024 Est. , 12nm)
-    + A736/T736(?) (2xA76+6xA55, IMG BXM GPU, sun60i new product 2024 Est. , 12nm)
-    + A737/T737(?) (2xA78+6xA55, IMG BXM GPU, 12nm)
-    + 以下是sun50i系列，内部AMBA总线减配
-    + A133/R818 (4xA53, IMG GE8300 GPU, 28nm)
-    + H616/H618/T507 (4xA53, 28nm)
-+ Rockchip 瑞芯微（福州）
-    + Datasheet & TRM [Repo](https://github.com/DeciHD/rockchip_docs)
-    + wiki https://opensource.rock-chips.com/wiki_Main_Page
-    + RK3688 (?)
-    + RK3588/RK3588S/RK3588S2 (4xA76+4xA55+3xM0, 8nm)
-    + RK3576 (4xA72+4xA53, G52MC3 GPU)
-    + RK3566/RK3568/RK3568B2/RK3568J (4xA55+1xRISCV(RV32IMC), 22nm)
-    + RK3567 (4xA55)
-    + RK3562 (4xA53, Mali G52)
-    + RK3528 (4xA53, Mali450)
-    + RK3399 (2xA72+4xA53+2xM0, 28nm)
-    + RK3328 (4xA53, 28nm)
-    + RK3326/PX30 (4xA35, 28nm)
-    + RK3308 (4xA35, 28nm)
-    + RK1808 (2xA35, 28nm)
-    + RV1126 (4xA7+1xRISCV(RV32IMC), 28nm)
-    + RV1109 (2xA7+1xRISCV(RV32IMC), 28nm)
-    + RV1106 (1xA7+1xRISCV(RV32IMC), 128MB/256MB SIP DDR, 28nm)
-    + RV1103 (1xA7+1xRISCV(RV32IMC), 64MB SIP DDR, 28nm, Allwinner V851se counterpart)
-+ Amlogic 晶晨半导体（上海）
-    + Datasheet & TRM [Repo](https://github.com/DeciHD/amlogic_docs)
-    + A311D2 (4xA73+4xA53, 12nm)
-    + A311D (4xA73+2xA53, 12nm)
-    + S922X (4xA73+2xA53, 12nm)
-    + S905X4 (4xA55, 12nm)
-    + S905X3/D3 (4xA55, 12nm)
-    + S905X2/S905Y2 (4xA53, 12nm)
-    + S905D/S905L/S905X (4xA53, 28nm)
-
-> 同一厂商参数相近的SoC经常会使用同一个Die，开启或屏蔽部分功能。根据CPU，GPU等关键配置就可以推测
-
-**国际厂商**
-
-+ ST 意法半导体
-    + 文档开放
-    + STM32MP1
-    + STM32MP2
-+ NXP 恩智浦半导体
-    + 文档开放
-    + i.MX6
-    + i.MX8
-+ TI 德州仪器
-    + 文档开放（需要注册）
-    + Sitara AMxxxx
-+ Renesas 瑞萨半导体
-    + 文档开放（需要注册）
-    + RZ MPU
-+ Microchip 微芯半导体
-    + ATSAMA5
-+ Nvidia 英伟达
-    + 文档开放（需要注册）
-    + Tegra K1 (2024 EoL)
-+ AMD Xilinx 赛灵思
-    + FPGA+ARM混合。文档开放
-    + ZYNQ-7000 XC7Z0XX
-+ Qualcomm 高通
-    + https://wiki.postmarketos.org/wiki/Mainlining
-    + MSM8916 (Snapdragon 410)/APQ8016 https://github.com/msm8916-mainline
-    + SDM845 (Snapdragon 845)
-+ Samsung 三星半导体
-    + 大部分原有产品早已停产。不推荐
-
-> 国际大厂ST，NXP，TI，Renesas的SoC通常性能一般，价格较高，但稳定性优，资料（相对）较全面，更适合工业或车规产品。很多初学者用Linux学习板都使用这些厂商的产品。而除手机、平板、电视外的商业消费电子，包括收银机、广告屏、机顶盒、便携式播放器等，基本由御三家方案主导。由于成本优势以及（相对的）性能进步，近几年全志和瑞芯微的产品在工控和汽车领域也有了更多应用
-
-**RISC-V SoC**
-
-+ StarFive 赛昉科技
-    + JH7110
-+ SpacemiT 进迭时空
-    + K1
-+ Sophgo 算能科技（比特大陆）
-    + SG2380 (New product 2024, Milk-V Oasis首发)
-+ Microchip 微芯半导体
-    + MPFSxxxT (PolarFire)
-
-**Other**
-
-+ Ingenic 北京君正
-    + X/JZ Series (MIPS) https://github.com/Ingenic-community/datasheets
 
 # ARMv7
 

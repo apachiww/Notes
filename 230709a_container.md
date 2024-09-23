@@ -108,6 +108,8 @@ https://documentation.ubuntu.com/lxd/en/latest/
 >
 > 更新：Incus已经进入extra，可以直接通过Arch仓库安装
 >
+> 在AlpineLinux下需要安装`incus incus-client incus-openrc incus-utils`。命令行中使用`incusd`取代`lxd`，`incus`取代`lxc`。初始化使用命令`incus admin init`。将需要使用`incus`的用户加入`incus`组。加入`incus-admin`组可以得到额外的管理权限
+>
 > [ArchWiki](https://wiki.archlinux.org/title/Incus)给出了迁移到Incus的方法以及一些初始配置。Incus的用法和LXD基本相同，不再讲述
 
 ## 1.1 安装与配置
@@ -244,7 +246,7 @@ lxc image info FINGERPRINT
 
 ## 1.3 创建并启动容器
 
-使用上面的`FINGERPRINT`，通过`launch`命令创建Archlinux容器并启动，容器名称为`arch-01`（称为一个`instance`）。容器实例是non-volatile的，电脑重启后依然在并可以使用（默认路径在`/var/lib/lxd/containers`）
+使用上面的`FINGERPRINT`（可以只输入几位），通过`launch`命令创建Archlinux容器并启动，容器名称为`arch-01`（称为一个`instance`）。容器实例是non-volatile的，电脑重启后依然在并可以使用（默认路径在`/var/lib/lxd/containers`）
 
 ```shell
 lxc launch FINGERPRINT arch-01

@@ -155,11 +155,27 @@
         + [**8.6.6**](#866-nat) NAT
         + [**8.6.7**](#867-数据包元信息设定) 数据包元信息设定
         + [**8.6.8**](#868-数据包跟踪信息设定) 数据包跟踪信息设定
-        + [**8.6.9**](#869-修改数据包) 修改数据包
-        + [**8.6.10**](#8610-重复数据包) 重复数据包
+        + [**8.6.9**](#869-修改数据包mangling) 修改数据包（Mangling）
+        + [**8.6.10**](#8610-数据包复制转发) 数据包复制转发
         + [**8.6.11**](#8611-负载均衡) 负载均衡
-        + [**8.6.12**](#8612-队列) 队列
+        + [**8.6.12**](#8612-queueing-to-userspace) Queueing to userspace
     + [**8.7**](#87-nft脚本) nft脚本
+    + [**8.8**](#88-其他一些特殊用法) 其他一些特殊用法
+        + [**8.8.1**](#881-区间) 区间
+        + [**8.8.2**](#882-元组) 元组
+        + [**8.8.3**](#883-数学操作) 数学操作
+        + [**8.8.4**](#884-状态对象计数器) 状态对象：计数器
+        + [**8.8.5**](#885-状态对象quotas) 状态对象：Quotas
+        + [**8.8.6**](#886-状态对象limits) 状态对象：Limits
+        + [**8.8.7**](#887-状态对象connlimits) 状态对象：Connlimits
+        + [**8.8.8**](#888-synproxy) Synproxy
+        + [**8.8.9**](#889-secmarks) Secmarks
+        + [**8.8.10**](#8810-集合sets) 集合Sets
+        + [**8.8.11**](#8811-集合element-timeouts) 集合：Element timeouts
+        + [**8.8.12**](#8812-集合从packet-path更新sets) 集合：从packet path更新Sets
+        + [**8.8.13**](#8813-集合映射maps) 集合：映射Maps
+        + [**8.8.14**](#8814-集合verdict-maps) 集合：Verdict maps
+        + [**8.8.15**](#8815-集合metering) 集合：Metering
 + [**9**](#9-安全专题防火墙前端ufw) 安全专题：防火墙前端ufw
 + [**10**](#10-安全专题防火墙前端firewalld) 安全专题：防火墙前端firewalld
 + [**11**](#11-常用包管理) 常用包管理
@@ -167,6 +183,7 @@
     + [**11.2**](#112-apt) apt
     + [**11.3**](#113-pacman) pacman
     + [**11.4**](#114-alpine-linux) Alpine Linux
++ [**12**](#12-安全专题landlock) 安全专题：Landlock
 + [**FreeBSD**](#freebsd)
 + [**1**](#1-防火墙) 防火墙
 + [**2**](#2-zfs) ZFS
@@ -194,7 +211,7 @@ Linux在内核中已经集成了网络数据包的观察（inspection），修�
 
 > Linux主机从任何端口（无论虚拟还是物理）接收到的数据包都要完整过一遍上图所示的流程。`raw mangle nat filter`就是表，而`PREROUTING INPUT FORWARD OUTPUT POSTROUTING`等就是属于这些表的规则链
 >
-> 路由会决定转发这些数据包还是将这些数据包给本机运行中的进程处理，相当于走左边的路径。否则走右边路径。最后路由会决定将处理后的数据包发往哪个接口
+> 路由决策会决定转发这些数据包还是将这些数据包给本机运行中的进程处理，相当于走左边的路径。否则走右边路径。最后路由会决定将处理后的数据包发往哪个接口
 >
 > 绝大部分情况下我们无需配置`raw mangle security`，只需关注`filter nat`两张表即可。`filter`就是我们主要需要配置的表，防火墙规则都放在这张表里
 
@@ -361,7 +378,7 @@ iptables -t filter -P INPUT DROP
 iptables -t filter -A INPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
 ```
 
-> `ESTABLISHED`表示已建立的连接。对于`iptables`来说，一个数据包可以对应有4种状态，分别为`NEW ESTABLISHED RELATED INVALID`。例如对于TCP数据包而言，`NEW`表示允许握手包建立新连接，`ESTABLISHED`表示允许已建立的连接继续，`RELATED`表示已建立的连接引发的数据包，`INVALID`表示除上述数据包以外的无效数据包
+> `ESTABLISHED`表示已建立的连接。对于`iptables`来说，一个数据包可以对应有4种状态，分别为`NEW ESTABLISHED RELATED INVALID`。例如对于TCP数据包而言，`NEW`表示允许握手包建立新连接，`ESTABLISHED`表示允许已建立的连接继续，`RELATED`表示已建立的连接引发的数据包（例如FTP），`INVALID`表示除上述数据包以外的无效数据包
 >
 > 所谓`stateful firewall`就是防火墙会跟踪数据包的状态并使用一个状态机维护有效的连接，并判断每个数据包所属的状态。除以上状态，还有`UNTRACKED`状态，以及`SNAT DNAT`两个虚拟状态
 >
@@ -517,8 +534,6 @@ iptables -t filter -A FW_OPEN -d 192.168.0.5 -p tcp --dport 22 -j ACCEPT
 ## 2.2 存储安全：数据加密
 
 见[GPG](201219a_shell.md#1130-gpg)
-
-实际应用中，仅仅依靠现有的一些软硬件方案通常还是无法保证数据安全的，相关的取证方案一直都在发展。取证的方法也可以应用于数据偷窃。类似GPG这样的软件加密只是再加上一层保险。保护数据安全也需要良好习惯，做好密钥备份
 
 ## 2.3 SATA SSD擦除
 
@@ -702,7 +717,7 @@ SELinux的开发与维护主要受RedHat赞助。红帽系的发行版例如Fedo
 
 > 安卓默认使用SELinux
 
-此外还有一个收费的[grsecurity](https://grsecurity.net/)，在[Gentoo Wiki](https://wiki.gentoo.org/wiki/Hardened/Grsecurity2_Quickstart)有页面。这是除SELinux、AppArmor以外的又一个Linux安全扩展，除了MAC以外它还提供了程序运行时的内存防护。它提供了PaX（包含NOEXEC禁止执行，ASLR链接地址随机化功能），RBAC（基于Role的MAC）这些主要的安全功能模块。它以Linux内核`patch`的形式发布，用户需要自行下载补丁应用到内核源码后重新编译内核才能使用。而SELinux和AppArmor已经是Linux官方支持的安全扩展
+此外还有一个收费的[grsecurity](https://grsecurity.net/)，在[Gentoo Wiki](https://wiki.gentoo.org/wiki/Hardened/Grsecurity2_Quickstart)有页面。这是除SELinux、AppArmor以外的又一个Linux安全扩展，除了MAC以外它还提供了程序运行时的内存防护。它曾经被AlpineLinux所使用。它提供了PaX（包含NOEXEC禁止执行，ASLR链接地址随机化功能），RBAC（基于Role的MAC）这些主要的安全功能模块。它以Linux内核`patch`的形式发布，用户需要自行下载补丁应用到内核源码后重新编译内核才能使用。而SELinux和AppArmor已经是Linux官方支持的安全扩展
 
 如果是想要免费的ASLR等运行时保护特性，可以看看[linux-hardened](https://github.com/anthraxx/linux-hardened)。这也是ArchLinux的`linux-hardened`内核使用到的项目
 
@@ -6427,9 +6442,9 @@ $ nft flush table inet table_name
 
 ## 8.3 规则链
 
-`nftables`不像`iptables`一样有内置的规则链例如`PREROUTING INPUT FORWARD OUTPUT POSTROUTING`等。类似地，`nftables`中的规则链也都是相同的，可以添加删除
+`nftables`不像`iptables`一样有内置的规则链例如`PREROUTING INPUT FORWARD OUTPUT POSTROUTING`等。`nftables`中的规则链本质上都是平等的，都可以添加删除
 
-`nftables`中的规则链分为`base`和`regular`两种。`base`基本规则链作为数据包入口使用，同时需要指定`hook`；`regular`普通规则链作为跳转目标使用。只有`base`规则链是直接被关联到一个`hook`的；而`regular`规则链和具体的`hook`是没有直接关联的，这样可以方便一些`rule`的共用
+`nftables`中的规则链分为`base`和`regular`两种。`base`基本规则链作为数据包入口使用，同时需要指定`hook`；`regular`普通规则链作为跳转目标使用。只有`base`规则链是直接被关联到一个`hook`的；而`regular`规则链和具体的`hook`是没有直接关联的。这种设计可以方便一些`rule`的共用
 
 示例，向表`table_name`（类型`inet`）添加一条`base`规则链`chain_name`
 
@@ -6477,7 +6492,7 @@ $ nft list chain inet table_name chain_name
 | :- | :- |
 | `filter` | 数据包过滤。可用于`ip` `ip6` `inet` `arp`和`bridge`表 |
 | `route` | 数据包路由，作用和`iptables`中的`mangle`表类似，可使用`hook`类型只有`output`。如果使用其他`hook`，请使用`filter`类型的规则链。可用于`ip` `ip6` `inet`表 |
-| `nat` | NAT。特定的经过NAT的数据流只有第一个数据包会经过该链，后续的直接跳过。不可用于数据包过滤。可用于`ip` `ip6` `inet`表 |
+| `nat` | NAT。特定的经过NAT的单个数据流只有第一个数据包会经过该链，该连接后续的数据包会bypass。不可用于数据包过滤。可用于`ip` `ip6` `inet`表 |
 
 `base`规则链有以下可用的规则链`hook`类型（就是指定使用哪个阶段的探针）
 
@@ -6516,7 +6531,7 @@ $ nft flush chain inet table_name chain_name
 
 `base`规则链由一条关键字`type`开头的基本定义以及紧随其后的若干条规则`rule`构成
 
-基本定义`type hook priority`，`policy`以及`comment`后面都有`;`，而每条`rule`后面没有`;`。`base`规则链可以定义`policy`，它和`iptables`中的policy含义一样表示该规则链对数据包默认采取的动作。而`regular`规则链没有`type`开头的基本定义，只有`rule`；`regular`规则链通常作为`jump`跳转到的目标。这里不再单独展示
+基本定义开头是`type hook priority`，其次`policy`以及`comment`后面都有`;`；而基本定义后面每条`rule`后面没有`;`。`base`规则链可以定义`policy`，它和`iptables`中的policy含义一样表示该规则链对数据包默认采取的动作。而`regular`规则链第1行没有`type`开头的基本定义，只有`rule`；`regular`规则链通常作为`jump`跳转到的目标。这里不再单独展示
 
 ```
 $ nft list chain inet filter input
@@ -6587,7 +6602,7 @@ $ nft delete rule inet table_name chain_name
 
 ### 8.4.3 集合
 
-`nftables`可以支持集合的使用。集合分为匿名集合与命名集合
+`nftables`可以支持集合`{}`的使用。集合分为匿名集合与命名集合
 
 匿名集合用例。匿名集合嵌入到`rule`中，不可更改，想要更改必须删除规则后重新添加
 
@@ -6778,11 +6793,11 @@ $ nft add rule inet table_name chain_name meta mark 123 counter
 ```
 
 ```
-$ nft add rule inet table_name chain_name meta priority abcd:1234
+$ nft add rule inet table_name chain_name meta priority abcd:1234 counter
 ```
 
 ```
-$ nft add rule inet table_name chain_name meta priority none
+$ nft add rule inet table_name chain_name meta priority none counter
 ```
 
 匹配socket的UID/GID
@@ -7009,7 +7024,7 @@ ct state related ip daddr $ftphost ct helper "ftp" tcp dport { 1024-65535 } acce
 
 > 多个`status`使用集合例如`{expected,dnat}`
 
-匹配`mark`（`mark`需要预先设定）
+匹配`mark`（`mark`需要预先设定。见[后文](#867-数据包元信息设定)）
 
 | 关键字 | 定义 | 注释 |
 | :- | :- | :- |
@@ -7088,7 +7103,7 @@ table inet connlimit_demo {
 
 | 关键字 | 定义 | 注释 |
 | :- | :- | :- |
-| `packets` | 累计数据包计数 | 可以加`original`或`reply`指定数据包方向，仅对指定方向计数 |
+| `packets` | 累计数据包计数 | 可以加`original`或`reply`指定数据包方向（发起连接的一方），仅对指定方向计数 |
 
 示例
 
@@ -7396,12 +7411,16 @@ tcp dport 22 log flags ip options
 ```
 
 ```
-log flags skuid # Socket uid
+log flags skuid
 ```
 
+> Socket uid
+
 ```
-log flags ether # MAC address
+log flags ether
 ```
+
+> MAC地址
 
 ```
 log flags all
@@ -7421,6 +7440,8 @@ $ nft add chain nat chain_name { type nat hook postrouting priority 100 ; }
 ```
 
 **NAT源IP**
+
+使用`snat to`
 
 在表`nat`中添加以下`rule`，采取`snat`动作（假设公网地址`113.113.113.113`）
 
@@ -7445,6 +7466,8 @@ ip protocol tcp snat ip to 10.0.0.1-10.0.0.100:3000-4000
 > 上述第一条表示使用`10.0.0.2`到`10.0.0.3`这些地址。最后一条也可以指定`tcp`端口范围
 
 **NAT目标IP**
+
+使用`dnat to`
 
 NAT功能还可以支持destination NAT（目标IP）。作用类似于端口映射
 
@@ -7484,15 +7507,347 @@ tcp dport 22 redirect to 2222
 
 ### 8.6.7 数据包元信息设定
 
+设定`mark`
+
+```
+nft add rule inet table_name chain_name meta mark set 123
+```
+
+可以定义如下`rule`匹配该`mark`
+
+```
+nft add rule inet table_name chain_name meta mark 123 counter
+```
+
+设定类型`pkttype`。可以是`host unicast broadcast multicast other`
+
+```
+nft add rule inet table_name chain_name meta pkttype set {host}
+```
+
+在`conntrack mark`和`mark`之间暂存与恢复`mark`
+
+设定`ct mark`
+
+```
+nft add rule inet table_name chain_name meta mark set 1
+nft add rule inet table_name chain_name ct mark set mark
+```
+
+将`ct mark`存储于`mark`
+
+```
+nft add rule inet table_name chain_name meta mark set ct mark
+```
+
+设定`nftrace debugging bit`
+
+```
+nft add rule inet table_name chain_name udp dport 53 meta nftrace set 1
+```
+
+设定`secmark`
+
+```
+nft add rule inet table_name chain_name udp dport 53 meta secmark set ct secmark
+```
+
+可以同时设定多个`meta`
+
+```
+nft add rule inet table_name chain_name meta pkttype set {host} meta mark set 123 
+```
+
 ### 8.6.8 数据包跟踪信息设定
 
-### 8.6.9 修改数据包
+**不跟踪**
 
-### 8.6.10 重复数据包
+设定`notrack`防止`ct`追踪，通常放在`base`链中，`hook`为`prerouting`，`priority`为`-300`
+
+```
+nft add chain table_name chain_name { type filter hook prerouting priority -300 \; }
+nft add rule table_name chain_name tcp dport { 80, 443 } notrack
+```
+
+**helper**
+
+在`table`中声明`helper`
+
+```
+table filter {
+      ct helper sip-5060 {
+             type "sip" protocol udp;
+      }
+
+      ct helper tftp-69 {
+             type "tftp" protocol udp;
+      }
+
+      ct helper ftp-standard {
+             type "ftp" protocol tcp;
+      }
+}
+```
+
+使用`helper`
+
+```
+nft add rule filter chain_name ct state new tcp dport 21 ct helper set "ftp-standard"
+```
+
+使用`map`，`ip protocol`和`th dport`，一条语句实现不同数据包映射到多个`helper`
+
+```
+nft add rule filter chain_name ct state new ct helper set ip protocol . th dport map { \
+                        udp . 69 : "tftp-69", \
+                        udp . 5060 : "sip-5060", \
+                        tcp . 21 : "ftp-standard" }
+```
+
+**超时**
+
+在`table`中声明`timeout`
+
+```
+table inet ct_timeout_demo {
+    ct timeout agressive-tcp {
+        l3proto ip;
+        protocol tcp;
+        policy = {established: 100, close_wait: 4, close: 4}
+    }
+}
+```
+
+使用`timeout`
+
+```
+nft add rule ct_timeout_demo chain_name tcp dport 8888 ct timeout set "agressive-tcp"
+```
+
+**连接预测**
+
+在`table`中声明`expectation`，和新连接预测有关
+
+```
+table ct_expect_demo {
+    ct expectation e_pgsql {
+        protocol tcp
+        dport 5432
+        timeout 1h
+        size 12
+        l3proto ip
+    }
+}
+```
+
+使用`expectation`。对于每个到`8888`的连接，预计会有一个到`5432`的连接
+
+```
+    chain input {
+        type filter hook input priority filter;
+
+        ct state new tcp dport 8888 ct expectation set "e_pgsql"
+        ct state established,related counter accept
+    }
+```
+
+**mark**
+
+`ct mark`在[前文](#867-数据包元信息设定)已经讲述过
+
+**label**
+
+长度16Byte/128bit
+
+```
+nft add rule table_name chain_name tcp dport 8888 ct label set 1
+```
+
+**zone**
+
+`zone`设定需要在`ct`开始跟踪数据包之前完成
+
+```
+table inet zone_demo {
+
+    chain PRE {
+        type filter hook prerouting priority raw;
+
+        iif eth3 ct zone set 23
+    }
+
+    chain OUT {
+        type filter hook output priority raw;
+
+        oif eth3 ct zone set 23
+    }
+}
+```
+
+**secmark**
+
+`ct secmark`和`ct mark`类似
+
+```
+nft add rule table_name chain_name tcp dport 8888 ct secmark set meta secmark
+```
+
+**事件**
+
+限制`ctnetlink`报告的事件
+
+```
+nft add rule table_name chain_name tcp dport 8888 ct event set new,related,destroy
+```
+
+### 8.6.9 修改数据包（Mangling）
+
+可以实现stateless NAT。`hook`通常为`prerouting`或`forward`
+
+将发送到`8080`的数据包改为发到`80`
+
+```
+nft add table table_name
+nft add chain table_name chain_name {type filter hook prerouting priority -300\;}
+nft add rule table_name chain_name tcp dport 8080 tcp dport set 80
+```
+
+修改TCP的MSS为实时计算的MTU
+
+```
+nft add rule ip table_name chain_name forward tcp flags syn tcp option maxseg size set rt mtu
+```
+
+设定为固定值
+
+```
+nft add rule ip table_name chain_name forward tcp flags syn tcp option maxseg size set 1452
+```
+
+注意，mangle的数据包不允许被ct跟踪，可以在最后加上`notrack`，如下示例
+
+```
+nft add rule ip6 table_name chain_name ip6 daddr fd00::1 ip6 daddr set fd00::2 notrack
+```
+
+### 8.6.10 数据包复制转发
+
+可以将数据包复制并原样发送到另一台主机用于监控。`hook`通常为`prerouting`
+
+```
+nft add rule table_name chain_name dup to 192.168.1.233
+```
+
+从特定接口发出复制后的数据包
+
+```
+nft add rule table_name chain_name dup to 192.168.1.233 device eth1
+```
+
+不同IP发来的数据包复制发送到不同IP
+
+```
+nft add rule table_name chain_name dup to ip saddr map { 192.168.0.1 : 172.20.0.2, 192.168.0.1 : 172.20.0.3 }
+```
 
 ### 8.6.11 负载均衡
 
-### 8.6.12 队列
+基于NAT。只有第1个数据包会经过NAT规则，后续的通过ct自动转发处理
+
+基于Round Robin随机发送到两台主机，概率相等。`hook`为`prerouting`
+
+```
+nft add rule table_name chain_name dnat to numgen inc mod 2 map { \
+               0 : 192.168.10.100, \
+               1 : 192.168.20.200 }
+```
+
+概率`6:4`
+
+```
+nft add rule table_name chain_name dnat to numgen inc mod 10 map { \
+               0-5 : 192.168.10.100, \
+               6-9 : 192.168.20.200 }
+```
+
+转发到端口
+
+```
+nft add rule table_name chain_name ip protocol tcp dnat to 192.168.1.100 : numgen inc mod 2 map {\
+               0 : 4040 ,\
+               1 : 4050 }
+```
+
+跳转`chain`
+
+```
+nft add rule table_name chain_name numgen random mod 2 vmap { 0 : jump mychain1, 1 : jump mychain2 }
+nft add rule table_name chain_name numgen random mod 100 vmap { 0-49 : jump mychain1, 50-99 : jump mychain2 }
+```
+
+基于Jenkins哈希跳转
+
+```
+nft add rule table_name chain_name dnat to jhash ip saddr . tcp dport mod 2 map { \
+                0 : 192.168.20.100, \
+                1 : 192.168.30.100 }
+```
+
+基于stateless NAT（仅仅是修改数据包）
+
+```
+nft add rule table_name chain_name tcp dport 80 ip daddr set numgen inc mod 2 map { 0 : 192.168.1.100, 1 : 192.168.1.101 }
+```
+
+**Direct Server Return (DSR)**
+
+示例
+
+```
+nft add rule netdev table_name chain_name udp dport 53 ether saddr set aa:bb:cc:dd:ff:ee ether daddr set numgen inc mod 2 map { 0 : xx:xx:xx:xx:xx:xx, 1: yy:yy:yy:yy:yy:yy } fwd to eth0
+```
+
+```
+nft add rule netdev table_name chain_name tcp dport 80 ether saddr set aa:bb:cc:dd:ff:ee ether daddr set jhash ip saddr . tcp sport mod 2 map { 0 : xx:xx:xx:xx:xx:xx, 1: yy:yy:yy:yy:yy:yy } fwd to eth0
+```
+
+### 8.6.12 Queueing to userspace
+
+仅适用于调用了`libnetfilter_queue`的程序
+
+在执行了上述应用以后，使用如下`rule`将数据包`enqueue`到队列。默认队列`0`
+
+```
+nft add table_name chain_name counter queue
+```
+
+指定队列。如果没有应用程序在监听`3`，那么发到`3`的数据包最终会丢弃
+
+```
+nft add table_name chain_name counter queue num 3
+```
+
+想要防止上述丢包动作（默认采取`accept`），使用如下配置
+
+```
+nft add table_name chain_name counter queue num 3 bypass
+```
+
+负载均衡到多个`queue`。可以启动4个进程实例分别监听这些`queue`
+
+```
+nft add table_name chain_name counter queue num 0-3
+```
+
+使用`fanout`可以基于CPU编号映射数据包到`queue`示例
+
+```
+nft add table_name chain_name counter queue num 0-3 fanout
+```
+
+```
+nft add table_name chain_name counter queue num 0-3 fanout,bypass
+```
 
 ## 8.7 nft脚本
 
@@ -7519,6 +7874,859 @@ define default_dns = 8.8.8.8
 define aux_dns = { 114.114.114.114, 114.114.115.115 }
 ```
 
+## 8.8 其他一些特殊用法
+
+### 8.8.1 区间
+
+可以用于端口与IP地址范围，示例
+
+```
+nft add rule table_name chain_name ip daddr 192.168.0.1-192.168.0.250 drop
+```
+
+```
+nft add rule table_name chain_name tcp ports 1-1024 drop
+```
+
+```
+nft add rule table_name chain_name ip saddr { 192.168.1.1-192.168.1.200, 192.168.2.1-192.168.2.200 } drop
+```
+
+```
+nft add rule table_name chain_name ip daddr vmap { 192.168.1.1-192.168.1.200 : jump chain-dmz, 192.168.2.1-192.168.20.250 : jump chain-desktop }
+```
+
+### 8.8.2 元组
+
+`nftables`支持元组形式的组合表示，可以一次匹配多个数据包要素。基于`anonymous set`的元组用法
+
+```
+nft add rule table_name chain_name ip saddr . ip daddr . ip protocol { 1.1.1.1 . 2.2.2.2 . tcp, 1.1.1.1 . 3.3.3.3 . udp} counter accept
+```
+
+> 上述命令匹配`ip saddr` `ip daddr` `ip protocol`3个域
+
+基于`verdict map`的用法
+
+定义`vmap`
+
+```
+nft add map table_name vmap_name { type ipv4_addr . inet_service : verdict \; }
+```
+
+引用该`vmap`
+
+```
+nft add rule table_name chain_name ip saddr . tcp dport vmap @vmap_name
+```
+
+该`vmap`初始状态为空，添加内容
+
+```
+nft add element table_name vmap_name { 1.2.3.4 . 22 : accept}
+```
+
+基于`anonymous map`的用法
+
+```
+nft add rule ip table_name chain_name dnat to ip saddr . tcp dport map { 1.1.1.1 . 80 : 192.168.1.100, 2.2.2.2 . 8888 : 192.168.1.101 }
+```
+
+> 上述配置将来自`1.1.1.1`，访问端口`80`的数据包的目标地址`dnat`为`192.168.1.100`
+
+`set`用法示例（需要较新版本的系统）
+
+```
+table inet table_name {
+    set myset {
+        type ipv4_addr . ipv4_addr
+        flags interval
+        elements = { 192.168.0.0/16 . 172.16.0.0/25,
+                     10.0.0.0/30 . 192.168.1.0/24,
+        }
+    }
+
+    chain chain_name {
+        ip saddr . ip daddr @myset counter accept
+    }
+}
+```
+
+用于网络接口
+
+```
+% nft add rule table_name chain_name iif . oif vmap { eth0 . eth1 : accept }
+```
+
+### 8.8.3 数学操作
+
+**数字生成器**
+
+有`inc` `random` `mod` `offset`。`inc`表示递增1，`random`表示随机，`mod`表示对前述递增计数器或随机生成器进行模运算，`offset`表示模运算后加上的常数
+
+```
+table ip table_name {
+	chain chain_name {
+		mark set numgen inc mod 4 offset 3
+		mark set numgen random mod 50 offset 20
+		mark set numgen inc mod 100
+	}
+}
+```
+
+> `inc mod 4 offset 3`会生成序列`3 4 5 6 3 4 5 6 ...`
+
+**哈希生成器**
+
+```
+table ip table_name {
+	chain chain_name {
+		mark set jhash ip saddr mod 2
+		mark set jhash ip saddr . tcp dport mod 2
+		mark set jhash ip saddr . tcp dport . iiftype mod 2
+	}
+}
+```
+
+> 上述配置可以将`mark`设定为`0`或`1`，相同地址来的数据包得到的`mark`是不变的
+
+### 8.8.4 状态对象：计数器
+
+**状态对象简介**
+
+`nftables`中的状态对象可以看成是一种静态变量，在不同的地方修改或引用，获得的结果都是一致的
+
+示例，创建一个`counter`
+
+```
+nft add table table_name
+nft add counter table_name counter_name
+```
+
+在`rule`中只能使用对象的名称引用对象
+
+```
+nft add rule table_name chain_name tcp dport https counter name my_counter
+```
+
+在`map`中使用
+
+```
+nft add rule table_name chain_name counter name tcp dport map { \
+          https : "counter1", \
+          80 : "counter1", \
+          25 : "counter2", \
+          50 : "counter2", \
+          107 : "counter2" \
+  }
+```
+
+在`map`中动态添加对象
+
+```
+nft add map table_name ports { type inet_service : quota \; }
+nft add rule table_name chain_name quota name tcp dport map @ports
+nft add quota table_name http-quota over 25 mbytes
+nft add quota table_name ssh-quota 10 kbytes
+nft add element table_name ports { 80 : "http-quota" }
+nft add element table_name ports { 22 : "ssh-quota" }
+```
+
+`quota`用于在满足一定条件下（例如累计流量超出后）执行特定的动作，例如丢包。后文会讲述
+
+查看指定对象信息。会显示当前该对象状态
+
+```
+nft list counters
+nft list quotas
+nft list counters table inet table_name
+nft list counter table_name https-traffic
+```
+
+例如`quota`已经有计数，显示结果
+
+```
+	quota https-quota {
+		25 mbytes used 217 kbytes
+	}
+```
+
+重置对象（将`counter`或`quota`清零）
+
+```
+nft reset quota table_name https-quota
+nft reset quotas table table_name
+```
+
+**匿名计数器**
+
+匿名计数器不需要显式定义，只对单条`rule`有效
+
+```
+ip protocol tcp counter
+```
+
+**命名计数器**
+
+命名计数器直接定义在`table`中，可以添加注释。定义及引用方法示例
+
+```
+table inet table_name {
+
+    counter cnt_http {
+        comment "count both http and https packets"
+    }
+
+    chain chain_name {
+        type filter hook input priority filter; policy drop;
+
+        tcp dport   80 counter name cnt_http
+        tcp dport  443 counter name cnt_http
+    }
+}
+```
+
+**查看计数器**
+
+已讲述，略
+
+**重置计数器**
+
+单个特定计数器
+
+```
+nft reset counter inet table_name counter_name
+```
+
+特定`table`中所有计数器
+
+```
+nft reset counters table inet table_name
+```
+
+所有计数器（匿名计数器除外）
+
+```
+nft reset counters
+```
+
+### 8.8.5 状态对象：Quotas
+
+创建`quota`示例
+
+```
+nft add quota table_name quota_name 25 mbytes
+```
+
+`quota`可以对匹配到的数据包进行字节计数（可以设定一个计数起始值），在超过阈值或在到达阈值之前执行特定的动作
+
+**匿名quota**
+
+匿名`quota`只对当前`rule`有效
+
+```
+udp dport 5060 quota until 100 mbytes accept
+```
+
+> 上述命令限制数据量最多`100MB`。超过以后丢包
+
+**命名quota**
+
+需要显式定义
+
+```
+table inet table_name {
+   quota q_until_sip { until 100 mbytes used 0 bytes }
+   quota q_over_http { over  500 mbytes ; comment "cap http (but not https)" ; }
+
+   chain chain_name { 
+      type filter hook input priority filter; policy drop;
+
+      udp dport 5060 quota name "q_until_sip" accept
+      tcp dport 80 quota name "q_over_http" drop
+      tcp dport { 80, 443 } accept
+   }
+}
+```
+
+**查看quota**
+
+已讲述，略
+
+**重置quota**
+
+```
+nft reset quota inet table_name quota_name
+nft reset quotas table inet table_name
+nft reset quotas
+```
+
+### 8.8.6 状态对象：Limits
+
+**命名limit**
+
+```
+table inet table_name {
+
+   limit lim_400ppm { rate 400/minute ; comment "use to limit incoming icmp" ; }
+   limit lim_1kbps  { rate over 1024 bytes/second burst 512 bytes ; comment "use to limit incoming smtp" ; }
+
+   chain chain_name { 
+      type filter hook input priority filter; policy drop;
+
+      meta l4proto icmp limit name "lim_400ppm" accept
+      tcp dport 25 limit name "lim_1kbps" accept
+   }
+}
+```
+
+**查看limit**
+
+```
+nft list limit inet table_name limit_name
+nft list limits table inet table_name
+nft list limits
+```
+
+### 8.8.7 状态对象：Connlimits
+
+只有匿名，表示连接数量。示例
+
+```
+table inet table_name {
+   chain chain_name { 
+      type filter hook input priority filter; policy drop;
+      tcp dport 22 ct count 10 accept
+   }
+}
+```
+
+### 8.8.8 Synproxy
+
+`synproxy`可以替代`conntrack/ct`用于追踪TCP连接，防止SYN洪泛攻击导致`conntrack`资源消耗完
+
+`synproxy`中可以指定`mss wscale timestamp sack-perm`参数用于定义一些限制，其中`mss wscale`需要符合服务器程序的设定
+
+使用`synproxy`首先需要执行如下命令
+
+```
+echo 0 > /proc/sys/net/netfilter/nf_conntrack_tcp_loose
+echo 1 > /proc/sys/net/ipv4/tcp_syncookies
+echo 1 > /proc/sys/net/ipv4/tcp_timestamps
+```
+
+**匿名synproxy**
+
+示例。`chain1`防止`conntrack`去追踪数据包
+
+```
+table ip table_name {
+
+    chain chain1 {
+        type filter hook prerouting priority raw; policy accept;
+
+        tcp dport 8888 tcp flags syn notrack
+    }
+
+    chain chain2 {
+        type filter hook input priority filter; policy accept;
+
+        tcp dport 8888 ct state invalid,untracked synproxy mss 1460 wscale 7 timestamp sack-perm
+        ct state invalid drop
+    }
+}
+```
+
+**命名synproxy**
+
+```
+table ip table_name {
+
+    synproxy https-synproxy {
+        mss 1460
+        wscale 7
+        timestamp sack-perm
+    }
+
+    synproxy other-synproxy {
+        mss 1460
+        wscale 5
+    }
+
+    chain chain1 {
+        type filter hook prerouting priority raw; policy accept;
+
+        tcp dport 8888 tcp flags syn notrack
+    }
+
+    chain chain2 {
+        type filter hook forward priority filter; policy accept;
+
+        ct state invalid,untracked synproxy name ip saddr map {
+            192.168.1.0/24 : "https-synproxy", 
+            192.168.2.0/24 : "other-synproxy",
+        }
+    }
+}
+```
+
+### 8.8.9 Secmarks
+
+和SELinux有关，对于SELinux不熟悉的可以[看前文](#5-安全专题selinux)大致了解，用于设定数据包安全上下文
+
+```
+table inet table_name {
+
+    secmark sshtag { "system_u:object_r:ssh_server_packet_t:s0" }
+
+    chain chain_name {
+        type filter hook input priority filter;
+
+        tcp dport 22 meta secmark set "sshtag"
+    }
+}
+```
+
+```
+table inet table_name {
+
+    secmark sshtag { "system_u:object_r:ssh_server_packet_t:s0" }
+
+    map secmapping {
+        type inet_service : secmark
+        elements = {
+            22 : "sshtag",
+        }
+    }
+
+    chain chain_name {
+        type filter hook input priority filter;
+
+        meta secmark set tcp dport map @secmapping
+    }
+}
+```
+
+### 8.8.10 集合Sets
+
+**匿名集合**
+
+示例
+
+```
+nft add rule ip table_name chain_name output tcp dport { 22, 23 } counter
+```
+
+**命名集合**
+
+示例
+
+```
+nft add set ip table_name set_name { type ipv4_addr\; comment \"drop all packets from these hosts\" \; }
+```
+
+添加元素
+
+```
+nft add element ip table_name set_name { 192.168.3.4, 192.168.3.1 }
+```
+
+引用集合
+
+```
+nft add rule ip table_name chain_name ip saddr @set_name drop
+```
+
+定义同时初始化
+
+```
+table inet table_name {
+	set s1 {
+		typeof osf name
+		elements = { "Linux" }
+	}
+	set s2 {
+		typeof vlan id
+		elements = { 2, 3, 103 }
+	}
+	set s3 {
+		typeof ip daddr
+		elements = { 1.1.1.1 }
+	}
+}
+```
+
+> 除了`typeof`还有`type`，可用数据类型`ipv4_addr ipv6_addr ether_addr inet_proto inet_service mark ifname`
+
+`nftables`配置文件还支持宏
+
+```
+define CDN = {
+    $CDN_EDGE,
+    $CDN_MONITORS
+}
+
+tcp dport { http, https } ip saddr $CDN accept
+```
+
+`timeout`可以设定其中元素的过期时间
+
+```
+nft add set ip table_name set_name {type inet_service \; timeout 3h45s \;}
+```
+
+`flags`有`constant interval timeout`，分别表示bound时`set`内容不变，包含`interval`区间，元素添加时可以指定`timeout`
+
+```
+nft add set ip table_name set_name {type ipv4_addr\; flags constant, interval\;}
+```
+
+可以限定`set`大小
+
+```
+nft add set ip table_name set_name {type ipv4_addr \; size 2 \;}
+```
+
+为每个元素建立`counter`
+
+```
+table inet table_name {
+	set set_name {
+		typeof ip saddr
+		counter
+		elements = { 1.1.1.1 counter packets 0 bytes 0, 1.1.1.2 counter packets 0 bytes 0,
+			     1.1.1.3 counter packets 0 bytes 0, 1.1.1.4 counter packets 0 bytes 0 }
+	}
+}
+```
+
+元素自动合并（重叠或连续的`intervals`）
+
+```
+table inet table_name {
+	set set_name {
+		typeof ip saddr
+        flags interval
+        auto-merge
+		elements = { 10.0.0.1,
+                     10.0.0.2,
+                     10.0.0.3,
+			         10.0.0.0/8,
+        }
+	}
+}
+```
+
+**查看命名set**
+
+```
+nft list set ip table_name set_name
+```
+
+**查找元素是否存在**
+
+```
+nft get element ip table_name set_name { 1.1.1.1 }
+```
+
+### 8.8.11 集合：Element timeouts
+
+`set`中的元素有一个`timeout`和一个`expires`，`timeout`为定值，`expires`为倒计时计数器
+
+```
+nft add table inet table_name
+nft add set inet table_name set_name {type ipv4_addr\; flags timeout\; }
+nft add element inet table_name set_name { 10.0.0.1 timeout 10s }
+```
+
+或
+
+```
+nft add element inet table_name set_name { 10.0.0.1 timeout 7s expires 5s }
+```
+
+### 8.8.12 集合：从packet path更新Sets
+
+可以用于动态数据记录例如动态黑名单（`dynamic`）
+
+```
+nft add set table_name set_name { type inet_service\; flags timeout,dynamic\; }
+nft add rule table_name chain_name set update tcp dport timeout 60s @myset
+```
+
+```
+table ip table_name {
+        set set_name {
+                type inet_service
+                flags timeout
+                elements = { http expires 9s}
+        }
+
+        chain chain_name {
+                type filter hook input priority 0; policy accept;
+                update @set_name { tcp dport timeout 1m }
+        }
+}
+```
+
+### 8.8.13 集合：映射Maps
+
+使用`:`分隔
+
+**匿名map**
+
+```
+nft add rule ip table_name chain_name dnat to tcp dport map { 80 : 192.168.1.100, 8888 : 192.168.1.101 }
+```
+
+**命名map**
+
+```
+nft add map table_name map_name { type inet_service: ipv4_addr\; }
+nft add element table_name map_name { 80 : 192.168.1.100, 8888 : 192.168.1.101 }
+nft add rule ip table_name chain_name snat to tcp dport map @map_name
+```
+
+### 8.8.14 集合：Verdict maps
+
+`vmaps`直接映射到动作
+
+**匿名vmap**
+
+```
+nft add rule ip table_name chain_name ip protocol vmap { tcp : jump tcp-chain, udp : jump udp-chain , icmp : jump icmp-chain }
+```
+
+**命名vmap**
+
+```
+nft add map table_name vmap_name { type ipv4_addr : verdict\; }
+nft add element table_name vmap_name { 192.168.0.10 : drop, 192.168.0.11 : accept }
+nft add rule table_name chain_name ip saddr vmap @vmap_name
+```
+
+> `vmap`可用动作有`accept, drop, queue, continue, return, jump chain, goto chain`
+
+### 8.8.15 集合：Metering
+
+示例
+
+```
+table ip table_name {
+      set my_ssh_ratelimit {
+             type ipv4_addr
+             timeout 60s
+             flags dynamic
+      }
+
+      chain input {
+             type filter hook input priority 0; policy drop;
+
+             ct state new tcp dport 22 update @my_ssh_ratelimit { ip saddr limit rate 3/minute } accept
+      }
+}
+```
+
+> 上述示例限制每个IP到本机`22`端口的SSH连接每分钟不超过3次，防止爆破。新的源IP会被存入`set`并设定好超时时间
+
+```
+table ip table_name {
+      set my_ssh_ratelimit {
+             type ipv4_addr . inet_service
+             timeout 60s
+             flags dynamic
+      }
+
+      chain input {
+             type filter hook input priority 0; policy drop;
+
+             ct state new update @my_ssh_ratelimit { ip saddr . tcp dport limit rate 3/minute } accept
+      }
+}
+```
+
+## 8.9 一些示例
+
+### 8.9.1 PC
+
+```
+flush ruleset
+
+table ip filter {
+     chain input {
+          type filter hook input priority 0; policy drop;
+
+          # accept traffic originated from us
+          ct state established,related accept
+
+          # accept any localhost traffic
+          iif lo accept
+     }
+}
+```
+
+```
+flush ruleset
+
+table ip6 filter {
+        chain input {
+                 type filter hook input priority 0; policy drop;
+
+                 # accept any localhost traffic
+                 iif lo accept
+
+                 # accept traffic originated from us
+                 ct state established,related accept
+
+                 # accept neighbour discovery otherwise connectivity breaks
+                 icmpv6 type { nd-neighbor-solicit, nd-router-advert, nd-neighbor-advert } accept
+        }
+}
+```
+
+```
+flush ruleset
+
+table inet filter {
+        chain input {
+                 type filter hook input priority 0; policy drop;
+
+                 # accept any localhost traffic
+                 iif lo accept
+
+                 # accept traffic originated from us
+                 ct state established,related accept
+
+                 # accept neighbour discovery otherwise IPv6 connectivity breaks
+                 icmpv6 type { nd-neighbor-solicit, nd-router-advert, nd-neighbor-advert } accept
+
+        }
+}
+```
+
+### 8.9.2 服务器
+
+```
+flush ruleset                                                                    
+                                                                                 
+table inet firewall {
+                                                                                 
+    chain inbound_ipv4 {
+        # accepting ping (icmp-echo-request) for diagnostic purposes.
+        # However, it also lets probes discover this host is alive.
+        # This sample accepts them within a certain rate limit:
+        #
+        # icmp type echo-request limit rate 5/second accept      
+    }
+
+    chain inbound_ipv6 {                                                         
+        # accept neighbour discovery otherwise connectivity breaks
+        #
+        icmpv6 type { nd-neighbor-solicit, nd-router-advert, nd-neighbor-advert } accept
+                                                                                 
+        # accepting ping (icmpv6-echo-request) for diagnostic purposes.
+        # However, it also lets probes discover this host is alive.
+        # This sample accepts them within a certain rate limit:
+        #
+        # icmpv6 type echo-request limit rate 5/second accept
+    }
+
+    chain inbound {                                                              
+
+        # By default, drop all traffic unless it meets a filter
+        # criteria specified by the rules that follow below.
+        type filter hook input priority 0; policy drop;
+
+        # Allow traffic from established and related packets, drop invalid
+        ct state vmap { established : accept, related : accept, invalid : drop } 
+
+        # Allow loopback traffic.
+        iifname lo accept
+
+        # Jump to chain according to layer 3 protocol using a verdict map
+        meta protocol vmap { ip : jump inbound_ipv4, ip6 : jump inbound_ipv6 }
+
+        # Allow SSH on port TCP/22 and allow HTTP(S) TCP/80 and TCP/443
+        # for IPv4 and IPv6.
+        tcp dport { 22, 80, 443} accept
+
+        # Uncomment to enable logging of denied inbound traffic
+        # log prefix "[nftables] Inbound Denied: " counter drop
+    }                                                                            
+                                                                                 
+    chain forward {                                                              
+        # Drop everything (assumes this device is not a router)                  
+        type filter hook forward priority 0; policy drop;                        
+    }                                                                            
+                                                                                 
+    # no need to define output chain, default policy is accept if undefined.
+}
+```
+
+### 8.9.3 家用软路由
+
+```
+flush ruleset
+
+define DEV_PRIVATE = eth1
+define DEV_WORLD = ppp0
+define NET_PRIVATE = 192.168.0.0/16
+
+table ip global {
+
+    chain inbound_world {
+        # accepting ping (icmp-echo-request) for diagnostic purposes.
+        # However, it also lets probes discover this host is alive.
+        # This sample accepts them within a certain rate limit:
+        #
+        # icmp type echo-request limit rate 5/second accept
+
+        # allow SSH connections from some well-known internet host
+        ip saddr 81.209.165.42 tcp dport ssh accept
+    }
+
+    chain inbound_private {
+        # accepting ping (icmp-echo-request) for diagnostic purposes.
+        icmp type echo-request limit rate 5/second accept
+
+        # allow DHCP, DNS and SSH from the private network
+        ip protocol . th dport vmap { tcp . 22 : accept, udp . 53 : accept, tcp . 53 : accept, udp . 67 : accept}
+    }
+
+    chain inbound {
+        type filter hook input priority 0; policy drop;
+
+        # Allow traffic from established and related packets, drop invalid
+        ct state vmap { established : accept, related : accept, invalid : drop }
+
+        # allow loopback traffic, anything else jump to chain for further evaluation
+        iifname vmap { lo : accept, $DEV_WORLD : jump inbound_world, $DEV_PRIVATE : jump inbound_private }
+
+        # the rest is dropped by the above policy
+    }
+
+    chain forward {
+        type filter hook forward priority 0; policy drop;
+
+        # Allow traffic from established and related packets, drop invalid
+        ct state vmap { established : accept, related : accept, invalid : drop }
+
+        # connections from the internal net to the internet or to other
+        # internal nets are allowed
+        iifname $DEV_PRIVATE accept
+
+        # the rest is dropped by the above policy
+    }
+
+    chain postrouting {
+        type nat hook postrouting priority 100; policy accept;
+
+        # masquerade private IP addresses
+        ip saddr $NET_PRIVATE oifname $DEV_WORLD masquerade
+    }
+}
+```
+
 ## 9 安全专题：防火墙前端ufw
 
 Debian系发行版通常使用`ufw`
@@ -7536,6 +8744,8 @@ Redhat系发行版通常使用`firewalld`
 ## 11.3 pacman
 
 ## 11.4 Alpine Linux
+
+## 12 安全专题：Landlock
 
 # FreeBSD
 

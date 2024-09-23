@@ -122,7 +122,7 @@
 | [231101a](231101a_riscv.md) | RISC-V体系结构，SBI | 0% |
 | [231104a](231104a_database.md) | 数据库 | 0% |
 | [231126a](231126a_pcb.md) | 高速PCB设计 | 0% |
-| [240706a](240706a_alpine.md) | AlpineLinux安装与日常使用 | 95% |
+| [240706a](240706a_alpine.md) | AlpineLinux安装与日常使用 | 100% |
 | [240813a](240813a_fat.md) | 磁盘分区表与FAT文件系统 | 80% |
 
 ## 参考书收藏
@@ -163,7 +163,7 @@
 
 ## Recipe
 
-🍥 C C++ Go Java Rust Ruby Python Lua Node.js Zig Scala Dart
+🍥 C C++ Go Java Rust Ruby Python Lua Node.js Zig Scala Dart Forth
 
 🍣 Haskell | Erlang OCaml Agda
 
@@ -181,11 +181,11 @@
 
 🍇 Rails(Ruby) Express(Node.js) Spring(Java) Gin(Go)
 
+🍎 React Vue
+
 🍒 WebAssembly
 
 🍈 Docker LXD Kubernetes QEMU
-
-🍎 React Vue
 
 🍐 Makefile
 
@@ -193,10 +193,12 @@
 
 🍉 Qt wxWidgets SDL
 
-🥑 ARM AVR 8051 FPGA
+🥑 ARM AVR 8051 RISC-V
+
+🫐 FPGA
 
 🥭 FreeRTOS RT-Thread
 
 🍌 KiCAD FreeCAD
 
-🍍 ArchLinux ArtixLinux AlpineLinux Debian Fedora Slackware FreeBSD Tribblix
+🍍 AlpineLinux ArchLinux Debian Fedora RHEL Slackware FreeBSD Tribblix Haiku

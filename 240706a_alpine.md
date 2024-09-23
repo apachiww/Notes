@@ -105,6 +105,14 @@ https://mirrors.ustc.edu.cn/alpine/latest-stable/main
 https://mirrors.ustc.edu.cn/alpine/latest-stable/community
 ```
 
+建议添加`edge`源
+
+```
+https://mirrors.ustc.edu.cn/alpine/edge/main
+https://mirrors.ustc.edu.cn/alpine/edge/community
+https://mirrors.ustc.edu.cn/alpine/edge/testing
+```
+
 ## 1.4 时区
 
 直接执行`setup-timezone`，根据提示输入时区即可
@@ -133,7 +141,7 @@ setup-ntp
 
 ## 1.7 磁盘分区
 
-使用UEFI模式启动。多系统建议不使用`setup-disk`。只分`/`和一个ESP（不给`/boot`专门分区）。AlpineLinux中的`fdisk`是`busybox`的版本，使用方法和传统的`fdisk`不一样
+使用UEFI模式启动。多系统不要使用`setup-disk`进行分区与格式化操作。这里只分一个`ext4`的`/`和一个`vfat`的ESP，内核和`initramfs`放在`ext4`分区中（不给`/boot`专门分区）。AlpineLinux中的`fdisk`是`busybox`的版本，使用方法和传统的`fdisk`不一样
 
 安装分区工具（`cfdisk`或`parted`）与格式化工具
 
@@ -152,7 +160,7 @@ pt /dev/sda mkpart '""' 411648s 252069887s
 
 > 第一个分区从2048扇区开始，一个LBA大小512B。假设ESP大小200M那么扇区范围`2048s`到`411647s`。依次类推。也可以直接使用`MiB`等单位
 >
-> 如果有需要，可以使用`set 1 esp on`将`/dev/sda1`设为`EFI System`。其他常用的有`swap`，`lvm`等
+> 如果有需要，可以使用`set 1 esp on`将`/dev/sda1`设为`EFI System`。不设定也没问题。其他常用的有`swap`，`lvm`等
 
 分好区以后使用`fdisk`再检查一下
 
@@ -187,7 +195,7 @@ BOOTLOADER=none setup-disk -m sys /mnt
 
 ### 1.8.1 chroot
 
-Alpine没有像Arch一样提供`arch-chroot`。想要使用`chroot`时，获取较为完全的功能需要使用以下命令，假设新的根分区挂载到`/mnt`
+Alpine没有像Arch一样提供`arch-chroot`。想要使用`chroot`时，获取较为完全的功能要按需挂载以下文件系统，假设新的根分区挂载到`/mnt`
 
 ```
 cd /mnt
@@ -256,7 +264,7 @@ cp /usr/share/refind/drivers_x86_64/ext*.efi /boot/efi/EFI/refind/drivers_x64
 cp /usr/share/refind/refind.conf-sample /boot/efi/EFI/refind/refind.conf
 ```
 
-可以复制图标文件到ESP。不一定使用。后续美化可以用到
+可以复制图标文件到ESP。后面会有界面主题配置方法，使用更好看的图标，可以只创建目录而不复制
 
 ```
 cp -r /usr/share/refind/icons /boot/efi/EFI/refind
@@ -322,7 +330,7 @@ mount --rbind /sys/firmware/efi/efivars sys/firmware/efi/efivars/
 chroot .
 ```
 
-安装`grub`本体到`/boot/efi/EFI/grub`
+假设ESP依旧挂载到`/boot/efi`，安装`grub`本体到`/boot/efi/EFI/grub`
 
 ```
 apk update && apk add grub-efi efibootmgr
