@@ -2476,9 +2476,9 @@ join
 >
 > 之前的普通加法器**主要问题出在进位的传递上**。$c_{i+1}=x_i \cdot y_i + y_i \cdot c_i + x_i \cdot c_i$，可以将进位和$x_iy_i$分开，$c_{i+1} = x_i \cdot y_i + (x_i+y_i) \cdot c_i$。可以设$g_i = x_i \cdot y_i, p_i = x_i + y_i$，那么$c_{i+1} = g_i + p_i \cdot c_i$
 >
-> 而$c_i$又可以展开为$c_i = (g_i - 1) + (p_i - 1) \cdot (c_i - 2)$，那么$c_{i+1} = g_i + p_i \cdot ((g_i - 1) + (p_i - 1) \cdot (c_i - 2)) = g_i + p_i(g_i - 1) + p_i(p_i - 1) \cdot (c_i - 2)$
+> 而$c_i$又可以展开为$c_i = (g_{i - 1}) + (p_{i - 1}) \cdot (c_{i - 2})$，那么$c_{i+1} = g_i + p_i \cdot ((g_{i - 1}) + (p_{i - 1}) \cdot (c_{i - 2})) = g_i + p_i(g_{i - 1}) + p_i(p_{i - 1}) \cdot (c_{i - 2})$
 >
-> 以此类推，最终可以推导得出$c_i=(g_i-1)+(p_i-1)(g_i-2)+(p_i-1)(p_i-2)(g_i-3)+ \cdots +(p_i-1)(p_i-2) \cdots p_2p_1g_0 + (p_i-1)(p_i-2) \cdots p_2p_1p_0c_0$
+> 以此类推，最终可以推导得出$c_i=(g_{i-1})+(p_{i-1})(g_{i-2})+(p_{i-1})(p_{i-2})(g_{i-3})+ \cdots +(p_{i-1})(p_{i-2}) \cdots p_2p_1g_0 + (p_{i-1})(p_{i-2}) \cdots p_2p_1p_0c_0$
 >
 > 例如
 >
