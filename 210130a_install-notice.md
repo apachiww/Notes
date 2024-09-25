@@ -573,15 +573,81 @@ hdparm -I /dev/sda
 
 ## 3.1 systemd
 
-`systemd`的命令行使用不再讲述
+### 3.1.1 概念
 
-### 3.1.1 基本概念
+### 3.1.2 基本使用
 
+启动服务
 
+```
+systemctl start service_name
+```
+
+> 停止和重启分别使用`stop`和`restart`
+
+开机自启
+
+```
+systemctl enable service_name
+```
+
+> 禁止开机自启使用`disable`
 
 ## 3.2 openrc
 
-TODO
+### 3.2.1 概念
+
+### 3.2.2 基本使用
+
+启动服务
+
+```
+rc-service service_name start
+```
+
+> 停止和重新启动分别使用`stop`和`restart`
+
+服务状态
+
+```
+rc-service service_name status
+```
+
+列出所有服务
+
+```
+rc-service --list
+```
+
+列出所有`runlevel`下的服务
+
+```
+rc-update show
+```
+
+所有服务
+
+```
+rc-update show -v
+```
+
+添加服务到`runlevel`。默认添加到`default`，开机到`default`时会自启动
+
+```
+rc-update add networking
+```
+
+禁止自启动
+
+```
+rc-update del networking
+```
+
+添加到指定`runlevel`
+
+```
+rc-update add udev sysinit
+```
 
 ## 4 其他杂项
 
@@ -614,6 +680,8 @@ grub-mkconfig -o /mnt/grub/grub.cfg
 
 ## 4.4 CMOS时间同步
 
+### 4.4.1 使用systemd-timesyncd
+
 `systemd`下使能`systemd-timesyncd`
 
 ```shell
@@ -639,6 +707,211 @@ timedatectl set-ntp true
 ```shell
 timedatectl status
 ```
+
+### 4.4.2 使用chronyd
+
+参考[RedHat教程](https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/9/html/configuring_basic_system_settings/configuring-time-synchronization_configuring-basic-system-settings#configuring-time-synchronization_configuring-basic-system-settings)
+
+AlpineLinux安装
+
+```
+$ apk add chrony
+$ rc-update add chrony
+```
+
+`chrony`可以基于NTP服务器，参考时钟，或手动调节来同步系统时钟，也可以将本机作为一个`NTPv4`的时钟`server`或`peer`来使用为其他主机提供时钟服务。`chrony`由3部分组成，一个是最关键部分`chronyd`守护进程，一个是命令行配置工具`chronyc`，可以支持控制本地（通过Unix Socket）以及远程（通过IP地址）的`chronyd`实例，一个是`/etc/chrony/chrony.conf`（或`/etc/chrony.conf`）配置文件
+
+启动`chronyd`
+
+```
+$ rc-service chronyd start
+```
+
+查看同步状态
+
+```
+$ chronyc tracking
+
+Reference ID    : 8BC7D6CA (139.199.214.202)
+Stratum         : 3
+Ref time (UTC)  : Tue Sep 05 15:08:20 2024
+System time     : 0.000082811 seconds fast of NTP time
+Last offset     : -0.000003996 seconds
+RMS offset      : 0.000310037 seconds
+Frequency       : 5.338 ppm slow
+Residual freq   : +0.004 ppm
+Skew            : 1.303 ppm
+Root delay      : 0.013504545 seconds
+Root dispersion : 0.007091730 seconds
+Update interval : 258.8 seconds
+Leap status     : Normal
+```
+
+> 如果`Reference ID`为`7F7F0101`，说明没有外部同步，`chronyd`运行在`local`模式
+>
+> `Stratum`表示连接到的时钟服务器的等级，和连接原子钟的服务器之间的距离。`1`表示就是原子钟服务器，`2`及以上为同步服务器
+>
+> `Ref time`表示上一次同步校准的时间
+>
+> `System time`表示系统时钟和NTP时钟的差距，可以发现`Ref time`和`System time`是一直在变化的。`chrony`使用较为温和的方式，加快时钟或减慢时钟来对系统时钟进行调节，而不是一次调节。可以使用`chronyc makestep`强制手动触发一次调节，通常用于时钟偏离过大的情况
+>
+> `Last offset`指上一次同步时的差距
+>
+> `Frequency`表示百万秒需要纠正几次。它一定程度反映了本机时钟的固有误差率
+>
+> `Residual freq`表示当前观测到实际的`Frequency`和当前`Frequency`设定值之间的差
+>
+> `Skew`表示当前`Frequency`计算值可能的误差
+>
+> `Root delay`表示从本机到Stratum-1原子钟之间网络传输的延迟总和
+>
+> `Update interval`表示上2次时钟同步之间的间隔
+>
+> `Leap`通常为`Normal`。可以为`Insert Second` `Delete Second` `Not synchronized`
+
+> `clock_error <= |system_time_offset| + root_dispersion + (0.5 * root_delay)`
+
+查看当前时钟源。标`*`的是当前正在使用的
+
+```
+$ chronyc sources -v
+
+  .-- Source mode  '^' = server, '=' = peer, '#' = local clock.
+ / .- Source state '*' = current best, '+' = combined, '-' = not combined,
+| /             'x' = may be in error, '~' = too variable, '?' = unusable.
+||                                                 .- xxxx [ yyyy ] +/- zzzz
+||      Reachability register (octal) -.           |  xxxx = adjusted offset,
+||      Log2(Polling interval) --.      |          |  yyyy = measured offset,
+||                                \     |          |  zzzz = estimated error.
+||                                 |    |           \
+MS Name/IP address         Stratum Poll Reach LastRx Last sample               
+===============================================================================
+^- 123.200.159.162.in-addr.>     3   8   377    52  -1070us[-1070us] +/-   91ms
+^* 139.199.214.202               2   8   377   179  +2314us[+2526us] +/-   14ms
+^- 180.102.46.78.in-addr.ar>     2   8   377   246   +398us[ +602us] +/-   95ms
+^- 33.73.16.84.in-addr.arpa      1   8   373   241  +2899us[+3103us] +/-  109ms
+```
+
+```
+$ chronyc sourcestats -v
+
+                             .- Number of sample points in measurement set.
+                            /    .- Number of residual runs with same sign.
+                           |    /    .- Length of measurement set (time).
+                           |   |    /      .- Est. clock freq error (ppm).
+                           |   |   |      /           .- Est. error in freq.
+                           |   |   |     |           /         .- Est. offset.
+                           |   |   |     |          |          |   On the -.
+                           |   |   |     |          |          |   samples. \
+                           |   |   |     |          |          |             |
+Name/IP Address            NP  NR  Span  Frequency  Freq Skew  Offset  Std Dev
+==============================================================================
+123.200.159.162.in-addr.>  31  16   71m     -0.100      0.282  -1560us   465us
+139.199.214.202            29  15   72m     +0.007      0.462  +1254ns   804us
+180.102.46.78.in-addr.ar>  31  19   72m     +0.129      0.392  -4371us   749us
+33.73.16.84.in-addr.arpa   30  14   68m     -0.375      0.742  +6856us  1175us
+```
+
+可以使用`online` `offline`告知`chronyd`哪些服务器处于上线/下线状态
+
+```
+$ chronyc online 139.199.214.202
+```
+
+手动设置时间使用如下命令
+
+```
+$ chronyc manual on
+$ chronyc settime Nov 21, 2023 16:30:05
+```
+
+列出所有手动设定
+
+```
+$ chronyc manual list
+```
+
+删除所有手动设定
+
+```
+$ chronyc manual reset
+```
+
+删除指定设定
+
+```
+$ chronyc manual delete 0
+```
+
+**配置文件**
+
+`client`示例
+
+```
+server ntp.lab.int iburst
+driftfile /var/lib/chrony/drift
+makestep 1.0 3
+rtcsync
+keyfile /etc/chrony.keys
+leapsectz right/UTC
+logdir /var/log/chrony
+```
+
+`server`示例
+
+```
+server ntp.lab.int iburst
+allow 192.168.0.0/24
+driftfile /var/lib/chrony/drift
+makestep 1.0 3
+rtcsync
+keyfile /etc/chrony.keys
+leapsectz right/UTC
+logdir /var/log/chrony
+```
+
+> 通过`allow`关键字就可以开启`server`模式，后加允许同步的客户端地址
+
+在无Internet连接的网络中配置`server`和`client`示例
+
+```
+driftfile /var/lib/chrony/drift
+commandkey 1
+keyfile /etc/chrony.keys
+initstepslew 10 client1 client3 client6
+local stratum 8
+manual
+allow 192.0.2.0/24
+```
+
+```
+server 192.0.2.123
+driftfile /var/lib/chrony/drift
+logdir /var/log/chrony
+log measurements statistics tracking
+keyfile /etc/chrony.keys
+commandkey 24
+local stratum 10
+initstepslew 20 ntp1.example.net
+```
+
+配置文件常见的一些关键字定义
+
+| 关键字 | 示例 | 说明 |
+| :- | :- | :- |
+| `server` | `server 119.28.206.193` | NTP服务器地址，可以是域名。`minpoll`和`maxpoll`设定两次请求之间的时间间隔，长度2的设定值幂次。使用`iburst`表示请求时一次发送4到8个请求，以求尽快得到回复。使用`offline`设定为下线状态，不会请求。使用`auto_offline`在请求失败时自动设定为`offline`。使用`prefer`优先选定。使用`presend 10`设定`10`秒后再请求一次，规避ARP延时的问题 |
+| `pool` | `pool pool.ntp.org iburst maxsources 3` | 服务器池地址，有了池可以不配置`server`。`maxsources`指定使用`pool`中多少个服务器作为可选来源，默认`4` |
+| `peer` | `peer 192.168.1.124` | 不分`server client`的`peer`模式，两台主机之间互相获取时钟作为参考并校对时间 |
+| `driftfile` | `driftfile /var/lib/chrony/drift` | `driftfile`记录硬件时钟误差 |
+| `makestep` | `makestep 0.1 3` | 替代了`initstepslew`的功能。`0.1`为调节时时钟变化量，影响调节速度，`3`表示系统时钟偏移超过`3`秒执行`step`单次调节 |
+| `allow` | `allow 192.168.1.0/24` | 作为`server`使用，为指定地址的`client`提供时间同步服务。相反可以用`deny`不允许指定主机请求 |
+| `rtcsync` |  | 将同步后的时间定期写到RTC时钟 |
+| `manual` |  | 允许在`chronyc`使用`settime`命令 |
+| `local` |  | `local`模式，作为`server`使用并且不参考其他时钟源。使用`stratum 8`关键字向`client`报告`stratum`值，应当大致设定为联网状态下相对原子钟服务器的`stratum`值 |
+| `log` | `log measurements statistics tracking selection rtc refclocks` | 记录日志 |
+| `logdir` | `logdir /var/log/chrony` | 日志目录 |
+| `ratelimit` | `ratelimit interval 1 burst 16` | `server`限制请求与回复速率。`interval`表示最小回复间隔，长度2的设定值幂次。`burst`默认`8` |
+| `keyfile` | `keyfile /etc/chrony.keys` | 预分享的NTP服务器对称密钥 |
 
 ## 4.5 GPU与3D
 
@@ -713,7 +986,7 @@ SELinux的争议在于NSA参与了开发
 
 相比SELinux需要为每一个文件标记额外属性，另一个流行的解决方案为[AppArmor](#6-安全专题apparmor)，它是基于访问路径设计的，相比SELinux要略简单一些
 
-SELinux的开发与维护主要受RedHat赞助。红帽系的发行版例如Fedora，RHEL等默认使用SELinux。而其他许多Debian、SUSE系发行版例如Ubuntu，Debian，OpenSUSE，SLES等更加偏好AppArmor，因为Canonical赞助了它。其他面向爱好者做桌面系统的发行版如ArchLinux，ArtixLinux，Gentoo等默认不会使用两者中的任何一个
+SELinux的开发与维护主要受RedHat赞助。红帽系的发行版例如Fedora，RHEL等默认使用SELinux。而其他许多Debian、SUSE系发行版例如Ubuntu，Debian，OpenSUSE，SLES等更加偏好AppArmor，因为Canonical赞助了它。通常其他面向爱好者做桌面系统的发行版默认不会使用两者中的任何一个
 
 > 安卓默认使用SELinux
 
@@ -8745,20 +9018,18 @@ Redhat系发行版通常使用`firewalld`
 
 ## 11.4 Alpine Linux
 
+## 11.5 OpenSUSE
+
 ## 12 安全专题：Landlock
 
 # FreeBSD
 
 ## 1 防火墙
 
-TODO
-
 ## 2 ZFS
 
 ## 3 容器jails
 
 ## 4 服务
-
-TODO
 
 ## 5 MAC
