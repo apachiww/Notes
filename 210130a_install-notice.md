@@ -9002,7 +9002,218 @@ table ip global {
 
 ## 9 安全专题：防火墙前端ufw
 
-Debian系发行版通常使用`ufw`
+Debian系发行版通常使用`ufw`。`ufw`使用方式以命令行配置为主
+
+## 9.1 安装
+
+Debian安装。安装完成后在`systemd`中默认启动
+
+```
+$ sudo apt install ufw
+```
+
+使能`ufw`
+
+```
+$ sudo ufw enable
+```
+
+Alpine Linux安装与使能
+
+```
+$ doas apk add ufw ufw-doc ufw-bash-completion
+$ doas ufw enable
+$ doas rc-update add ufw
+$ doas rc-service ufw start
+```
+
+禁用防火墙
+
+Debian
+
+```
+$ sudo ufw disable
+```
+
+Alpine Linux
+
+```
+$ doas rc-service ufw stop
+$ doas rc-update del ufw
+$ doas ufw disable
+```
+
+重载配置文件
+
+```
+$ sudo ufw reload
+```
+
+## 9.2 基本使用
+
+### 9.2.1 查看状态
+
+```
+$ sudo ufw status verbose
+Status: active
+Logging: on (low)
+Default: deny (incoming), allow (outgoing), deny (routed)
+New profiles: skip
+```
+
+查看`iptables`表
+
+```
+$ sudo ufw show raw
+```
+
+### 9.2.2 添加允许与禁止规则
+
+指定端口，以及可选的传输层协议
+
+```
+$ sudo ufw allow 133
+$ sudo ufw allow 53/tcp
+```
+
+```
+$ sudo ufw deny 53/udp
+```
+
+上述无论`allow`或`deny`都是逐个添加到规则链中的。需要使用`delete`命令删除，示例
+
+```
+$ sudo ufw delete deny 53/udp
+```
+
+设置默认动作（黑名单或白名单）
+
+```
+$ sudo ufw default deny incoming
+```
+
+规则默认应用于所有接口。可以设定接口
+
+```
+$ sudo ufw allow in on eth0 to any port 80 proto tcp
+```
+
+限制连接（30秒内6次），防止SSH爆破示例
+
+```
+$ sudo ufw limit ssh/tcp
+```
+
+在`/etc/services`中有系统中所有服务所需的传输协议与端口信息。可以直接使用这里面的服务名来配置
+
+```
+$ sudo ufw allow ssh
+```
+
+允许特定源IP
+
+```
+$ sudo ufw allow from 192.168.1.25
+```
+
+允许一个子网
+
+```
+$ sudo ufw allow from 192.168.1.0/24
+```
+
+更详细的用法
+
+```
+$ sudo ufw allow from 192.168.1.15 to 207.46.232.182 port 22
+```
+
+```
+$ sudo ufw allow from 192.168.1.15 to 207.46.232.182 app SSH
+```
+
+> `app`可以使用`sudo ufw app list`查看
+
+```
+$ sudo ufw allow from 192.168.1.15 port 18500 to 207.46.232.182 port 2222
+```
+
+可以使用`any`
+
+```
+$ sudo ufw allow from 192.168.1.15 to any port 22 proto tcp
+```
+
+`deny`用法示例。相同
+
+```
+$ sudo ufw deny from 192.168.1.2 to any port 22
+```
+
+显示`rule`编号
+
+```
+$ sudo ufw status numbered
+```
+
+删除指定编号
+
+```
+$ sudo ufw delete 1
+```
+
+插入规则
+
+```
+$ sudo ufw insert 1 allow from 192.168.1.22
+```
+
+路由转发
+
+```
+$ sudo ufw route allow in on eth0 proto tcp from 192.168.1.23 to 192.168.2.55 port 22 
+```
+
+如果机器暴露在公网，可以使用 https://github.com/poddmo/ufw-blocklist
+
+### 9.2.3 日志
+
+```
+$ sudo ufw logging on
+```
+
+关闭
+
+```
+$ sudo ufw logging off
+```
+
+日志可以使用`journalctl`查看
+
+### 9.2.4 修改配置文件
+
+配置文件在`/etc/ufw`。这里面的`rule`本质上依旧是`iptables`的`rule`格式
+
+示例，修改配置丢弃ICMP包
+
+```
+# ok icmp codes
+-A ufw-before-input -p icmp --icmp-type destination-unreachable -j DROP
+...
+```
+
+配置文件名及定义
+
+| 文件 | 说明 |
+| :- | :- |
+| `/etc/default/ufw` | 默认的一些上层配置，例如是否使能IPv6 |
+| `before6.rules` | 在使用`ufw`命令行添加的所有`rule`之前执行 |
+| `after6.rules` | 在使用`ufw`命令行添加的所有`rule`之后执行 |
+| `sysctl.conf` | 内核参数 |
+| `/var/lib/ufw/user6.rules` `/lib/ufw/user6.rules` | 通过`ufw`命令行添加的规则 |
+| `ufw.conf` | `LOGLEVEL`和`ufw`是否在系统启动时`enabled` |
+| `after.init` | `ufw`初始化后配置文件 |
+| `before.init` | `ufw`初始化前配置文件 |
 
 ## 10 安全专题：防火墙前端firewalld
 
