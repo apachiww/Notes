@@ -17,13 +17,18 @@
     + [**2.3**](#23-sata-ssd擦除) SATA SSD擦除
 + [**3**](#3-服务) 服务
     + [**3.1**](#31-systemd) systemd
-        + [**3.1.1**](#311-基本概念) 基本概念
+        + [**3.1.1**](#311-概念) 概念
+        + [**3.1.2**](#312-基本使用) 基本使用
     + [**3.2**](#32-openrc) openrc
+        + [**3.2.1**](#321-概念) 概念
+        + [**3.2.2**](#322-基本使用) 基本使用
 + [**4**](#4-其他杂项) 其他杂项
     + [**4.1**](#41-系统初始化显示) 系统初始化显示
     + [**4.2**](#42-sudo与特权用户) sudo与特权用户
     + [**4.3**](#43-将grub配置文件安装到esp分区) 将grub配置文件安装到ESP分区
     + [**4.4**](#44-cmos时间同步) CMOS时间同步
+        + [**4.4.1**](#441-使用systemd-timesyncd) 使用systemd-timesyncd
+        + [**4.4.2**](#442-使用chronyd) 使用chronyd
     + [**4.5**](#45-gpu与3d) GPU与3D
     + [**4.6**](#46-显示器亮度调节) 显示器亮度调节
 + [**5**](#5-安全专题selinux) 安全专题：SELinux
@@ -176,13 +181,61 @@
         + [**8.8.13**](#8813-集合映射maps) 集合：映射Maps
         + [**8.8.14**](#8814-集合verdict-maps) 集合：Verdict maps
         + [**8.8.15**](#8815-集合metering) 集合：Metering
+    + [**8.9**](#89-一些示例) 一些示例
+        + [**8.9.1**](#891-pc) PC
+        + [**8.9.2**](#892-服务器) 服务器
+        + [**8.9.3**](#893-家用软路由) 家用软路由
 + [**9**](#9-安全专题防火墙前端ufw) 安全专题：防火墙前端ufw
+    + [**9.1**](#91-安装) 安装
+    + [**9.2**](#92-基本使用) 基本使用
+        + [**9.2.1**](#921-查看状态) 查看状态
+        + [**9.2.2**](#922-添加允许与禁止规则) 添加允许与禁止规则
+        + [**9.2.3**](#923-日志) 日志
+        + [**9.2.4**](#924-修改配置文件) 修改配置文件
 + [**10**](#10-安全专题防火墙前端firewalld) 安全专题：防火墙前端firewalld
+    + [**10.1**](#101-安装) 安装
+    + [**10.2**](#102-基本概念) 基本概念
+        + [**10.2.1**](#1021-zone和policy) Zone和Policy
+        + [**10.2.2**](#1022-使用简介) 使用简介
+    + [**10.3**](#103-状态查看与配置) 状态查看与配置
+        + [**10.3.1**](#1031-查看运行状态) 查看运行状态
+        + [**10.3.2**](#1032-zone) Zone
+        + [**10.3.3**](#1033-内置zone) 内置Zone
+        + [**10.3.4**](#1034-policy) Policy
+    + [**10.4**](#104-zone配置) Zone配置
+        + [**10.4.1**](#1041-数据包匹配) 数据包匹配
+        + [**10.4.2**](#1042-service配置) service配置
+        + [**10.4.3**](#1043-创建与删除zone) 创建与删除zone
+        + [**10.4.4**](#1044-配置target) 配置target
+        + [**10.4.5**](#1045-设定描述) 设定描述
+        + [**10.4.6**](#1046-短名称设定) 短名称设定
+        + [**10.4.7**](#1047-icmp-block) ICMP block
+        + [**10.4.8**](#1048-端口转发) 端口转发
+        + [**10.4.9**](#1049-nat-masquerade) NAT (Masquerade)
+        + [**10.4.10**](#10410-rich-rules) Rich Rules
+        + [**10.4.11**](#10411-适用于zone的其他配置) 适用于Zone的其他配置
+        + [**10.4.12**](#10412-ipset设定) IPSet设定
+        + [**10.4.13**](#10413-helper设定) Helper设定
+        + [**10.4.14**](#10414-icmp-type设定) ICMP Type设定
+    + [**10.5**](#105-policy配置) Policy配置
+        + [**10.5.1**](#1051-nat配置示例) NAT配置示例
+        + [**10.5.2**](#1052-创建与删除policy) 创建与删除policy
+        + [**10.5.3**](#1053-优先级) 优先级
+        + [**10.5.4**](#1054-输入输出zone) 输入输出zone
+    + [**10.6**](#106-配置文件) 配置文件
+        + [**10.6.1**](#1061-主配置文件) 主配置文件
+        + [**10.6.2**](#1062-zone配置文件) Zone配置文件
+        + [**10.6.3**](#1063-service配置文件) Service配置文件
+        + [**10.6.4**](#1064-ipset配置文件) IPSet配置文件
+        + [**10.6.5**](#1065-helper配置文件) Helper配置文件
+        + [**10.6.6**](#1066-icmp-type配置文件) ICMP Type配置文件
+        + [**10.6.7**](#1067-direct-interface配置文件) Direct Interface配置文件
 + [**11**](#11-常用包管理) 常用包管理
     + [**11.1**](#111-redhat系) RedHat系
     + [**11.2**](#112-apt) apt
     + [**11.3**](#113-pacman) pacman
     + [**11.4**](#114-alpine-linux) Alpine Linux
+    + [**11.5**](#115-opensuse) OpenSUSE
 + [**12**](#12-安全专题landlock) 安全专题：Landlock
 + [**FreeBSD**](#freebsd)
 + [**1**](#1-防火墙) 防火墙
@@ -9218,6 +9271,963 @@ $ sudo ufw logging off
 ## 10 安全专题：防火墙前端firewalld
 
 Redhat系发行版通常使用`firewalld`
+
+和`ufw`一样，`firewalld`在功能上也具有一定的局限性。有特殊需求最好还是直接使用`nftables`或`iptables`
+
+## 10.1 安装
+
+如果当前`iptables ip6tables etables ipset`在运行，需要首先停止，示例，停止`iptables`
+
+```
+$ sudo systemctl stop iptables
+```
+
+Fedora下安装
+
+```
+$ sudo dnf install firewalld firewall-config firewall-applet
+```
+
+启动
+
+```
+$ sudo systemctl unmask --now firewalld
+$ sudo systemctl enable firewalld
+$ sudo systemctl start firewalld
+```
+
+关闭`firewalld`使用`iptables`
+
+```
+$ sudo systemctl mask --now firewalld
+$ sudo systemctl enable --now iptables
+```
+
+## 10.2 基本概念
+
+### 10.2.1 Zone和Policy
+
+`firewalld`既可以为本地系统提供防火墙功能，也可以配置转发，将本机作为一个网关使用，为内网提供防火墙功能
+
+`firewalld`中使用`zone`来区分不同类型的数据包，不同的`zone`通常代表了不同的安全等级，适用于不同的应用场合。`zone`通常**只对输入到本机的数据包进行筛选与过滤**，而对于从本机输出的数据包（本机发起的连接）不会有限制。`firewalld`是一种`stateful`的防火墙，它会跟踪连接，也就是说如果连接是由外界发起的，那么在本机第一次接收到该数据包并允许通过后，该连接后续所有关联的数据包都直接默许通过
+
+可以给`zone`设定一些数据包匹配规则，例如将特定网络接口（`eth0`），特定IP，特定网络服务添加到一个`zone`，那么遇到条件符合的数据包就会采取该`zone`对应的动作（首要就是通过网络接口进行匹配）
+
+在默认配置下，数据包只能在`zone`内流通（这个概念为`forward`），没有配置`policy`的情况下数据包无法跨`zone`。如果一个数据包没有匹配上任何`zone`，那么它会被扔到默认的`zone`（通常为`public`）
+
+`policy`和`zone`有点类似，也可以将网络接口，源IP，以及服务添加到`policy`进行数据包匹配。区别是`policy`是用来桥接`zone`的。一个`policy`中，数据从`policy`的`ingress zone`输入，并输出到`egress zone`。`policy`经常用于网关功能，配合`zone`并经过适当的配置可以将本机作为一台NAT网关使用。一个`policy`可以有多个`ingress zone`和`egress zone`（实际应用通常只配置1个）。实际上现在的`firewalld`中`zone`本身就是由`policy`实现的。此外，`policy`可以支持任意方向的数据包过滤。如果只是将`firewalld`作为本地防火墙使用，仅仅使用`zone`已经能够满足需求
+
+`firewalld`的基本规则如下：
+
+> 数据包只会从一个唯一的`zone`进入
+>
+> 数据包只会从一个唯一的`zone`输出
+>
+> 一个`zone`代表了一个`trust`等级
+>
+> `intra-zone`即`zone`内传输，默认允许，可通过`--remove-forward`禁止同一个`zone`内流通
+>
+> `inter-zone`即`zone`间传输，默认禁止，可通过添加`policy`允许特定数据包在`zone`间流通
+
+### 10.2.2 使用简介
+
+`firewalld`主要通过`firewall-cmd`命令行进行配置。如果`firewalld`没有启动，可以使用`firewall-offline-cmd`进行有限配置。大部分时候`firewall-cmd`就足以满足需求
+
+`firewalld`的配置文件在`/etc/firewalld`。如果没有该目录，会使用`/usr/lib/firewalld`中的文件作为默认配置
+
+> `/etc/firewalld`中的文件会被`firewalld`修改，不建议直接更改该目录中的文件。建议使用`firewall-cmd --permanent`修改。想要手动修改配置，建议修改`/usr/lib/firewalld`里面的配置文件。在复位配置时（使用`firewall-cmd --reset-to-defaults`）`firewalld`会将`/etc/firewalld`中修改过的对应副本重命名为`.xml.old`后缀，使用`/usr/lib/firewalld`中的副本
+
+运行时使用`firewall-cmd`修改的配置会立即生效，但是不会更新到配置文件中。如果想要更新配置文件，需要使用`firewall-cmd --permanent`，并且修改后不会立即生效，需要再执行一下`firewall-cmd --reload`重新加载一下配置文件才会生效。或使用`firewall-cmd --complete-reload`进行更完全的重载。如果想要将当前的运行时配置持久化，使用`firewall-cmd --runtime-to-permanent`
+
+使用`firewall-cmd --reset-to-defaults`可以重置到默认配置
+
+`firewalld`还有图形配置界面`firewall-config`。这里只讲解`firewall-cmd`的用法
+
+所有`firewall-cmd`命令需要使用`root`身份执行
+
+## 10.3 状态查看与配置
+
+### 10.3.1 查看运行状态
+
+```
+$ firewall-cmd --state
+running
+```
+
+### 10.3.2 Zone
+
+列出所有的`zone`。如果从来没有配置过`firewalld`，那么显示的就是自带的`zone`
+
+```
+$ firewall-cmd --get-zones
+FedoraServer FedoraWorkstation block dmz drop external home internal public trusted work
+```
+
+更详细的信息
+
+```
+$ firewall-cmd --list-all-zones
+FedoraServer
+  target: default
+  ingress-priority: 0
+  egress-priority: 0
+  icmp-block-inversion: no
+  interfaces:
+  sources:
+  services: cockpit dhcpv6-client ssh
+  ports:
+  protocols:
+  forward: yes
+  masquerade: no
+  forward-ports:
+  source-ports:
+  icmp-blocks:
+  rich rules:
+
+...
+```
+
+> 上述命令可以看到所有`zone`对应的配置，例如绑定的网络接口，IP地址，服务，端口，传输层协议等。`target`表示所有被输入到该`zone`的数据包在没有匹配到任何`rule`的情况下采取的动作，`default`动作和`%%REJECT%%`类似但是允许ICMP请求
+>
+> `target`所采取的动作通常只有当前数据包是其他`zone`通过`policy`转发过来的，或者当前`zone`为`default zone`，才会频繁触发。因为在数据包匹配的环节，不符合的数据包就不会发到当前`zone`。`default zone`是个例外，所有未匹配上的数据包都会发往该`zone`，所以`target`会起较大的作用。通常可以将`default zone`设定为不同的内置`zone`例如`home work public drop block`等实现不同的防护
+>
+> 而由于数据包匹配符合而发往当前`zone`的数据包，默认就是采取`ACCEPT`动作
+
+特定`zone`的详细信息
+
+```
+$ firewall-cmd --info-zone=public
+$ firewall-cmd --zone=public --list-all
+```
+
+查看默认的`zone`（所有未匹配上的数据包全部放在这里）
+
+```
+$ firewall-cmd --get-default-zone
+public
+```
+
+> 默认`zone`配置在`/etc/firewalld/firewalld.conf`的`DefaultZone`
+
+设定默认`zone`
+
+```
+$ firewall-cmd --set-default-zone=home
+```
+
+查看`active zone`
+
+```
+$ firewall-cmd --get-active-zones
+public (default)
+```
+
+> 所谓`active zone`就是当前有绑定`interface`或`source`地址的`zone`，以及`default zone`
+
+查看指定网络接口绑定的`zone`
+
+```
+$ firewall-cmd --get-zone-of-interface=eth0
+public
+```
+
+查看指定源地址绑定的`zone`
+
+```
+$ firewall-cmd --get-zone-of-source=192.168.1.0/24
+```
+
+### 10.3.3 内置Zone
+
+`firewalld`中有一些内置的`zone`，定义如下
+
+| 名称 | 定义 |
+| :- | :- |
+| `drop` | 通常不绑定IP或服务等，可作为`default zone`使用，任何进入该`zone`的数据包都会丢弃并且没有任何回复。从本机发出的数据包不受影响，`target`为`DROP` |
+| `block` | 通常不绑定IP或服务等，可作为`default zone`使用，任何进入的连接都会使用`icmp-host-prohibited`（IPv4）或`icmp6-adm-prohibited`（IPv6）回复，`target`为`%%REJECT%%` |
+| `public` | 除默认配置的服务以外（默认`dhcpv6-client mdns ssh`）任何进入的数据包都会丢弃 |
+| `external` | 该`zone`开启了NAT（`masquerade`），可以将面向公网的网络接口绑定到该`zone` |
+| `dmz` | 默认只允许`ssh`连接 |
+| `work` | 默认只允许`dhcpv6-client mdns ssh`连接 |
+| `home` | 默认只允许`dhcpv6-client mdns samba-client ssh`连接 |
+| `internal` | 默认只允许`dhcpv6-client mdns samba-client ssh`连接，通常将面向私有网络的接口绑定到该`zone`，并且使用一个`policy`将该`zone`和`external`连接 |
+| `trusted` | 通常不绑定IP或服务等，允许所有连接，`target`为`ACCEPT` |
+
+### 10.3.4 Policy
+
+列出所有的`policy`
+
+```
+$ firewall-cmd --get-policies
+allow-host-ipv6
+```
+
+带详细信息
+
+```
+$ firewall-cmd --list-all-policies
+```
+
+指定`policy`的详细信息
+
+```
+$ firewall-cmd --info-policy=allow-host-ipv6
+```
+
+## 10.4 Zone配置
+
+### 10.4.1 数据包匹配
+
+也适用于`policy`
+
+**服务**
+
+示例，添加`https`服务
+
+```
+$ firewall-cmd --zone=public --add-service=https
+```
+
+查看当前`zone`可用服务（可加`--zone`或`--policy`指定特定的`zone`或`policy`）
+
+```
+$ firewall-cmd --list-services --zone=public
+```
+
+查看所有可用服务
+
+```
+$ firewall-cmd --get-services
+```
+
+> 删除使用`--remove-service`
+
+**网络接口**
+
+```
+$ firewall-cmd --zone=public --add-interface=eth0
+```
+
+> 不适用于`policy`。删除使用`--remove-interface`，移动网络接口到其他`zone`可以使用`--change-interface`
+
+**源IP**
+
+```
+$ firewall-cmd --zone=public --add-source=192.168.1.0/24
+```
+
+> 删除使用`--remove-source`
+
+```
+$ firewall-cmd --zone=public --list-sources
+```
+
+**源端口**
+
+```
+$ firewall-cmd --zone=public --add-source-port=8888
+```
+
+> 删除使用`--remove-source-port`
+
+```
+$ firewall-cmd --zone=public --list-source-ports
+```
+
+**端口与协议**
+
+```
+$ firewall-cmd --zone=public --add-port=80/tcp
+```
+
+查看指定`zone`绑定的端口
+
+```
+$ firewall-cmd --zone=public --list-ports
+```
+
+> 删除使用`--remove-port`
+
+**协议**
+
+```
+$ firewall-cmd --zone=myzone --add-protocol=tcp
+```
+
+> 删除使用`--remove-protocol`
+
+```
+$ firewall-cmd --zone=myzone --list-protocols
+```
+
+### 10.4.2 service配置
+
+列出预定义`service`
+
+```
+$ firewall-cmd --get-services
+```
+
+显示`zone`绑定的`service`
+
+```
+$ firewall-cmd --zone=public --list-services
+```
+
+创建新的`service`类型
+
+```
+$ firewall-cmd --permanent --new-service=myservice
+```
+
+为`service`配置参数示例。按需配置即可，不一定要设定所有参数
+
+```
+$ firewall-cmd --permanent --service=myservice --set-description=Description
+$ firewall-cmd --permanent --service=myservice --set-short=ShortName
+$ firewall-cmd --permanent --service=myservice --add-port=8888/tcp
+$ firewall-cmd --permanent --service=myservice --add-protocol=tcp
+$ firewall-cmd --permanent --service=myservice --add-source-port=13576/tcp
+```
+
+> 删除操作有`--remove-port --remove-protocol --remove-source-port`
+
+`helper`相关（使用`--get-helpers`查询所有可用`helper`）
+
+```
+$ firewall-cmd --permanent --service=myservice --add-helper=ftp
+$ firewall-cmd --permanent --service=myservice --remove-helper=ftp
+```
+
+`destination`相关
+
+```
+$ firewall-cmd --permanent --service=myservice --set-destination=ipv4:2.2.2.2
+$ firewall-cmd --permanent --service=myservice --remove-destination=ipv4
+```
+
+通过已有`.xml`配置文件添加的方法。可以额外指定名称
+
+```
+$ firewall-cmd --permanent --new-service-from-file=myservice.xml --name=anotherservice
+```
+
+> 手动添加或修改`service`配置文件建议到`/usr/lib/firewalld`
+
+删除
+
+```
+$ firewall-cmd --permanent --delete-service=myservice
+```
+
+恢复默认
+
+```
+$ firewall-cmd --permanent --load-service-defaults=myservice
+```
+
+查看配置文件路径
+
+```
+$ firewall-cmd --permanent --path-service=myservice
+```
+
+查看各种信息
+
+```
+$ firewall-cmd --permanent --service=myservice --get-description
+$ firewall-cmd --permanent --service=myservice --get-short
+$ firewall-cmd --permanent --service=myservice --get-ports
+$ firewall-cmd --permanent --service=myservice --get-protocols
+$ firewall-cmd --permanent --service=myservice --get-source-ports
+$ firewall-cmd --permanent --service=myservice --get-service-helpers
+$ firewall-cmd --permanent --service=myservice --get-destinations
+```
+
+### 10.4.3 创建与删除zone
+
+```
+$ firewall-cmd --permanent --new-zone=myzone
+```
+
+从文件创建新`zone`
+
+```
+$ firewall-cmd --permanent --new-zone-from-file=zone.xml
+```
+
+删除`zone`
+
+```
+$ firewall-cmd --permanent --delete-zone=ZoneName
+```
+
+重置特定`zone`的配置
+
+```
+$ firewall-cmd --permanent --load-zone-defaults=public
+```
+
+查看指定`zone`当前使用的配置文件路径
+
+```
+$ firewall-cmd --permanent --path-zone=public
+```
+
+### 10.4.4 配置target
+
+也适用于`policy`
+
+查看`target`
+
+```
+$ firewall-cmd --permanent --zone=myzone --get-target
+```
+
+设定`target`
+
+```
+$ firewall-cmd --permanent --zone=myzone --set-target=DROP
+```
+
+> `zone`可用的`target`有`default DROP ACCEPT %%REJECT%%`
+>
+> `policy`可用的`target`有`CONTINUE ACCEPT DROP %%REJECT%%`
+
+### 10.4.5 设定描述
+
+也适用于`policy`
+
+查看描述
+
+```
+$ firewall-cmd --permanent --zone=myzone --get-description
+```
+
+设定描述
+
+```
+$ firewall-cmd --permanent --zone=myzone --set-description="Description"
+```
+
+### 10.4.6 短名称设定
+
+也适用于`policy`
+
+```
+$ firewall-cmd --permanent --zone=public --get-short
+Public
+```
+
+```
+$ firewall-cmd --permanent --zone=myzone --set-short=MyZone
+```
+
+### 10.4.7 ICMP block
+
+也适用于`policy`
+
+```
+$ firewall-cmd --add-icmp-block=echo-request
+```
+
+> 删除使用`--remove-icmp-block`
+>
+> `icmptype`使用`firewall-cmd --get-icmptypes`查看
+
+```
+$ firewall-cmd --list-icmp-blocks
+```
+
+### 10.4.8 端口转发
+
+也适用于`policy`
+
+```
+$ firewall-cmd --zone=myzone --add-forward-port=port=80:proto=tcp:toport=8080:toaddr=192.168.1.13
+```
+
+> 删除使用`--remove-forward-port`
+
+```
+$ firewall-cmd --zone=myzone --list-forward-ports
+```
+
+### 10.4.9 NAT (Masquerade)
+
+也适用于`policy`
+
+开启`masquerade`
+
+```
+$ firewall-cmd --zone=myzone --add-masquerade
+```
+
+> 删除使用`--remove-masquerade`
+
+### 10.4.10 Rich Rules
+
+也适用于`policy`
+
+```
+$ firewall-cmd --zone=myzone --list-rich-rules
+```
+
+```
+$ firewall-cmd --zone=myzone --add-rich-rule='rule_expression'
+```
+
+> 删除使用`--remove-rich-rule`
+
+### 10.4.11 适用于Zone的其他配置
+
+不适用于`policy`
+
+**zone内转发**
+
+```
+$ firewall-cmd --zone=myzone --add-forward
+$ firewall-cmd --zone=myzone --remove-forward
+```
+
+**ICMP block inversion**
+
+```
+$ firewall-cmd --zone=myzone --add-icmp-block-inversion
+$ firewall-cmd --zone=myzone --remove-icmp-block-inversion
+```
+
+### 10.4.12 IPSet设定
+
+列出`ipset`类型
+
+```
+$ firewall-cmd --get-ipset-types
+```
+
+查看已有`ipset`
+
+```
+$ firewall-cmd --get-ipsets
+```
+
+新建`ipset`
+
+```
+$ firewall-cmd --permanent --new-ipset=myipset --family=inet --type=hash:ip,port --maxelem=128
+```
+
+> `ipv6`的`family`使用`inet6`
+
+从文件创建
+
+```
+$ firewall-cmd --permanent --new-ipset-from-file=myipset.xml
+```
+
+> 删除使用`--delete-ipset`，恢复默认使用`--load-ipset-defaults`
+
+查看指定`ipset`详细信息
+
+```
+$ firewall-cmd --permanent --info-ipset=myipset
+```
+
+查看短名称与描述
+
+```
+$ firewall-cmd --permanent --ipset=myipset --set-short=MyIPSet
+$ firewall-cmd --permanent --ipset=myipset --set-description='Description'
+```
+
+> 查看使用`--get-short` `--get-description`
+
+增删列表
+
+```
+$ firewall-cmd --permanent --ipset=myipset --add-entry=2.2.2.2:8000
+$ firewall-cmd --permanent --ipset=myipset --remove-entry=2.2.2.2:8000
+```
+
+通过文件增删
+
+```
+$ firewall-cmd --permanent --ipset=myipset --add-entries-from-file=myipset.xml
+$ firewall-cmd --permanent --ipset=myipset --remove-entries-from-file=myipset.xml
+```
+
+查看列表
+
+```
+$ firewall-cmd --permanent --ipset=myipset --get-entries
+```
+
+查看`ipset`配置文件路径
+
+```
+$ firewall-cmd --path-ipset=myipset
+```
+
+### 10.4.13 Helper设定
+
+列出`helper`
+
+```
+$ firewall-cmd --get-helpers
+```
+
+查看指定`helper`信息
+
+```
+$ firewall-cmd --info-helper=ftp
+```
+
+新建`helper`
+
+```
+$ firewall-cmd --permanent --new-helper=myhelper --module=nf_conntrack_module --family=ipv4
+$ firewall-cmd --permanent --new-helper-from-file=myhelper.xml
+```
+
+删除
+
+```
+$ firewall-cmd --permanent --delete-helper=myhelper
+```
+
+重置
+
+```
+$ firewall-cmd --permanent --load-helper-defaults=myhelper
+```
+
+各种设定
+
+```
+$ firewall-cmd --permanent --helper=myhelper --set-description='Description'
+$ firewall-cmd --permanent --helper=myhelper --set-short=MyHelper
+$ firewall-cmd --permanent --helper=myhelper --set-module='Module Description'
+$ firewall-cmd --permanent --helper=myhelper --add-port=8888/tcp
+```
+
+> 删除使用`--remove-port`
+
+查看各种信息
+
+```
+$ firewall-cmd --permanent --path-helper=myhelper
+$ firewall-cmd --permanent --helper=myhelper --get-description
+$ firewall-cmd --permanent --helper=myhelper --get-short
+$ firewall-cmd --permanent --helper=myhelper --get-ports
+$ firewall-cmd --permanent --helper=myhelper --get-module
+```
+
+### 10.4.14 ICMP Type设定
+
+列出`icmptype`
+
+```
+$ firewall-cmd --get-icmptypes
+```
+
+查看指定`icmptype`信息
+
+```
+$ firewall-cmd --info-icmptype=host-unknown
+```
+
+新建`icmptype`
+
+```
+$ firewall-cmd --permanent --new-icmptype=myicmptype
+$ firewall-cmd --permanent --new-icmptype-from-file=myicmptype.xml
+```
+
+删除
+
+```
+$ firewall-cmd --permanent --delete-icmptype=myicmptype
+```
+
+重置
+
+```
+$ firewall-cmd --permanent --load-icmptype-defaults=myicmptype
+```
+
+各种设定
+
+```
+$ firewall-cmd --permanent --icmptype=myicmptype --set-description='Description'
+$ firewall-cmd --permanent --icmptype=myicmptype --set-short=MyICMPType
+$ firewall-cmd --permanent --icmptype=myicmptype --add-destination=ipv4
+```
+
+> 删除操作有`--remove-destination`
+
+查看各种信息
+
+```
+$ firewall-cmd --permanent --icmptype=myicmptype --get-description
+$ firewall-cmd --permanent --icmptype=myicmptype --get-short
+$ firewall-cmd --permanent --icmptype=myicmptype --get-destinations
+```
+
+## 10.5 Policy配置
+
+### 10.5.1 NAT配置示例
+
+```
+$ firewall-cmd --permanent --zone=public --add-masquerade
+$ firewall-cmd --new-policy NAT_int_to_ext --permanent
+$ firewall-cmd --permanent --policy NAT_int_to_ext --add-ingress-zone internal
+$ firewall-cmd --permanent --policy NAT_int_to_ext --add-egress-zone public
+$ firewall-cmd --permanent --policy NAT_int_to_ext --add-target ACCEPT
+```
+
+### 10.5.2 创建与删除policy
+
+```
+$ firewall-cmd --permanent --new-policy=mypolicy
+```
+
+从文件创建新`policy`，可以使用`--name=mypolicy`指定名称
+
+```
+$ firewall-cmd --permanent --new-policy-from-file=policy.xml
+```
+
+删除`policy`
+
+```
+$ firewall-cmd --permanent --delete-policy=mypolicy
+```
+
+重置特定`policy`的配置
+
+```
+$ firewall-cmd --permanent --load-policy-defaults=mypolicy
+```
+
+查看指定`zone`当前使用的配置文件路径
+
+```
+$ firewall-cmd --permanent --path-policy=mypolicy
+```
+
+### 10.5.3 优先级
+
+```
+$ firewall-cmd --permanent --policy=mypolicy --get-priority
+```
+
+```
+$ firewall-cmd --permanent --policy=mypolicy --set-priority=0
+```
+
+> 新创建的`policy`默认优先级为`0`。如果优先级为负数，那么该`policy`内含的`rule`会在所有`zone`的`rule`前执行；反之会在所有`zone`的`rule`后执行
+
+### 10.5.4 输入输出zone
+
+查看
+
+```
+$ firewall-cmd --policy=mypolicy --list-ingress-zones
+$ firewall-cmd --policy=mypolicy --list-egress-zones
+```
+
+添加
+
+```
+$ firewall-cmd --policy=mypolicy --add-ingress-zone=myzone
+```
+
+```
+$ firewall-cmd --policy=mypolicy --add-egress-zone=myzone
+```
+
+> 删除使用`--remove-ingress-zone` `--remove-egress-zone`
+
+## 10.6 配置文件
+
+### 10.6.1 主配置文件
+
+`/etc/firewalld/firewalld.conf`中有以下常用配置项
+
+| 配置项 | 定义 |
+| :- | :- |
+| `DefaultZone` | 默认的`zone`，默认`public` |
+| `MinimalMark` | 用于direct interface的Mark。默认`100`，如果需要更多可以再向上加（Direct Interface已经淘汰） |
+| `CleanupOnExit` | `firewalld`退出时是否清空临时配置 |
+| `Lockdown` | 开启时只允许`lockdown-whitelist.xml`中允许的应用通过DBus修改配置。默认`no` |
+| `IPv6_rpfilter` | 对于IPv6数据包，如果回复数据包走同一个网络接口，那么不丢弃该数据包，反之会丢弃数据包 |
+| `IndividualCalls` | 默认`no`。调试时开启 |
+| `LogDenied` | 可设定`all unicast broadcast multicast off`，默认`off`。对于所有的`reject drop`进行日志记录 |
+
+### 10.6.2 Zone配置文件
+
+位于`/etc/firewalld/zones`和`/usr/lib/firewalld/zones`
+
+格式示例
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<zone target="ACCEPT">
+  <short>Trusted</short>
+  <description>All network connections are accepted.</description>
+  <forward/>
+</zone>
+```
+
+| 关键字 | 解释 |
+| :- | :- |
+| `<zone>` | 最外层，声明一个`zone`，`target`可以是`"ACCEPT" "DROP" "%%REJECT%%"`指没有匹配上的数据包的去向，不配置默认扔到`default zone` |
+| `<short>` | `zone`的短名称，不等于真名 |
+| `<description>` | `zone`的描述 |
+| `<interface/>` | 绑定的网络接口，示例`<interface name="eth0"/>` |
+| `<source/>` | 绑定的源地址，示例`<source address="192.168.23.0/24"/>` `<source mac="XX:XX:XX:XX:XX:XX"/>` `<source ipset=""/>` |
+| `<service/>` | 绑定的服务，示例`<service name="ssh"/>` |
+| `<port/>` | 绑定的端口与传输层协议，示例`<port protocol="tcp" port="3333"/>` |
+| `<protocol/>` | 绑定的传输层协议，示例`<protocol value="tcp"/>` |
+| `<icmp-block/>` | 禁止的ICMP数据包类型。示例`<icmp-block name="echo-request"/>`。可用的ICMP类型通过`firewall-cmd --get-icmptypes`查看 |
+| `<icmp-block-inversion/>` | 将上述`<icmp-block/>`改为白名单，只能用一次 |
+| `<masquerade/>` | 通常用于`external`，开启NAT |
+| `<forward-port/>` | 端口转发，示例`<forward-port port="80" protocol="tcp" to-port="8080" to-addr="192.168.1.2"/>` |
+| `<source-port/>` | 绑定的源端口与协议，示例`<source-port port="8888" protocol="tcp"/>` |
+| `<rule/>` | 放在`zone`中，更高级的配置方式，格式如下 |
+
+```
+<rule [family="ipv4|ipv6"]>
+  [ <source address="address[/mask]" [invert="True"]/> ]
+  [ <destination address="address[/mask]" [invert="True"]/> ]
+  [
+    <service name="string"/> |
+    <port port="portid[-portid]" protocol="tcp|udp"/> |
+    <protocol value="protocol"/> |
+    <icmp-block name="icmptype"/> |
+    <masquerade/> |
+    <forward-port port="portid[-portid]" protocol="tcp|udp" [to-port="portid[-portid]"] [to-addr="address"]/> |
+    <source-port port="portid[-portid]" protocol="tcp|udp"/> |
+  ]
+  [
+    <log [prefix="prefixtext"] [level="emerg|alert|crit|err|warn|notice|info|debug"]/> [<limit value="rate/duration"/>] </log> |
+    <nflog [prefix="prefixtext"] [group="group id"] [queue-size="threshold"]/> [<limit value="rate/duration"/>] </nflog>
+  ]
+  [ <audit> [<limit value="rate/duration"/>] </audit> ]
+  [
+    <accept> [<limit value="rate/duration"/>] </accept> |
+    <reject [type="rejecttype"]> [<limit value="rate/duration"/>] </reject> |
+    <drop> [<limit value="rate/duration"/>] </drop> |
+    <mark set="mark[/mask]"> [<limit value="rate/duration"/>] </mark>
+  ]
+</rule>
+```
+
+### 10.6.3 Service配置文件
+
+位于`/etc/firewalld/services`和`/usr/lib/firewalld/services`
+
+格式示例
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<service>
+  <short>WWW (HTTP)</short>
+  <description>HTTP Description</description>
+  <port protocol="tcp" port="80"/>
+</service>
+```
+
+> 所有可用的`service`可以使用`firewall-cmd --get-services`查看
+
+| 关键字 | 解释 |
+| :- | :- |
+| `<short>` | 短名称 |
+| `<port/>` | 端口与协议，示例`<port protocol="tcp" port="80"/>` |
+| `<protocol/>` | 协议，示例`<protocol value="tcp"/>` |
+| `<source-port/>` | 源端口与协议，示例`<source-port port="8888" protocol="tcp"/>` |
+| `<module/>` | netfilter helper名，示例`<module name="nf_conntrack_ftp"/>` |
+| `<destination/>` | 目标地址，示例`<destination ipv4="192.168.1.0/24"/>` |
+
+### 10.6.4 IPSet配置文件
+
+位于`/etc/firewalld/ipsets`和`/usr/lib/firewalld/ipsets`
+
+格式示例
+
+```
+<?xml version="1.0" encoding="utf-8"?>
+<ipset type="hash:net">
+  <short>white-list</short>
+  <entry>2.2.2.2</entry>
+  <entry>2.2.3.3</entry>
+</ipset>
+```
+
+> 所有可用的`type`可以使用`firewall-cmd --get-ipset-types`查看。有`hash:mac hash:ip,port`等
+
+用于定义一个地址列表，可以是IP，MAC，端口等
+
+| 关键字 | 解释 |
+| :- | :- |
+| `<short>` | 略 |
+| `<description>` | 略 |
+| `<option/>` | 示例`<option name="family" value="inet">` `<option name="hashsize" value="16">` `<option name="maxelem" value="16">` |
+| `<entry>` | 列表项 |
+
+### 10.6.5 Helper配置文件
+
+位于`/etc/firewalld/helpers`和`/usr/lib/firewalld/helpers`
+
+格式示例
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<helper module="nf_conntrack_ftp" family="ipv4">
+  <short>FTPHelper</short>
+  <description>FTP Description</description>
+  <port protocol="tcp" port="21"/>
+</helper>
+```
+
+### 10.6.6 ICMP Type配置文件
+
+位于`/etc/firewalld/icmptypes`和`/usr/lib/firewalld/icmptypes`
+
+格式示例
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<icmptype>
+  <short>Host Unreachable</short>
+  <description>Description</description>
+  <destination ipv4="yes"/>
+  <destination ipv6="no"/>
+</icmptype>
+```
+
+| 关键字 | 解释 |
+| :- | :- |
+| `<short>` | 略 |
+| `<description>` | 略 |
+| `<destination/>` | 指定是否对`ipv4`或`ipv6`有效 |
+
+### 10.6.7 Direct Interface配置文件
+
+Direct Interface已经淘汰
+
+Direct Interface是更直接的调用`iptables`的方法，不到特殊情况一般很少使用
+
+示例
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<direct>
+  <chain ipv="ipv4" table="raw" chain="blacklist"/>
+  <rule ipv="ipv4" table="raw" chain="PREROUTING" priority="0">-s 192.168.1.0/24 -j blacklist</rule>
+  <rule ipv="ipv4" table="raw" chain="blacklist" priority="1">-j DROP</rule>
+</direct>
+```
 
 ## 11 常用包管理
 
