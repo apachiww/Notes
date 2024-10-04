@@ -90,9 +90,25 @@
 + [**8**](#8-vagrant) Vagrant
 + [**9**](#9-libvirt) libvirt
 + [**10**](#10-podman) Podman
+    + [**10.1**](#101-普通用户使用) 普通用户使用
+    + [**10.2**](#102-登录容器仓库) 登录容器仓库
+    + [**10.3**](#103-容器镜像) 容器镜像
+        + [**10.3.1**](#1031-远程镜像) 远程镜像
+        + [**10.3.2**](#1032-containerfile) Containerfile
+    + [**10.4**](#104-卷) 卷
+        + [**10.4.1**](#1041-podman-unshare) podman unshare
+    + [**10.5**](#105-网络) 网络
+    + [**10.6**](#106-使用systemd管理容器) 使用systemd管理容器
+    + [**10.7**](#107-补充) 补充
+        + [**10.7.1**](#1071-暂停容器) 暂停容器
 + [**11**](#11-专题sr-iov) 专题：SR-IOV
 + [**12**](#12-专题linux-cgroup) 专题：Linux cgroup
-+ [**13**](#13-ioi的容器工具isolate) IOI的容器工具：isolate
+    + [**12.1**](#121-cgroup基本概念) cgroup基本概念
+    + [**12.2**](#122-cgroup-v1) cgroup v1
+    + [**12.3**](#123-cgroup-v2) cgroup v2
+    + [**12.4**](#124-namespaces) namespaces
+    + [**12.5**](#125-使用cgroup) 使用cgroup
++ [**13**](#13-ioi容器工具isolate) IOI容器工具：isolate
 
 ## 1 LXD
 
@@ -1191,11 +1207,11 @@ lxc network attach lxd-macvlan0 arch-01 eth1
 
 ## 2 Docker
 
-`docker`和`lxd`本质都是容器管理工具，但是`docker`和`lxd`具有不同的定位。`lxd`主要用于整个操作系统的模拟，`lxd`的容器通常有较为健全的功能，可以管理服务，有更强大的硬件配置功能，整体功能和虚拟机类似，但相比之下内存浪费更少；而`docker`更多是为单个应用提供轻量化的运行环境，主要是解决应用的缓存，配置，依赖，环境统一性等问题，其主要关注点在文件系统和进程的隔离上，多个应用通常需要使用多个`docker`容器
+`docker`和`lxd`本质都是容器管理工具，但是`docker`和`lxd`具有不同的定位。`lxd`主要用于整个操作系统的模拟，`lxd`的容器通常有较为健全的功能，可以管理服务，有更强大的硬件配置功能，整体功能和虚拟机类似，但相比之下内存浪费更少；而`docker`更多是为单个应用提供轻量化的运行环境，主要是解决应用的缓存，配置，依赖，环境统一性等问题，多个应用通常需要使用多个`docker`容器
 
 通常`lxd`使用完整的操作系统镜像，主要是完整的发行版镜像；而`docker`不一定使用完整的发行版镜像（虽然也可以支持），而是使用面向一种特定服务的定制最小化镜像（去除了大部分常用Linux系统工具，只保留非常基本的命令）
 
-由于以上差别，`lxd`更多用于共享的（GPU）计算集群，可以作为虚拟机的类似替代品使用；而`docker`更多用于部署互联网服务，适用于现在的微服务应用
+由于以上差别，`lxd`更多用于共享的（GPU）计算集群，可以作为虚拟机的类似替代品使用；而`docker`更多用于部署互联网服务，尤其是一些需要灵活调整容量的场合
 
 ## 2.1 安装与配置
 
@@ -1703,7 +1719,7 @@ docker rename alpine-test alpine-one
 | `--dns` | 指定DNS服务器地址 |
 | `--ip --ip6` | 指定容器IP |
 | `--mac-address` | 指定容器MAC |
-| `--env` | 设置容器环境变量 |
+| `--env -e` | 设置容器环境变量 |
 | `--log-driver --log-opt` | 日志驱动和选项 |
 | `--user -u` | 指定容器中运行程序的用户（默认`root`），覆盖`Dockerfile`的`US正在运行ER`配置 |
 | `--workdir -w` | 指定容器中运行程序的目录（默认`/`），覆盖`Dockerfile`的`WORKDIR`配置 |
@@ -1990,7 +2006,7 @@ docker builder prune
 
 ### 2.3.4 日志
 
-查看容器`nginx-test`的日志
+查看容器`nginx-test`的日志，可用于诊断错误
 
 ```shell
 docker logs nginx-test
@@ -2574,6 +2590,12 @@ docker run -d -p 80:80 --name nginx-test nginx # --network bridge 省略
 ```shell
 docker port nginx-test
 # = docker container port nginx-test
+```
+
+或所有端口映射
+
+```shell
+docker port -a
 ```
 
 `docker`的网络配置功能主要还依赖于`iptables`。`docker`会在宿主机安装两张`iptables`表，分别为`DOCKER DOCKER-USER`。`iptables`配置见[笔记](210130a_install-notice.md#11-防火墙iptables)
@@ -3858,7 +3880,216 @@ TODO
 
 ## 10 Podman
 
-Podman由红帽支持，和Docker十分类似，命令行用法也相近。上手过Docker以后很容易就可以上手Podman。主要的一个区别是Podman不是基于daemon的，从设计上看更加简单一些
+Podman由RedHat支持，是Docker的替代品，两者大部分功能与用法兼容，可以直接`alias docker='podman'`。上手过Docker以后可以直接上手Podman。主要的一个区别是Podman不是基于daemon的，从设计上看更加简单一些，并且不像`docker`的daemon一样必须以`root`身份运行，一定程度规避了一些安全问题
+
+> 除了`podman`，RedHat还有一个Kubernetes发行版OpenShift
+
+这里只讲述`podman`一些基本用法，以及相对于`docker`在使用上的不同点。其他功能请参考Docker教程
+
+## 10.1 普通用户使用
+
+安装`container-tools`
+
+```
+$ dnf install container-tools
+```
+
+以普通用户身份执行`podman`需要在`/etc/subuid`和`/etc/subgid`中添加用户名，都配置为如下形式，`username`就是想要使用`podman`的用户名
+
+```
+username:1000000:1000000000
+```
+
+> `podman`不像`docker`一样会创建一个用户组，普通用户直接执行`podman`就可以了。而针对容器可能运行出错需要自动重启的问题，可以针对每一个容器生成一个`systemd`单元文件，使用`systemd`直接管理，后面会讲述
+
+## 10.2 登录容器仓库
+
+`podman`也可以用DockerHub。这里使用RedHat的容器仓库，可以先到RedHat官网注册一个账号，再继续下述配置（其他容器仓库平台同理）
+
+首先编辑`/etc/containers/registries.conf`（当前用户配置在`~/.config/containers/registries.conf`），搜索镜像就会到这些站点
+
+```
+unqualified-search-registries = ["registry.access.redhat.com", "registry.redhat.io"]
+
+short-name-mode = "enforcing"
+```
+
+登录站点，按提示输入用户名和密码
+
+```
+$ podman login registry.access.redhat.com
+$ podman login registry.redhat.io
+```
+
+查看登录状态
+
+```
+$ podman login registry.redhat.io --get-login
+```
+
+## 10.3 容器镜像
+
+### 10.3.1 远程镜像
+
+查找`rhel7`容器镜像
+
+```
+$ podman search rhel7
+...
+registry.redhat.io/rhel7.9  ...
+...
+```
+
+使用`skopeo`可以在线查询容器镜像信息
+
+```
+$ skopeo inspect docker://registry.redhat.io/rhel7.9
+```
+
+拉取镜像
+
+```
+$ podman pull registry.redhat.io/rhel7.9:latest
+```
+
+查看已拉取镜像
+
+```
+$ podman images
+$ podman inspect registry.redhat.io/rhel7.9:latest
+```
+
+### 10.3.2 Containerfile
+
+原先的`Dockerfile`在`podman`中叫做`Containerfile`，除开头没有`# syntax=docker/dockerfile:1`以外其他用法基本相同（例如`FROM RUN CMD`等命令），不再讲述
+
+## 10.4 卷
+
+常见的`volume`的权限问题
+
+由于非`root`容器中的UID是通过主机的`/etc/subuid /etc/subgid`映射到新值的，如果使用主机上的文件目录当作`volume`会遇到权限问题
+
+### 10.4.1 podman unshare
+
+`podman unshare`命令可以为后面的命令包裹上一层UID和GID的转译。后面命令中的UID和GID是容器中的UID和GID，而实际命令执行的是在物理机上经过映射后的UID和GID
+
+查看映射
+
+```
+$ podman unshare cat /proc/self/uid_map
+$ podman unshare cat /proc/self/gid_map
+```
+
+假设在容器中`mysql`的UID为`27`，GID为`27`，那么在物理机上的文件或目录需要是`1000026:1000026`才能作为`volume`被容器中的`mysql`或`mariadb`访问
+
+设定主机目录权限
+
+```
+$ podman unshare chown 27:27 /home/username/db_data
+```
+
+挂载
+
+```
+$ podman run -d --name mariadb01 \
+...
+-v /home/username/db_data:/var/lib/mysql \
+...
+```
+
+在开启了SELinux的平台还需要将目录的`type`修改为`container_file_t`。可以使用以下命令在挂载`volume`时自动设置
+
+```
+$ podman run -d --name mariadb01 \
+...
+-v /home/username/db_data:/var/lib/mysql:Z \
+...
+```
+
+可以使用`ls -Z`验证一下
+
+```
+$ ls -Z
+...
+system_u:object_r:container_file_t:s0:c81,c1000 db_data
+...
+```
+
+## 10.5 网络
+
+`podman`创建与使用网桥的方法和`docker`相同。默认情况下多个`podman`容器无法互相访问，需要另外创建网络并将容器加入
+
+正常情况下`podman`应该使用`netavark`网络后端。如果不是，那么要修改
+
+```
+$ podman info --format {{.Host.NetworkBackend}}
+netavark
+```
+
+配置文件在`/usr/share/containers/containers.conf`
+
+```
+[network]
+...
+network_backend = "netavark"
+...
+```
+
+## 10.6 使用systemd管理容器
+
+由于`podman`是daemonless的特性，容器执行默认不会受到监控。需要`systemd`的额外辅助
+
+为现有容器（不会自动删除的容器）创建unit file
+
+```
+$ podman generate systemd --name mycontainer --files /home/username/mycontainer.service
+```
+
+执行后自动删除容器，最后加`--new`即可
+
+```
+$ podman generate systemd --name mycontainer --files /home/username/mycontainer.service --new
+```
+
+将该文件放入`~/.config/systemd/user`
+
+```
+$ mv mycontainer.service .config/systemd/user/
+```
+
+就可以使用`systemctl`启停容器了
+
+```
+$ systemctl --user start mycontainer.service
+$ systemctl --user stop mycontainer.service
+```
+
+一旦使用`systemd`启停，就不能再使用`podman`命令启停该容器了
+
+用户登录时自动启动容器
+
+```
+$ systemctl --user enable mycontainer.service
+```
+
+或系统启动时自动`linger`，类似于用户自动登录，并启动容器
+
+```
+$ loginctl enable-linger
+```
+
+> 关闭使用`disable-linger`
+
+## 10.7 补充
+
+### 10.7.1 暂停容器
+
+使用`pause`和`unpause`可以启停容器以及其内所有进程
+
+```
+$ podman pause mycontainer
+$ podman unpause mycontainer
+```
 
 ## 11 专题：SR-IOV
 
