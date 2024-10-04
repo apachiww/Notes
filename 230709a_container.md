@@ -87,6 +87,10 @@
         + [**6.2.5**](#625-一些性能调优方法) 一些性能调优方法
     + [**6.3**](#63-qemu命令行完整参考) QEMU命令行完整参考
 + [**7**](#7-virtualbox) VirtualBox
+    + [**7.1**](#71-安装) 安装
+    + [**7.2**](#72-虚拟磁盘文件) 虚拟磁盘文件
+        + [**7.2.1**](#721-格式转换) 格式转换
+        + [**7.2.2**](#722-挂载) 挂载
 + [**8**](#8-vagrant) Vagrant
 + [**9**](#9-libvirt) libvirt
 + [**10**](#10-podman) Podman
@@ -3505,7 +3509,9 @@ qemu-system-x86_64 \
 
 > Legacy模式默认使用的SeaBIOS固件位于`/usr/share/qemu/bios-256k.bin`，通过包名`seabios`安装。如果想使用其他固件通过`-bios`指定即可
 
-UEFI启动操作有些不同。需要`edk2-ovmf`包提供的OVMF固件，可以将其拷贝到当前目录后使用（必须可写）
+UEFI启动操作有些不同。ArchLinux下需要`edk2-ovmf`包提供的OVMF固件，可以将其拷贝到当前目录后使用（必须可写）
+
+> AlpineLinux安装`ovmf`，固件文件在`/usr/share/OVMF/`下
 
 ```
 cp /usr/share/edk2-ovmf/x64/OVMF.fd .
@@ -3610,7 +3616,7 @@ qemu-system-x86_64 \
 intel_iommu=on
 ```
 
-AMD和Intel平台需要加上以下内核参数，防止Linux内核触碰不支持穿透的硬件设备。之后执行一下`grub-mkconfig`并重启，参考[使用内核参数](201219a_shell.md#1210-内核参数)
+AMD和Intel平台需要加上以下内核参数，防止Linux内核触碰不支持穿透的硬件设备。之后执行一下`grub-mkconfig`修改好启动参数并重启，参考[使用内核参数](201219a_shell.md#1210-内核参数)
 
 ```
 iommu=pt
@@ -3868,7 +3874,92 @@ echo 2 > /sys/kernel/mm/hugepages/hugepages-1048576kB/nr_hugepages
 
 ## 7 VirtualBox
 
-TODO
+## 7.1 安装
+
+安装
+
+ArchLinux
+
+```
+$ pacman -S virtualbox virtualbox-host-modules-arch
+```
+
+启动`virtualbox`前一定保证加载`vboxdrv`模块。如果没有加载，那么使用`modprobe`加载
+
+```
+$ modprobe vboxdrv
+```
+
+> 使用桥接或host-only网络还要加载`vboxnetadp vboxnetflt`模块
+
+将用户添加到`vboxusers`
+
+```
+$ usermod -a -G vboxusers username
+```
+
+日常使用直接使用`VirtualBox`图形化界面就行
+
+## 7.2 虚拟磁盘文件
+
+### 7.2.1 格式转换
+
+使用`VBoxManage clonehd`可以支持`VDI VMDK VHD RAW`格式互转
+
+```
+$ VBoxManage clonehd source.vdi destination.vmdk --format VMDK
+```
+
+VirtualBox不支持`qcow2`格式，需要转换
+
+```
+$ qemu-img convert -O vdi img.qcow2 img.vdi
+```
+
+### 7.2.2 挂载
+
+可以挂载固定大小的`vdi`磁盘镜像
+
+**单文件系统**
+
+```
+$ VBoxManage internalcommands dumphdinfo disk.vdi | grep "offData"
+```
+
+依据`ext4`文件系统在`.vdi`文件中的起始偏移，加上`32256`得到`offset`
+
+```
+$ mount -t ext4 -o rw,noatime,noexec,loop,offset=102458 disk.vdi /mnt
+```
+
+**多文件系统**
+
+创建`loop`，可以在`/dev`下看到`loop0p1`等分区
+
+```
+$ losetup -o 70202 -Pf
+```
+
+**使用nbd挂载**
+
+> 该方法也适用于`.vhd`镜像
+
+```
+$ modprobe nbd max_part=16
+$ qemu-nbd -c /dev/nbd0 disk.vdi
+$ mount /dev/nbd0p1 /mnt
+```
+
+> 上述命令创建`16`个`/dev/nbd`节点。将`disk.vdi`映射到`/dev/nbd0`，正常情况下会自动出现其中的分区例如`/dev/nbd0p1`。如果没有可以尝试执行`partprobe /dev/nbd0`
+>
+> 也可以指定只映射`.vdi`中的第`1`个分区，使用`qemu-nbd -P 1 -c /dev/nbd0 disk.vdi`
+
+卸载
+
+```
+$ umount /mnt
+$ qemu-nbd -d /dev/nbd0
+```
 
 ## 8 Vagrant
 
