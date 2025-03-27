@@ -105,7 +105,7 @@ https://mirrors.ustc.edu.cn/alpine/latest-stable/main
 https://mirrors.ustc.edu.cn/alpine/latest-stable/community
 ```
 
-建议添加`edge`源
+使用`edge`源，可以有很多目前`latest-release`没有的包（不要和`latest-stable`混用，两者取其一即可）。但是要注意`edge`源滚动更新可能容易滚挂
 
 ```
 https://mirrors.ustc.edu.cn/alpine/edge/main
@@ -462,6 +462,8 @@ Intel核显3D与编解码驱动。平台Haswell，Thinkpad T440p
 apk add mesa mesa-utils mesa-vulkan-intel libva-intel-driver libva-utils linux-firmware-i915 mesa-dri-gallium mesa-va-gallium igt-gpu-tools
 ```
 
+> Broadwell及以后的CPU要使用`intel-media-driver`代替`libva-intel-driver`
+>
 > AMD显卡平台（从GCN开始）安装`mesa-vulkan-ati`提供Vulkan支持，还需要`libva`，`linux-firmware-amdgpu`（GCN前的显卡安装`linux-firmware-radeon`，且没有Vulkan支持）。此外GCN1需要在内核启动命令行添加参数`radeon.si_support=0 amdgpu.si_support=1`，GCN2需要添加参数`radeon.cik_support=0 amdgpu.cik_support=1`，否则`radeon`驱动会先于`amdgpu`加载，导致无法使用Vulkan。使用`lspci -k`可以查看当前使用的驱动
 
 将用户加入`video`组。后续可执行`vainfo`查看是否可访问视频编解码
@@ -473,7 +475,7 @@ adduser xxx video
 ALSA
 
 ```
-apk add alsa-utils alsaconf
+apk add alsa-utils alsaconf sof-firmware
 ```
 
 将用户加入`audio`
@@ -482,7 +484,7 @@ apk add alsa-utils alsaconf
 adduser xxx audio
 ```
 
-此时尝试执行一下`alsamixer`。如果默认声卡不是耳机孔输出，可以修改默认声卡
+此时尝试执行一下`alsamixer`。如果默认声卡不是ALC模拟声卡，可以修改默认声卡
 
 ```
 vim /usr/share/alsa/alsa.conf
@@ -542,7 +544,6 @@ apk add man-db man-pages bash bash-completion font-jetbrains-mono font-droid-san
 修改shell为`bash`
 
 ```
-apk add bash bash-completion
 usermod xxx -s /bin/bash
 ```
 
@@ -630,6 +631,12 @@ swaymsg -t get_outputs
 wlr-randr
 ```
 
+设置`nemo`默认使用的Terminal为`foot`
+
+```
+$ gsettings set org.cinnamon.desktop.default-applications.terminal exec foot
+```
+
 ### 2.3.4 网络管理
 
 DNS配置在`/etc/resolv.conf`。`networking`启动后会自动配置好
@@ -708,11 +715,9 @@ WPACLI_OPTS="-a /etc/wpa_supplicant/wpa_cli.sh"
 
 ### 2.3.5 输入法
 
-> 2024.09.04：`sway 1.9`下wayland原生应用依然不支持输入法候选框。建议等待几个月后`1.10`发布
->
-> 此外`sway`仅支持`text-input-v3`，无法支持wayland原生模式下运行Chromium浏览器以及Electron应用（仅支持`text-input-v1`）。建议这些应用使用`x11`模式运行，执行时加上参数`--set-features=UseOzonePlatform --ozone-platform=x11`
+> 必须使用`sway 1.10`及以上版本，否则输入法没有候选框
 
-安装`fcitx`需要添加源
+安装`fcitx`必须使用`edge`源
 
 ```
 https://mirrors.ustc.edu.cn/alpine/edge/main
@@ -736,6 +741,16 @@ exec fcitx5
 ```
 export XMODIFIERS=@im=fcitx
 export QT_IM_MODULE=fcitx
+```
+
+当前Chromium及其衍生Electron应用例如code-oss默认使用`text-input-v1`，`text-input-v3`需要手动开启支持
+
+Chromium在搜索栏输入`chrome://flags`，找到`Wayland text-input-v3`开启即可，默认不开启
+
+code-oss暂不支持设定，只能通过命令行参数解决，其他Electron应用同理
+
+```
+alias code-oss='code-oss --ozone-platform-hint=auto --enable-wayland-ime --wayland-text-input-version=3'
 ```
 
 ## 2.4 图形界面：Wayfire
