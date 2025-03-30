@@ -22,7 +22,7 @@
         + [**1.9.1**](#191-refind) rEFInd
         + [**1.9.2**](#192-grub) GRUB
 + [**2**](#2-安装后杂项) 安装后杂项
-    + [**2.1**](#21-openrc并行启动) OpenRC并行启动
+    + [**2.1**](#21-openrc配置) OpenRC配置
     + [**2.2**](#22-refind界面美化) rEFInd界面美化
     + [**2.3**](#23-图形界面sway) 图形界面：Sway
         + [**2.3.1**](#231-显卡与声卡) 显卡与声卡
@@ -31,6 +31,17 @@
         + [**2.3.4**](#234-网络管理) 网络管理
         + [**2.3.5**](#235-输入法) 输入法
     + [**2.4**](#24-图形界面wayfire) 图形界面：Wayfire
++ [**3**](#3-入门) 入门
+    + [**3.1**](#31-服务管理) 服务管理
+        + [**3.1.1**](#311-基本概念) 基本概念
+        + [**3.1.2**](#312-rc-service) rc-service
+        + [**3.1.3**](#313-rc-update) rc-update
+        + [**3.1.4**](#314-rc-status) rc-status
+        + [**3.1.5**](#315-openrc) openrc
+        + [**3.1.6**](#316-runlevel-stacking) runlevel stacking
+    + [**3.2**](#32-包管理) 包管理
+        + [**3.2.1**](#321-基本功能) 基本功能
+        + [**3.2.2**](#322-其他高级用法) 其他高级用法
 
 ## 1 基本安装流程
 
@@ -386,7 +397,7 @@ efibootmgr -c -d /dev/sda -p 1 -l /EFI/grub/grubx64.efi -L "GRUB"
 
 ## 2 安装后杂项
 
-## 2.1 OpenRC并行启动
+## 2.1 OpenRC配置
 
 编辑`/etc/rc.conf`开启并行启动。但是通常加速作用不是很大
 
@@ -394,10 +405,28 @@ efibootmgr -c -d /dev/sda -p 1 -l /EFI/grub/grubx64.efi -L "GRUB"
 rc_parallel="YES"
 ```
 
+建议开openrc日志
+
+```
+rc_logger="YES"
+```
+
 有些服务例如`chronyd`和`networking`可能拖慢开机速度。`chronyd`依赖于`networking`。可以禁用`chronyd`自启动，这种情况下`networking`也不会启动。需要手动启动
 
 ```
 rc-update del chronyd
+```
+
+建议开`acpid`
+
+```
+rc-update add acpid
+```
+
+默认的系统日志服务是`busybox`的`syslog`，在`boot`阶段启动。读系统日志到`/var/log/messages`
+
+```
+$ tail -5 /var/log/messages
 ```
 
 ## 2.2 rEFInd界面美化
@@ -777,4 +806,353 @@ ln -s /abs/path/to/wayfire.ini ~/.config/wayfire.ini
 #!/bin/bash
 
 exec dbus-run-session wayfire
+```
+
+## 3 入门
+
+## 3.1 服务管理
+
+`openrc`使用方法简介
+
+### 3.1.1 基本概念
+
+`openrc`中每个runlevel在`/etc/runlevels`下都有一个目录，而`/etc/init.d`中存放了启停管理每个服务需要的脚本，这些脚本由`openrc-run`解析。在`/etc/runlevels`下创建到`/etc/init.d`中脚本的软链接代表在该runlevel下启动该服务
+
+默认有`default shutdown nonetwork sysinit boot`共计`5`个runlevel，以及`hotplugged needed/wanted manual`3个dynamic runlevel。开机会经过`sysinit boot`先进行一些初始化任务，一直到`default`。根据依赖，`needed/wanted`会启动`sysfs cgroups fsck root localmount`等服务。而关机会经过`shutdown`，执行一些关机断电前的准备工作
+
+`hotplugged`和设备热插拔有关
+
+**文件目录**
+
+`/etc/runlevels`中包含了所有可用的runlevel，每个目录代表一个runlevel。需要使用`install -d`创建新的目录来创建runlevel，创建后使用`rc-status -l`就可以看到
+
+`/etc/rc.conf`是`openrc`的全局配置文件，其中包含了并行启动，openrc日志开关，默认启动的runlevel等。openrc日志默认存在`/var/log/rc.log`
+
+`/etc/init.d`包含了启停管理每个服务需要的脚本
+
+`/etc/conf.d`包含了每个服务相关的配置
+
+### 3.1.2 rc-service
+
+启停服务，查询状态
+
+```
+$ rc-service chronyd status
+$ rc-service chronyd start
+$ rc-service chronyd stop
+```
+
+重启
+
+```
+$ rc-service networking restart
+```
+
+强制停止由于崩溃无法停止的服务，使用`zap`
+
+```
+$ rc-service some-crashed-service zap
+```
+
+### 3.1.3 rc-update
+
+查询所有Enabled服务以及运行的runlevel
+
+```
+$ rc-update show
+```
+
+查询所有服务，包括没有Enable的
+
+```
+$ rc-update show -v
+```
+
+将服务添加至某个runlevel。不指定runlevel默认添加到`default`
+
+```
+$ rc-update add chronyd default
+```
+
+将服务从当前runlevel删除
+
+```
+$ rc-update del chronyd
+```
+
+从所有runlevel删除
+
+```
+$ rc-update del chronyd -a
+```
+
+从指定runlevel删除
+
+```
+$ rc-update del chronyd default
+```
+
+### 3.1.4 rc-status
+
+列出当前runlevel的服务和状态
+
+```
+$ rc-status
+```
+
+列出所有服务状态（包括没有Enable的）
+
+```
+$ rc-status -s
+```
+
+列出当前所有runlevel的服务和状态
+
+```
+$ rc-status -a
+```
+
+显示当前runlevel
+
+```
+$ rc-status -r
+```
+
+列出所有runlevel
+
+```
+$ rc-status -l
+```
+
+列出指定runlevel的服务以及状态。不指定默认列出当前runlevel以及Dynamic runlevel的状态
+
+```
+$ rc-status boot
+```
+
+### 3.1.5 openrc
+
+可以直接使用`openrc`命令切换到某个runlevel
+
+```
+$ openrc default
+```
+
+直接执行`openrc`会强制恢复当前runlevel，即停止不该启动的服务，并重新启动意外停止的服务
+
+```
+$ openrc
+```
+
+### 3.1.6 runlevel stacking
+
+所谓runlevel stacking就是让一个runlevel继承另一个runlevel的所有服务，在此基础上再添加新的服务。当切换到该runlevel时，只会启动添加的新服务，而原先继承来的服务会维持运行
+
+创建新runlevel，名称为`gui`（必须以`root`身份执行）
+
+```
+$ install -d /etc/runlevels/gui
+$ rc-status -l
+default
+shutdown
+nonetwork
+sysinit
+boot
+gui
+```
+
+让`gui`继承`default`的所有服务，就是把`default`这个runlevel添加到`gui`，再添加`gui`需要另外启动的服务例如`dbus`
+
+```
+$ rc-update -s add default gui
+$ rc-update add dbus gui
+```
+
+从`default`切换到`gui`
+
+```
+$ openrc gui
+```
+
+**异步启动**
+
+适用于某些服务启动慢，拖慢整体开机速度的问题
+
+添加一个名为`async`的runlevel。叫任何名字都可以
+
+```
+$ install -d /etc/runlevels/async
+$ rc-status -l
+default
+async
+shutdown
+nonetwork
+sysinit
+boot
+```
+
+让`async`继承`default`的服务
+
+```
+$ rc-update -s add default async
+```
+
+将启动慢的服务添加到`async`，例如`networking`
+
+```
+$ rc-update del networking default
+$ rc-update add networking async
+```
+
+最后是最关键的操作，编辑`/etc/inittab`，添加一行，实现异步启动，`default`执行完以后才会执行
+
+```
+...
+::wait:/sbin/openrc default
+::once:/sbin/openrc async -q
+
+# Set up a couple of getty's
+...
+```
+
+> Alpine默认使用`busybox`作为`init`程序（`/sbin/init`），读取该`inittab`。其他发行版使用`sysvinit`较多
+
+## 3.2 包管理
+
+`apk`使用方法简介
+
+### 3.2.1 基本功能
+
+**安装卸载**
+
+更新快照
+
+```
+$ apk update
+```
+
+安装卸载
+
+```
+$ apk add vim
+$ apk del vim
+```
+
+安装自编译包
+
+```
+$ apk add --allow-untrusted /path/to/file.apk
+```
+
+> 和其他包管理不同，`apk`会自动删除orphan并维持依赖的最简
+
+**查询信息**
+
+查询包名，以及带简介
+
+```
+$ apk search glmark2
+$ apk search -v glmark2
+```
+
+列出包所有信息，仅列出包含文件，列出依赖/被依赖，或者查看某个文件是哪个包安装的
+
+```
+$ apk info -a glmark2
+$ apk info -L glmark2
+$ apk info -R glmark2
+$ apk info -r glmark2
+$ apk info --who-owns /usr/bin/glmark2
+```
+
+**更新**
+
+仅下载包但不更新。更新直接`apk add`即可
+
+```
+$ apk fetch chrony
+```
+
+全系统更新
+
+```
+$ apk upgrade
+```
+
+模拟更新，dry-run
+
+```
+$ apk upgrade -s
+```
+
+`upgrade`后有时会有报`error`，可以尝试自动`fix`
+
+```
+$ apk fix
+```
+
+### 3.2.2 其他高级用法
+
+**包依赖图**
+
+打印包依赖图，格式`graphviz`
+
+```
+$ apk dot glmark2
+```
+
+**版本号**
+
+检查一个包是否可更新
+
+```
+$ apk version chrony
+Installed:                                Available:
+chrony-4.6.1-r0                         = 4.6.1-r0 
+```
+
+检查一个包会如何更新（版本号，源地址）
+
+```
+$ apk policy chrony
+chrony policy:
+  4.6.1-r0:
+    lib/apk/db/installed
+  4.6.1-r0:
+    https://mirrors.ustc.edu.cn/alpine/edge/main
+```
+
+**防止更新**
+
+保持软件包在某个版本或更低，`upgrade`不会更新
+
+```
+$ apk add glmark2=2023.01-r1
+```
+
+```
+$ apk add 'glmark2<2023.01-r1'
+```
+
+**包缓存**
+
+`apk`默认会保留所有旧包在`cache`，可以删除
+
+```
+$ apk -v cache clean 
+```
+
+重新下载
+
+```
+$ apk cache download
+```
+
+**密钥问题**
+
+Alpine有大版本更新时容易遇到密钥问题，可以如下解决
+
+```
+$ apk update --allow-untrusted
+$ apk fix --upgrade --allow-untrusted alpine-keys
 ```
