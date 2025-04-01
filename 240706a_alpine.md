@@ -28,8 +28,10 @@
         + [**2.3.1**](#231-显卡与声卡) 显卡与声卡
         + [**2.3.2**](#232-基本安装) 基本安装
         + [**2.3.3**](#233-配置) 配置
-        + [**2.3.4**](#234-网络管理) 网络管理
-        + [**2.3.5**](#235-输入法) 输入法
+        + [**2.3.4**](#234-网络管理networking) 网络管理：networking
+        + [**2.3.5**](#235-网络管理基于connman) 网络管理：基于ConnMan
+        + [**2.3.6**](#236-输入法) 输入法
+        + [**2.3.7**](#237-显示器背光亮度) 显示器背光亮度
     + [**2.4**](#24-图形界面wayfire) 图形界面：Wayfire
 + [**3**](#3-入门) 入门
     + [**3.1**](#31-服务管理) 服务管理
@@ -116,7 +118,7 @@ https://mirrors.ustc.edu.cn/alpine/latest-stable/main
 https://mirrors.ustc.edu.cn/alpine/latest-stable/community
 ```
 
-使用`edge`源，可以有很多目前`latest-release`没有的包（不要和`latest-stable`混用，两者取其一即可）。但是要注意`edge`源滚动更新可能容易滚挂
+使用`edge`源，可以有很多目前`latest-release`没有的包（不要和`latest-stable`混用，两者取其一即可）。但是要注意`edge`源可能不稳定
 
 ```
 https://mirrors.ustc.edu.cn/alpine/edge/main
@@ -481,7 +483,7 @@ showtools shutdown
 
 ## 2.3 图形界面：Sway
 
-最新dotfile https://github.com/apachiww/dotfiles/tree/main/snap-240904-thinkpadt440p-alpine 。可使用`sway`或`wayfire`
+最新dotfile https://github.com/apachiww/dotfiles/tree/main/snap-240904-thinkpadt440p-alpine
 
 ### 2.3.1 显卡与声卡
 
@@ -522,8 +524,8 @@ vim /usr/share/alsa/alsa.conf
 设定声卡序号
 
 ```
-defaults.ctl.card 1
-defaults.pcm.card 1
+defaults.ctl.card 1;
+defaults.pcm.card 1;
 ```
 
 ALSA服务默认不启动，需要另外配置启动
@@ -567,7 +569,7 @@ rc-update add dbus
 安装其他一些基础功能与附加小组件，包括字体，图标等。使用`doas`替代`sudo`
 
 ```
-apk add man-db man-pages bash bash-completion font-jetbrains-mono font-droid-sans-mono-nerd font-noto-emoji font-wqy-zenhei adwaita-icon-theme papirus-icon-theme fuzzel mako waybar doas doasedit foot-extra-terminfo nemo wpa_supplicant usbutils pciutils
+apk add man-db man-pages bash bash-completion font-jetbrains-mono font-droid-sans-mono-nerd font-noto-emoji font-wqy-zenhei adwaita-icon-theme papirus-icon-theme fuzzel mako waybar doas doasedit foot-extra-terminfo nemo wpa_supplicant usbutils pciutils imv mplayer zathura
 ```
 
 修改shell为`bash`
@@ -666,7 +668,9 @@ wlr-randr
 $ gsettings set org.cinnamon.desktop.default-applications.terminal exec foot
 ```
 
-### 2.3.4 网络管理
+### 2.3.4 网络管理：networking
+
+Alpine默认使用`ifupdown-ng`管理网络
 
 DNS配置在`/etc/resolv.conf`。`networking`启动后会自动配置好
 
@@ -742,7 +746,112 @@ WPACLI_OPTS="-a /etc/wpa_supplicant/wpa_cli.sh"
 
 此外需要额外启动`wpa_cli`
 
-### 2.3.5 输入法
+### 2.3.5 网络管理：基于ConnMan
+
+先卸载`ifupdown-ng`
+
+```
+$ rc-update del networking
+$ apk del ifupdown-ng
+```
+
+安装`connman`（无线网依旧使用`wpa_supplicant`）
+
+```
+$ apk add connman
+```
+
+添加到`async`启动（见[3.1.6](#316-runlevel-stacking)）
+
+```
+$ rc-update add connman async
+```
+
+如果是台式机，不考虑无线连接，那么配置到这里就足够了，在连接以太网时`connman`会自动通过DHCP获取地址
+
+> `connman`对于每个网络的配置自动保存在`/var/lib/connman`下
+>
+> `connman`配置文件在`/etc/connman/main.conf`
+
+建议在`/etc/connman/main.conf`添加如下配置，主要是防止修改主机名，以及优先使用以太网
+
+```
+[General]
+AllowHostnameUpdates = false
+PreferredTechnologies = ethernet,wifi
+```
+
+**常用命令**
+
+列出当前主机所有可用网络连接方式，有线/无线
+
+```
+$ connmanctl technologies
+```
+
+**无线连接**
+
+关无线网卡
+
+```
+$ connmanctl disable wifi
+```
+
+开无线网卡
+
+```
+$ connmanctl enable wifi
+```
+
+扫无线网
+
+```
+$ connmanctl scan wifi
+```
+
+列出AP
+
+```
+$ connmanctl services
+*AO Wired                ethernet_ac12275d7c1c_cable
+    TP_LINK-CCCC         wifi_37b74263590f_4367772e614e65742d31a913372d3547_managed_psk
+    TP_LINK-DDDD         wifi_f89ac635a90f_54505f4c494e4bad332d88663444_managed_psk
+```
+
+**开放AP**
+
+直接连接AP（可`tab`补齐）
+
+```
+$ connmanctl connect wifi_37b74263590f_4367772e614e65742d31a913372d3547_managed_psk
+```
+
+**WPA2**
+
+交互模式
+
+```
+$ connmanctl
+connmanctl>
+```
+
+注册`agent`再连接，按提示输入密码
+
+```
+connmanctl> agent on
+connmanctl> connect wifi_37b74263590f_4367772e614e65742d31a913372d3547_managed_psk
+Agent RequestInput wifi_37b74263590f_4367772e614e65742d31a913372d3547_managed_psk
+  Passphrase = [ Type=psk, Requirement=mandatory ]
+Passphrase?
+```
+
+退出后如果密码无误，会自动连接
+
+```
+connmanctl> quit
+```
+
+### 2.3.6 输入法
 
 > 必须使用`sway 1.10`及以上版本，否则输入法没有候选框
 
@@ -780,6 +889,22 @@ code-oss暂不支持设定，只能通过命令行参数解决，其他Electron�
 
 ```
 alias code-oss='code-oss --ozone-platform-hint=auto --enable-wayland-ime --wayland-text-input-version=3'
+```
+
+### 2.3.7 显示器背光亮度
+
+使用`brightnessctl`调节笔记本显示器背光亮度，必须要`root`权限才能使用
+
+```
+$ apk add brightnessctl
+$ rc-update add brightnessctl default
+```
+
+调节亮度。可以绑定到Fn功能键，分别为`XF86MonBrightnessUp` `XF86MonBrightnessDown`
+
+```
+$ brightnessctl set +10%
+$ brightnessctl set 10%-
 ```
 
 ## 2.4 图形界面：Wayfire
@@ -1015,7 +1140,7 @@ $ rc-update add networking async
 ...
 ```
 
-> Alpine默认使用`busybox`作为`init`程序（`/sbin/init`），读取该`inittab`。其他发行版使用`sysvinit`较多
+> Alpine默认使用`busybox`作为`init`程序（`/sbin/init`），读取该`inittab`。其他发行版有些会使用`sysvinit`，而`systemd`有自己的兼容方案`systemd-sysvcompat`
 
 ## 3.2 包管理
 
@@ -1146,6 +1271,20 @@ $ apk -v cache clean
 
 ```
 $ apk cache download
+```
+
+**强制降级**
+
+如果更新遇到了问题，想要从`edge`回到`latest-stable`，改完源以后先更新一下快照
+
+```
+$ apk update -f
+```
+
+强制回退，使用`latest-stable`中的软件包
+
+```
+$ apk upgrade --available
 ```
 
 **密钥问题**
