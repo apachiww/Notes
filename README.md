@@ -124,6 +124,9 @@
 | [231126a](231126a_pcb.md) | 高速PCB设计 | 0% |
 | [240706a](240706a_alpine.md) | AlpineLinux安装与日常使用 | 100% |
 | [240813a](240813a_fat.md) | 磁盘分区表与FAT文件系统 | 80% |
+| [250107a](250107a_loongarch.md) | LoongArch学习笔记 | 0% |
+| [250118a](250118a_plan9port.md) | Plan 9 port试用 | 0% |
+| [250302a](250302a_void.md) | VoidLinux安装与日常使用 | 90% |
 
 ## 参考书收藏
 
