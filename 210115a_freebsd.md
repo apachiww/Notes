@@ -532,6 +532,10 @@ $ service seatd start
 $ service dbus start
 ```
 
+> 从14.1开始FreeBSD默认有`pam_xdg`（`/usr/lib/pam_xdg.so`），所以无需设定`XDG_RUNTIME_DIR`，直接使用`seatd`就可以
+>
+> `sysrc`设定`servicename_enable="YES"`和`service servicename enable`具备相同的效果，都会将`servicename_enable="YES"`写到`/etc/rc.conf`，区别是`sysrc`不会检验`servicename`的有效性，也就是说如果`servicename`是无效的，`service`命令不会将其添加到`/etc/rc.conf`
+
 ### 3.3.3 安装Sway
 
 ```
@@ -764,6 +768,12 @@ config:
 ```
 $ zpool status -x
 all pools are healthy
+```
+
+如果是SSD，可能有TRIM的需求
+
+```
+$ zpool trim pool0
 ```
 
 销毁该`zpool`，必须使用`zpool destroy`命令，数据会同步销毁，会同时删除目录`/pool0`
@@ -2118,7 +2128,7 @@ config:
 errors: No known data errors
 ```
 
-> `log`可以支持`mirror` `raidz1`这样的`vdev`作为存储位置。`log`最好在创建`pool0`之后立即添加，且添加后无法从`pool0`删除，除非`destroy`整个`pool0`
+> `log`可以支持`mirror` `raidz1`这样的`vdev`作为存储位置。`log`最好在创建`pool0`之后立即添加，或者直接在创建`zpool`时指定，且添加后无法从`pool0`删除，除非`destroy`整个`pool0`
 
 ### 4.11.2 调参
 
@@ -2138,6 +2148,188 @@ FreeBSD Handbook中许多ZFS参数已经过时，当时FreeBSD还没有使用Ope
 
 ## 5 服务管理
 
-## 6 系统更新
+`freebsd`使用`rc`系统，脚本放在`/etc/rc.d`和`/usr/local/etc/rc.d`，使用`service`命令管理服务
+
+列出所有服务
+
+```
+$ service -l
+```
+
+列出当前`enable`的服务（即在`/etc/rc.conf`中设定为`name_enable="YES"`的服务）
+
+```
+$ service -e
+```
+
+每种服务可用的操作是不一定相同的，但是一般都支持`start stop restart enable disable`等常用操作。进程类服务可以使用`status`查询状态。有些服务还可以使用`describe`输出简介
+
+已经`enable`的服务（`/etc/rc.conf`有记录为`enable="YES"`的服务）才能使用`start stop`进行控制。`enable`后会在`/etc/rc.conf`中添加一行`servicename_enable="YES"`。实际上不建议使用`sysrc`直接修改`/etc/rc.conf`，防止输错服务名
+
+```
+$ service chronyd enable
+```
+
+启动服务
+
+```
+$ service chronyd start
+```
+
+查看状态
+
+```
+$ service chronyd status
+```
+
+停止服务
+
+```
+$ service chronyd stop
+```
+
+重启服务
+
+```
+$ service chronyd restart
+```
+
+禁用开机启动
+
+```
+$ service chronyd disable
+```
+
+禁用的服务只能通过`onestart onestop`进行控制
+
+```
+$ service chronyd onestart
+$ service chronyd onestop
+```
+
+## 6 包管理
+
+## 6.1 安装卸载
+
+更新快照
+
+```
+$ pkg update
+```
+
+强制更新并覆盖快照（例如换源）
+
+```
+$ pkg update -f
+```
+
+安装
+
+```
+$ pkg install chrony
+```
+
+仅下载不安装
+
+```
+$ pkg fetch chrony
+```
+
+安装本地包
+
+```
+$ pkg install chrony-4.6.1_1.pkg
+```
+
+卸载，`remove`或`delete`都可
+
+```
+$ pkg delete chrony
+```
+
+自动卸载orphan
+
+```
+$ pkg autoremove
+```
+
+下载包到指定目录再安装
+
+```
+$ pkg fetch -d -o ~/pkg/ chrony
+```
+
+更新所有包
+
+```
+$ pkg upgrade
+```
+
+删除过时包缓存
+
+```
+$ pkg clean
+```
+
+强制删除所有包缓存
+
+```
+$ pkg clean -a
+```
+
+## 6.2 搜索查询
+
+在快照中查询
+
+```
+$ pkg search chrony
+```
+
+列出所有已安装包
+
+```
+$ pkg info -a
+```
+
+列出指定包所有信息，依赖的动态库，依赖的包，被依赖，包含的文件，安装目录`prefix`，显示`manifest`，占用磁盘空间
+
+```
+$ pkg info chrony
+$ pkg info -B chrony
+$ pkg info -d chrony
+$ pkg info -r chrony
+$ pkg info -l chrony
+$ pkg info -p chrony
+$ pkg info -R chrony
+$ pkg info -s chrony
+```
+
+## 6.3 进阶
+
+审计，会fetch一个`vulnxml`并给出指定软件已知的CVE
+
+```
+$ pkg audit -F firefox
+```
+
+锁定包，被锁定的包无法进行任何升级，卸载等操作
+
+```
+$ pkg lock chrony
+```
+
+解锁
+
+```
+$ pkg unlock chrony
+```
+
+包之间的依赖关系就是一张有向图。列出不被任何包依赖的包
+
+```
+$ pkg prime-list
+```
+
+## 7 系统更新
 
 `freebsd-upgrade`

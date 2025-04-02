@@ -569,7 +569,7 @@ rc-update add dbus
 安装其他一些基础功能与附加小组件，包括字体，图标等。使用`doas`替代`sudo`
 
 ```
-apk add man-db man-pages bash bash-completion font-jetbrains-mono font-droid-sans-mono-nerd font-noto-emoji font-wqy-zenhei adwaita-icon-theme papirus-icon-theme fuzzel mako waybar doas doasedit foot-extra-terminfo nemo wpa_supplicant usbutils pciutils imv mplayer zathura
+apk add man-db man-pages bash bash-completion font-jetbrains-mono font-droid-sans-mono-nerd font-noto-emoji font-wqy-zenhei adwaita-icon-theme papirus-icon-theme fuzzel mako waybar doas doasedit foot-extra-terminfo nemo wpa_supplicant usbutils pciutils imv vlc-qt zathura
 ```
 
 修改shell为`bash`
