@@ -93,6 +93,9 @@
     + [**6.2**](#62-搜索查询) 搜索查询
     + [**6.3**](#63-进阶) 进阶
 + [**7**](#7-系统更新) 系统更新
+    + [**7.1**](#71-配置文件) 配置文件
+    + [**7.2**](#72-更新当前版本) 更新当前版本
+    + [**7.3**](#73-更新到新版本) 更新到新版本
 
 ## 1 下载镜像
 
@@ -2336,4 +2339,142 @@ $ pkg prime-list
 
 ## 7 系统更新
 
-`freebsd-upgrade`
+FreeBSD目前实际上处于较快的发展中。如果使用的是RELEASE，新的大版本出来以后旧的大版本还会持续维护几年
+
+`freebsd-updade`主要用于FreeBSD的全系统升级。`pkg`功能有限，无法用于一些基础组件的升级
+
+`freebsd-update`的配置文件在`/etc/freebsd-update.conf`
+
+## 7.1 配置文件
+
+配置文件中有如下关键字
+
+`ServerName`指定了`freebsd-update`使用的下载服务器。目前大陆高校镜像站暂无支持`freebsd-update`的服务器
+
+```
+ServerName update.FreeBSD.org
+```
+
+`Components`定义了`freebsd-update`会更新哪些部分。可能还有一个`src`。该配置不建议更改
+
+```
+Components world kernel
+```
+
+`StrictComponents`设定决定`freebsd-update`是否会严格更新上述`Components`中列出的所有部分。如果是`no`，那么只有在这个部分真正有安装的情况下才会更新
+
+```
+StrictComponents yes
+```
+
+`IgnorePaths`可以指定一些文件/目录，在`freebsd-update`时不会更新它们
+
+```
+IgnorePaths /boot/loader.conf
+```
+
+`UpdateIfUnmodified`可以让指定目录下的文件只有在没有被用户修改的情况下才被更新，防止覆盖用户的设置
+
+```
+UpdateIfUnmodified /etc/
+```
+
+此外用户有可能修改了文件的默认权限，通过`KeepModifiedMetadata`可以让新文件继承原来文件的权限等信息
+
+```
+KeepModifiedMetadata yes
+```
+
+此外也可以像`git merge`一样将已有设定合并到新文件，本质上是将一堆patch（`diff`）应用到文件上，用`MergeChanges`即可。在`freebsd-update`期间可以通过编辑器手动处理
+
+```
+MergeChanges /etc/
+```
+
+`freebsd-update`使用的工作目录，定义在`WorkDir`。其中会放置下载到的新系统资料，以及更新期间生成的patch
+
+```
+WorkDir /var/db/freebsd-update
+```
+
+`KeyPrint`指定了用于签名update的RSA密钥的SHA256
+
+```
+KeyPrint xxxxxxxxxxxx...
+```
+
+`AllowAdd`和`AllowDelete`分别指定`freebsd-update`是否允许新增/删除文件
+
+```
+AllowAdd yes
+AllowDelete yes
+```
+
+`BackupKernel`和`BackupKernelDir`指定在更新内核时是否备份旧内核，以及备份路径
+
+```
+BackupKernel yes
+BackupKernelDir /boot/kernel.old
+```
+
+## 7.2 更新当前版本
+
+执行以下两行命令即可，该操作不会更新到新的小版本或大版本，只是给当前版本应用一些安全补丁等
+
+```
+$ freebsd-update fetch
+$ freebsd-update install
+```
+
+如果对内核打了补丁，需要重启。内核版本变化可以对比`freebsd-version -k`和`uname -r`得知
+
+更新后可以支持回滚一次
+
+```
+$ freebsd-update rollback
+```
+
+## 7.3 更新到新版本
+
+大版本更新指例如`13.1`到`14.2`，小版本更新指例如`14.1`到`14.2`
+
+建议更新前备份一下`/etc`等重要目录
+
+> 发生版本更新最开始的一段时间内FreeBSD依旧会用老版本的系统打包，直到老版本EoL。所以建议每次新版本出来以后过一段时间再更新，如果想要立即更新，可能需要准备好重新构建内核模块
+
+更新前必须更新到当前版本最新
+
+```
+$ freebsd-update fetch
+$ freebsd-update install
+```
+
+再更新到新的版本
+
+```
+$ freebsd-update -r 14.2-RELEASE upgrade
+```
+
+之后`freebsd-update`会提示更新内容并下载。更新时需要用户交互处理。结束后需要再执行一下`install`，这时更新才会真正应用
+
+```
+$ freebsd-update install
+```
+
+结束后重启，需要再运行一遍完成剩下更新任务
+
+```
+$ freebsd-update install
+```
+
+大版本更新如果改了ABI会导致应用不兼容，出现滚挂的现象。此时使用`pkg-static`更新一下即可。如果`pkg`依旧可用，直接`pkg upgrade`即可
+
+```
+$ pkg-static upgrade -f
+```
+
+此后建议再执行一下
+
+```
+$ freebsd-update install
+```
