@@ -688,7 +688,11 @@ ZFS中总共有7种`vdev`，这些类型代表了`vdev`中磁盘/分区的组织
 
 ZFS主要使用到两个命令，`zpool`和`zfs`。`zpool`主要用于管理`pool`以及其中的`vdev`，而`zfs`主要用于`dataset`相关的操作
 
-使用`zpool`命令创建的`pool`默认会被挂载到根目录`/`下的同名目录，并且可以在里面直接存取普通文件。而在`pool`中创建的`dataset`会被挂载到对应`pool`目录下的`dataset`同名目录，并且也可以直接访问存取文件
+使用`zpool`命令创建的`pool`默认会被**映射**到根目录`/`下的同名目录，可以在里面直接存取普通文件。而在`pool`中创建的`dataset`会被**挂载**到对应`pool`目录下的`dataset`同名目录，并且也可以直接访问存取文件
+
+> 注意这里的用词，对于`pool`本身来说没有**挂载**的概念，`pool`在哪个路径是由`ALTROOT`决定的，所以这里用了**映射**这个词。只有`dataset`有**挂载**的概念。实际上`pool`在被创建时会创建一个同名`dataset`，可以通过`zfs list`看到，它的挂载点默认就在这个`pool`的`ALTROOT`上
+>
+> 所以看似我们可以对`pool`进行直接访问读写，实际上我们访问的是这个同名`dataset`。这个`dataset`默认类型为`filesystem`
 
 ZFS支援多种缓存机制，包括内存缓存，磁盘缓存，提供更高的读写性能
 
@@ -708,7 +712,7 @@ $ sysrc zfs_enable="YES"
 >
 > 也可以基于分区例如`/dev/ada0p1`创建。用分区有许多优点，首先是可以自定义大小，这在Mirror/RAID阵列中有用，在使用不同型号磁盘时可以保证容量一致，并且后续更换磁盘时也不会因为容量不一致而造成额外的麻烦。此外也有多分区需求的场景，不得不使用分区
 >
-> FreeBSD上把磁盘分区作为`vdev`使用或基于分区创建`vdev`不会造成性能损失，但是其他平台不一定
+> FreeBSD上把磁盘分区作为`vdev`使用或基于分区创建`vdev`不会造成性能损失
 
 ```
 $ zpool create pool0 /dev/ada0
@@ -724,6 +728,12 @@ $ zpool create pool0 ada0
 
 ```
 $ zpool create pool0 /dev/ada0p1
+```
+
+或通过UUID指定设备（GPT分区表建议这样用）。需要打开`kern.geom.label.ufsid.enable="1"`
+
+```
+$ zpool create pool0 /dev/gptid/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 ```
 
 或者可以一次指定多块磁盘，组成RAID0
@@ -777,7 +787,7 @@ $ zpool status -x
 all pools are healthy
 ```
 
-如果是SSD，可能有TRIM的需求
+如果是SSD，可能有TRIM的需求，手动`trim`
 
 ```
 $ zpool trim pool0
@@ -793,6 +803,10 @@ $ zpool destroy pool0
 
 和`dataset`一样，`zpool`也有属性可以设置，通过`zpool set`设定，`zpool get`读取。创建`zpool`时可以通过`-o key=value`的形式设定
 
+> 由于`zpool`创建时会创建一个同名`dataset`，在创建时可以通过`-O`选项设定这个同名`dataset`属性，例如`-O compression=lz4`。而`-o`用于指定`zpool`本身的属性
+>
+> `zpool`自动`trim`可以通过设定`-o autotrim=on`打开，这适用于SSD
+
 ```
 $ zpool get all pool0
 ```
@@ -803,7 +817,7 @@ $ zpool get all pool0
 
 `dataset`的属性可以通过`zfs get`获取，可以在`zfs create`时通过`-o key=value`设定，或后续通过`zfs set`设定
 
-一个`pool`下可以创建多个`dataset`，这些`dataset`可以各自开启不同的功能。`pool`本身也是一个`dataset`
+一个`pool`下可以创建多个`dataset`，这些`dataset`可以各自开启不同的功能。`pool`在被创建时会创建一个同名`dataset`指向它自身
 
 在`pool0`中创建`data0`，并在`data0`启用压缩。可以在目录`/pool0/data0`中直接存取文件
 
@@ -1521,7 +1535,7 @@ pool0        492K  31.5G      2     11  11.3K  57.1K
 
 ZFS的`dataset`支持嵌套，子`dataset`会继承父`dataset`的属性
 
-ZFS一共支持4种类型的`dataset`，分别为`filesystem` `volume` `snapshot` `bookmark`。通过`zpool`创建的`pool`本身也是一个`filesystem`类型的`dataset`
+ZFS一共支持4种类型的`dataset`，分别为`filesystem` `volume` `snapshot` `bookmark`。`pool`在创建时创建的同名`dataset`类型为`filesystem`
 
 ### 4.10.1 Dataset的创建和管理
 
