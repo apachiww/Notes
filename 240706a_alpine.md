@@ -298,6 +298,8 @@ vim /mnt/boot/efi/EFI/refind/refind.conf
 
 保证`refind`正常引导Alpine需要的最小配置示例。其中分辨率依照实际调整（有可能不支持屏幕物理分辨率，尤其在开启CSM的平台）。可以使用例如`include os.conf`包含其他配置文件。分别使用`lsblk -dno PARTUUID /dev/sdax`（`volume`项）和`lsblk -dno UUID /dev/sdax`（`options`项）查看`PARTUUID`和`UUID`
 
+> 实际上都使用`PARTUUID`也行
+
 ```
 timeout 5
 use_nvram false
@@ -328,6 +330,17 @@ menuentry "Alpine" {
     initrd  /boot/initramfs-lts
     options "root=UUID=xxxxxxxx-xxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx ro modules=sd-mod,usb-storage,ext4 rootfstype=ext4 loglevel=3"
 }
+```
+
+> rEFInd也可以在内核映像同目录下放一个`refind_linux.conf`来传递内核cmdline，但是这个文件只有在内核是自动扫描到的情况下才会生效，也就是说开了`scanfor manual`的情况下不会生效。例如放在`/boot/refind_linux.conf`。这会创建一个子菜单，默认使用第一行的cmdline，这个子菜单可以在开机界面通过Tab或F2访问
+>
+> 如果在`refind.conf`的入口里没有指定`initrd`，需要将其添加到cmdline中，示例`initrd=boot\initramfs-lts`。注意必须用反斜杠
+
+`/boot/refind_linux.conf`
+
+```
+"Boot default" "root=UUID=xxxxxxxx-xxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx ro modules=sd-mod,usb-storage,ext4 rootfstype=ext4 loglevel=3 initrd=boot\initramfs-lts"
+"Boot silently" "root=UUID=xxxxxxxx-xxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx ro modules=sd-mod,usb-storage,ext4 rootfstype=ext4 quiet initrd=boot\initramfs-lts"
 ```
 
 ### 1.9.2 GRUB
@@ -1295,3 +1308,211 @@ Alpine有大版本更新时容易遇到密钥问题，可以如下解决
 $ apk update --allow-untrusted
 $ apk fix --upgrade --allow-untrusted alpine-keys
 ```
+
+## 4 Root on ZFS
+
+使用ZFSBootMenu
+
+需要使用`extended`镜像启动
+
+## 4.1 准备工作
+
+联网以及换源步骤见前。在Live环境安装ZFS并加载模块
+
+```
+$ apk add zfs zfs-scripts wipefs sgdisk
+$ modprobe zfs
+$ lsmod | grep zfs
+```
+
+生成`/etc/hostid`。可以使用网卡MAC后8个hex
+
+```
+$ zgenhostid -f 8899aabb
+```
+
+## 4.2 磁盘分区与格式化
+
+清理数据
+
+```
+$ zpool labelclear -f /dev/sda
+$ wipefs -a /dev/sda
+$ sgdisk --zap-all /dev/sda
+```
+
+分2个区，一个ESP（`ef00`），一个ZFS（`bf00`）
+
+```
+$ sgdisk -n "1:1m:+1g" -t "1:ef00" /dev/sda
+$ sgdisk -n "2:0:+110g" -t "2:bf00" /dev/sda
+$ mdev -s
+```
+
+格式化ESP
+
+```
+$ mkfs.vfat -F32 /dev/sda1
+```
+
+创建`zpool`
+
+```
+$ zpool create -f -o ashift=12 -o autotrim=on -O acltype=posixacl -O xattr=sa -O relatime=on -m none zroot /dev/sda2 
+```
+
+创建`dataset`，依次为`zroot/ROOT`，`zroot/ROOT/alpine`挂到`/`，`zroot/home`挂到`/home`。根据需要开压缩等参数。此外需要指定`zroot`的`bootfs`，这样bootloader才会知道应该选哪个`dataset`挂载
+
+```
+$ zfs create -o mountpoint=none zroot/ROOT
+$ zfs create -o mountpoint=/ -o canmount=noauto zroot/ROOT/alpine
+$ zfs create -o mountpoint=/home zroot/home
+$ zpool set bootfs=zroot/ROOT/alpine zroot
+```
+
+> 注意任何用于`/`的`dataset`都必须指定`canmount=noauto`防止自动挂载，尤其在多rootfs的情况下需要注意
+
+最后`export`，再重新`import`映射到`/mnt`
+
+```
+$ zpool export zroot
+$ zpool import -N -R /mnt zroot
+$ zfs mount zroot/ROOT/alpine
+$ zfs mount zroot/home
+```
+
+检查一下挂载情况
+
+```
+$ zfs mount
+zroot/ROOT/alpine           /mnt
+zroot/home                  /mnt/home
+```
+
+先不必挂载ESP，启动引导后面再配置
+
+## 4.3 正式安装
+
+安装`base`到`/mnt`
+
+```
+$ apk --arch x86_64 -X https://mirrors.ustc.edu.cn/alpine/latest-stable/main -U --allow-untrusted --root /mnt --initdb add alpine-base
+```
+
+从Live复制一些文件到新系统
+
+```
+$ cp /etc/hostid /mnt/etc/
+$ cp /etc/resolv.conf /mnt/etc/
+$ cp /etc/apk/repositories /mnt/etc/apk/
+$ cp /etc/network/interfaces /mnt/etc/network/
+```
+
+`chroot`
+
+```
+$ mount --rbind /proc /mnt/proc/
+$ mount --rbind /sys /mnt/sys/
+$ mount --rbind /dev /mnt/dev/
+$ mount --rbind /sys/firmware/efi/efivars /mnt/sys/firmware/efi/efivars/
+$ chroot /mnt
+```
+
+设定一下`root`密码
+
+```
+$ passwd
+```
+
+将一些服务设定为自启动。根据需求可以将`networking`更换为`connman`并设定异步启动，不再讲述
+
+```
+$ rc-update add hwdrivers sysinit
+$ rc-update add networking default
+$ rc-update add hostname default
+```
+
+## 4.4 ZFS配置
+
+在新系统安装ZFS
+
+```
+$ apk add zfs zfs-lts zfs-scripts
+```
+
+将`zfs-import`和`zfs-mount`添加到`sysinit`
+
+```
+$ rc-update add zfs-import sysinit
+$ rc-update add zfs-mount sysinit
+```
+
+## 4.5 mkinitfs
+
+配置`mkinitfs`，让`mkinitfs`包含ZFS模块
+
+```
+$ echo "/etc/hostid" >> /etc/mkinitfs/features.d/zfshost.files
+$ echo 'features="ata base cdrom ext4 keymap kms mmc nvme raid scsi usb virtio zfs zfshost"' > /etc/mkinitfs/mkinitfs.conf
+```
+
+重新生成`initramfs`
+
+```
+$ mkinitfs -c /etc/mkinitfs/mkinitfs.conf "$(ls /lib/modules)"
+```
+
+## 4.6 安装配置ZFSBootMenu
+
+启动时的内核commandline设定在每个`dataset`的`org.zfsbootmenu:commandline`上，该属性有继承特性。所以共用的commandline可以设定在`zroot/ROOT`，而各个rootfs可以分别设定自有的commandline
+
+```
+$ zfs set org.zfsbootmenu:commandline="loglevel=3" zroot/ROOT/alpine
+```
+
+挂载`/dev/sda1`
+
+```
+$ mkdir /boot/efi
+$ mount -t vfat /dev/sda1 /boot/efi
+$ mkdir -p /boot/efi/EFI/zbm
+```
+
+直接下载ZFSBootMenu
+
+```
+$ curl -o /boot/efi/EFI/zbm/vmlinuz.efi -L https://get.zfsbootmenu.org/efi
+```
+
+**单系统引导**
+
+如果是单系统引导直接使用`efibootmgr`注册即可
+
+```
+$ efibootmgr -c -d /dev/sda -p 1 -l /EFI/zbm/vmlinuz.efi -L "ZFSBootMenu"
+```
+
+**rEFInd**
+
+使用`refind`引导的配置示例，在`refind`配置文件添加一个入口
+
+```
+menuentry "Alpine" {
+    icon    /EFI/refind/icons/os_linux.png
+    loader  /EFI/zbm/vmlinuz.efi
+    options "quiet loglevel=0 zbm.skip zbm.prefer=zroot!!"
+}
+```
+
+> `zbm.skip`表示不显示菜单。显示菜单使用`zbm.show`。由于ZFSBootMenu默认会尝试`import`所有的`pool`，如果有多个`pool`，可以强制指定只使用1个，防止混淆
+
+最后退出`chroot`，并`export`再重启，应当可以正常引导
+
+```
+$ zpool export zroot
+$ reboot
+```
+
+ZFSBootMenu会根据`zpool`的`bootfs`选择使用哪个`dataset`，这里使用`zroot/ROOT/alpine`，并获取该`dataset`的`org.zfsbootmenu:commandline`传递给Alpine的内核
+
+> 每次启动会报`zpool`已经存在的警告，正常使用即可，没有影响
