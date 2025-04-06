@@ -1425,6 +1425,15 @@ $ mount --rbind /sys/firmware/efi/efivars /mnt/sys/firmware/efi/efivars/
 $ chroot /mnt
 ```
 
+依次进行以下`setup`，过程省略
+
+```
+$ setup-keymap
+$ setup-hostname
+$ setup-timezone
+$ setup-ntp
+```
+
 设定一下`root`密码
 
 ```
