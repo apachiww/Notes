@@ -87,14 +87,12 @@
 | [201230a](201230a_cryptography.md) | 加密算法，密码学 | 0% |
 | [210108a](210108a_autocad.md) | AutoCAD基本操作 | 100% |
 | [210110a](210110a_computer-arch.md) | 计算机体系结构以及处理器的设计 | 1% |
-| [210111a](210111a_qt.md) | Qt应用开发 | 0% |
 | [210115a](210115a_freebsd.md) | FreeBSD安装与日常使用 | 100% |
 | [210130a](210130a_install-notice.md) | 类Unix管理维护以及安全优化，SELinux | 40% |
 | [210316a](210316a_computer-graphics.md) | 计算机图形学，Vulkan，OpenGL（GLSL） | 0% |
 | [210317a](210317a_parallel.md) | Linux并发编程，C++11线程库，CUDA | 0% |
 | [210320a](210320a_3drebuild.md) | 卫星遥感 | 100% |
 | [210409a](210409a_haskell.md) | 函数式编程，Haskell | 30% |
-| [210501a](210501a_famitracker.md) | 计算机音乐，和声理论，FamiTracker，经典计算机音乐集成电路解析 | 0% |
 | [210515c](210515c_nginx.md) | Nginx/Apache/H2O Web服务原理以及部署 | 0% |
 | [210524a](210524a_8051.md) | 8051单片机 | 100% |
 | [210625a](210625a_uefi.md) | UEFI | 10% |
@@ -107,14 +105,12 @@
 | [210904b](210904b_power.md) | 开关电源，DC-DC | 2% |
 | [211017a](211017a_analog.md) | 模电，无线电 | 0% |
 | [211211a](211211a_codestyle-and-licence.md) | 代码规范，开源协议 | 50% |
-| [220420a](220420a_tribblix.md) | Tribblix、Slackware安装与日常使用 | 0% |
 | [220429a](220429a_compiler.md) | 二进制ELF文件格式，链接器原理 | 100% |
 | [221019a](221019a_bsd-impl.md) | FreeBSD设计与实现 | 0% |
 | [221112a](221112a_network.md) | 计算机网络 | 80% |
 | [221116a](221116a_wacom.md) | Wacom数位板手动配置 | 100% |
 | [230323a](230323a_ncnn.md) | ncnn和MNN | 0% |
 | [230411a](230411a_unix-programming.md) | Linux/Unix系统编程 | 0% |
-| [230513a](230513a_texlive.md) | Texlive安装与使用 | 0% |
 | [230526a](230526a_driver.md) | Linux驱动开发，设备树 | 0% |
 | [230709a](230709a_container.md) | Linux容器和虚拟化工具，LXD（Incus），Docker，CRI-O，Kata Containers，VirtualBox，QEMU（+KVM），K8s/K3s，Vagrant等工具的使用，cgroup | 30% |
 | [230719a](230719a_js.md) | 基于Node.js和React全栈开发 | 0% |
@@ -127,7 +123,7 @@
 | [250107a](250107a_loongarch.md) | LoongArch学习笔记 | 0% |
 | [250118a](250118a_plan9port.md) | Plan 9 port试用 | 0% |
 | [250302a](250302a_void.md) | VoidLinux安装与日常使用 | 100% |
-| [250404a](250404a_init.md) | s6和dinit的使用 | 0% |
+| [250404a](250404a_chimera.md) | ChimeraLinux安装与日常使用 | 0% |
 
 ## 参考书收藏
 
