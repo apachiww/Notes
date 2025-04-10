@@ -96,6 +96,10 @@
     + [**7.1**](#71-配置文件) 配置文件
     + [**7.2**](#72-更新当前版本) 更新当前版本
     + [**7.3**](#73-更新到新版本) 更新到新版本
++ [**8**](#8-root-on-zfs) Root on ZFS
+    + [**8.1**](#81-分区与格式化) 分区与格式化
+    + [**8.2**](#82-fstab) fstab
+    + [**8.3**](#83-启动引导) 启动引导
 
 ## 1 下载镜像
 
@@ -223,7 +227,7 @@ $ cp /boot/loader.efi /mnt/EFI/freebsd
 
 ### 2.2.1 单系统引导
 
-直接使用`efibootmgr`将`loader.efi`注册到BIOS的启动项中。`efibootmgr`用法见[Alpine安装教程](240706a_alpine.md#191-refind)
+可以使用`efibootmgr`将`loader.efi`注册到BIOS的启动项中。FreeBSD的`efibootmgr`暂无法使用。可以使用其他Linux发行版的`efibootmgr`，用法见[Alpine安装教程](240706a_alpine.md#191-refind)
 
 
 ### 2.2.2 双系统/多系统引导：grub
@@ -801,7 +805,7 @@ $ zpool trim pool0
 $ zpool destroy pool0
 ```
 
-和`dataset`一样，`zpool`也有属性可以设置，通过`zpool set`设定，`zpool get`读取。创建`zpool`时可以通过`-o key=value`的形式设定
+和`dataset`一样，`zpool`也有属性可以设置，通过`zpool set`设定，`zpool get`读取。创建`zpool`时可以通过`-o key=value`的形式设定，例如在SSD上可以设定`-o ashift=12`，即4k
 
 > 由于`zpool`创建时会创建一个同名`dataset`，在创建时可以通过`-O`选项设定这个同名`dataset`属性，例如`-O compression=lz4`。而`-o`用于指定`zpool`本身的属性
 >
@@ -2160,7 +2164,7 @@ FreeBSD Handbook中许多ZFS参数已经过时，当时FreeBSD还没有使用Ope
 | `vfs.zfs.arc.max` | `ARC`允许占用的最大内存，为防止其他程序无内存可用。无需调节 |
 | `vfs.zfs.arc.min` | 系统需要为`ARC`保留的最小内存空间，防止其他程序用完内存导致`ARC`无内存可用。无需调节 |
 | `vfs.zfs.prefetch.disable` | 默认`0`开prefetch。如果负载多是小数据读取，可以尝试关闭 |
-| `vfs.zfs.vdev.max_auto_ashift` | `zpool`默认使用的最大文件系统扇区大小，默认`14`即16kB，无需修改（`ashift`是`zpool`的一个属性。现在ZFS会自动使用合适的`ashift`，该参数为`0`） |
+| `vfs.zfs.vdev.max_auto_ashift` | `zpool`默认使用的最大文件系统扇区大小，默认`14`即16kB，在SSD上可以这样设定（`ashift`是`zpool`的一个属性） |
 | `vfs.zfs.vdev.min_auto_ashift` | `zpool`默认使用的最小文件系统扇区大小，默认`9`即512B，无需修改 |
 | `vfs.zfs.top_maxinflight` | 每个`vdev`的命令队列大小。减小队列有时可以减小延迟 |
 | `vfs.zfs.l2arc.write_max` | 限制每秒写入到`L2ARC`磁盘的数据量 |
@@ -2491,4 +2495,87 @@ $ pkg-static upgrade -f
 
 ```
 $ freebsd-update install
+```
+
+## 8 Root on ZFS
+
+FreeBSD的Root on ZFS相对较简单，因为FreeBSD的bootloader对ZFS有较好的支持。不需要独立的`/boot`
+
+Root on ZFS只有在磁盘分区阶段有些不同，本质上也是只要挂载好ZFS并继续安装就行
+
+> FreeBSD默认的`Auto (ZFS)`选项会创建很多个`dataset`。这里只会给一个简化版本，只创建一个`zroot/ROOT/freebsd`给`/`，一个`zroot/home`给`/home`
+
+## 8.1 分区与格式化
+
+在磁盘分区阶段同样选择`Shell`。创建分区表
+
+```
+$ gpart create -s gpt ada0
+```
+
+创建两个分区，一个给ESP一个给ZFS
+
+```
+$ gpart add -t efi -b 2048 -s 500M ada0
+$ gpart add -t freebsd-zfs -s 100G ada0
+```
+
+格式化ESP
+
+```
+$ newfs_msdos -F 32 -c 1 ada0p1
+```
+
+创建`zroot`。根据需要调节参数
+
+```
+$ zpool create -o ashift=12 -o autotrim=on -O atime=off -O relatime=on -m none zroot ada0p2
+```
+
+创建`dataset`
+
+```
+$ zfs create -o mountpoint=none zroot/ROOT
+$ zfs create -o mountpoint=/ -o canmount=noauto zroot/ROOT/freebsd
+$ zfs create -o mountpoint=/home zroot/home
+$ zpool set bootfs=zroot/ROOT/freebsd zroot
+```
+
+先`export`再重新`import`
+
+```
+$ zpool export zroot
+$ zpool import -N -R /mnt zroot
+```
+
+挂载
+
+```
+$ zfs mount zroot/ROOT/freebsd
+$ zfs mount zroot/home
+$ mkdir -p /mnt/boot/efi
+$ mount -t msdosfs /dev/ada0p1 /mnt/boot/efi
+```
+
+## 8.2 fstab
+
+`/tmp/bsdinstall_etc/fstab`
+
+只需一个`tmpfs`足够
+
+```
+tmpfs             /tmp      tmpfs     rw,mode=1777    0 0
+```
+
+之后`exit`照常安装
+
+## 8.3 启动引导
+
+由于`bsdinstall`不知道用户要用ZFS，所以默认不会往`/etc/rc.conf`加`zfs_enable="YES"`，不要忘记安装完以后手动添加到`/mnt/etc/rc.conf`，否则除了`bootfs`以外的`dataset`都不会挂载
+
+启动引导依旧需要手动配置。重启前先复制好，给已有bootloader添加启动项，或再用其他Linux启动盘启动用`efibootmgr`注册一下，过程略
+
+```
+$ mkdir -p /mnt/boot/efi/EFI/freebsd
+$ cp /mnt/boot/efi/loader.efi /mnt/boot/efi/EFI/freebsd/
 ```
