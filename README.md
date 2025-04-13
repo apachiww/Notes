@@ -79,7 +79,7 @@
 | [201002c](201002c_complex.md) | 复变函数 | 0% |
 | [201020a](201020a_stm32.md) | ARMv7-M体系结构以及STM32单片机开发 | 70% |
 | [201219a](201219a_shell.md) | Linux命令行，Shell脚本，Awk字符串处理，Tcl编程，Expect，Git教程 | 100% |
-| [201219b](201219b_makefile.md) | Makefile的用法，基于cmake和GNU make | 90% |
+| [201219b](201219b_makefile.md) | Makefile的用法 | 70% |
 | [201220a](201220a_mcu-ide.md) | MCU开发环境构建 | 10% |
 | [201220b](201220b_crack.md) | CTF相关实用技能摘录 | 0% |
 | [201220c](201220c_metasploit.md) | Metasploit渗透测试 | 0% |
@@ -97,7 +97,6 @@
 | [210524a](210524a_8051.md) | 8051单片机 | 100% |
 | [210625a](210625a_uefi.md) | UEFI | 10% |
 | [210702a](210702a_avr.md) | AVR单片机开发 | 50% |
-| [210729a](210729a_ai.md) | 机器学习，深度学习，强化学习，常用模型、框架和算法 | 0% |
 | [210731a](210731a_llvm.md) | 编译原理与LLVM | 0% |
 | [210731b](210731b_usb.md) | USB协议 | 30% |
 | [210808a](210808a_lcd.md) | LCD驱动 | 50% |
@@ -113,7 +112,6 @@
 | [230411a](230411a_unix-programming.md) | Linux/Unix系统编程 | 0% |
 | [230526a](230526a_driver.md) | Linux驱动开发，设备树 | 0% |
 | [230709a](230709a_container.md) | Linux容器和虚拟化工具，LXD（Incus），Docker，CRI-O，Kata Containers，VirtualBox，QEMU（+KVM），K8s/K3s，Vagrant等工具的使用，cgroup | 30% |
-| [230719a](230719a_js.md) | 基于Node.js和React全栈开发 | 0% |
 | [230813a](230813a_auto.md) | 自动控制算法 | 0% |
 | [231101a](231101a_riscv.md) | RISC-V体系结构，SBI | 0% |
 | [231104a](231104a_database.md) | 数据库 | 0% |
@@ -123,7 +121,7 @@
 | [250107a](250107a_loongarch.md) | LoongArch学习笔记 | 0% |
 | [250118a](250118a_plan9port.md) | Plan 9 port试用 | 0% |
 | [250302a](250302a_void.md) | VoidLinux安装与日常使用 | 100% |
-| [250404a](250404a_chimera.md) | ChimeraLinux安装与日常使用 | 0% |
+| [250404a](250404a_chimera.md) | ChimeraLinux安装与日常使用 | 100% |
 
 ## 参考书收藏
 
