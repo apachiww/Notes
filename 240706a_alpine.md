@@ -1183,6 +1183,10 @@ $ apk add vim
 $ apk del vim
 ```
 
+> `apk`有一个文件`/etc/apk/world`，里面记录了所有当前已经安装的包名。实际上`apk add`和`apk del`是直接修改`/etc/apk/world`，往里面添加/删除入口以后再和文件系统里安装的包对比，以检查此次发生的变化，如果有变动才进行相应的包解压/文件删除操作
+>
+> 想要一个包永远不被安装，可以使用`!`，示例`apk add !electron`。也可以自行创建`virtual package`（给一些指定的包集合起名，meta package），示例`apk add --virtual screenshot slurp swappy grim`，会创建一个`screenshot`的`virtual package`，在`apk add screenshot`时会自动安装上述3个包
+
 安装自编译包
 
 ```
