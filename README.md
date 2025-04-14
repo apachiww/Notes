@@ -24,6 +24,17 @@
 | [AppArmor](210130a_install-notice.md#6-安全专题apparmor) |
 | [Ansible](210130a_install-notice.md#7-运维工具ansible) |
 
+### 一些OS的安装与体验
+
+主要关注点是BSD和一些比较有特色的独立发行版
+
+|  |
+| :- |
+| [FreeBSD](210115a_freebsd.md) |
+| [AlpineLinux](240706a_alpine.md) [openrc](240706a_alpine.md#31-服务管理) |
+| [VoidLinux](250302a_void.md) [runit](250302a_void.md#21-服务管理) |
+| [ChimeraLinux](250404a_chimera.md) [dinit](250404a_chimera.md#21-服务管理) |
+
 ### 容器与虚拟化
 
 |  |
@@ -200,4 +211,4 @@
 
 🍌 KiCAD FreeCAD
 
-🍍 AlpineLinux ArchLinux Debian Fedora RHEL Slackware FreeBSD Tribblix Haiku
+🍍 AlpineLinux VoidLinux ArchLinux Debian Fedora RHEL Slackware FreeBSD Haiku OpenIndiana
