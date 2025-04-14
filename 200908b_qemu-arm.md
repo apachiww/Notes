@@ -288,11 +288,7 @@ Core: at, batch, cpio, ed, fcrontab, lsb-tools, nspr, nss, pam, pax, sendmail (p
 
 # 使用Buildroot
 
-# AlpineLinux
-
-# Fedora
-
-# Debian
+# 发行版：AlpineLinux
 
 # U-Boot
 

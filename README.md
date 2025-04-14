@@ -122,6 +122,7 @@
 | [250118a](250118a_plan9port.md) | Plan 9 port试用 | 0% |
 | [250302a](250302a_void.md) | VoidLinux安装与日常使用 | 100% |
 | [250404a](250404a_chimera.md) | ChimeraLinux安装与日常使用 | 100% |
+| [250414a](250414a_lfs.md) | Linux From Scratch | 100% |
 
 ## 参考书收藏
 
