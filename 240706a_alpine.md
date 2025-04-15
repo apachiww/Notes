@@ -191,7 +191,7 @@ fdisk -l /dev/sda
 格式化分区
 
 ```
-mkfs.vfat /dev/sda1
+mkfs.vfat -F32 /dev/sda1
 mkfs.ext4 /dev/sda2
 ```
 
