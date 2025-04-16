@@ -570,7 +570,7 @@ setup-desktop sway
 
 > 上述命令安装`elogind, polkit-elogind, eudev`（被调用的`setup-wayland`）`dmenu, font-dejavu , foot, grim, i3status, sway, swayidle, swaylockd, util-linux-login, wl-clipboard, wmenu, xwayland, firefox`（`setup-desktop sway`）。上述命令会将系统`mdev`切换至`udev`（`setup-devd udev`），同时将`elogind polkit`设为开机启动。
 >
-> 如果没有需求，可以删除`swayidle swaylockd swaylock`
+> 如果没有需求，可以删除`swayidle swaylockd swaylock` `i3status`
 
 支持桌面背景需要再安装`swaybg`
 
@@ -589,7 +589,7 @@ rc-update add dbus
 安装其他一些基础功能与附加小组件，包括字体，图标等。使用`doas`替代`sudo`
 
 ```
-apk add man-db man-pages bash bash-completion font-jetbrains-mono font-droid-sans-mono-nerd font-noto-emoji font-wqy-zenhei adwaita-icon-theme papirus-icon-theme fuzzel mako waybar doas doasedit foot-extra-terminfo nemo wpa_supplicant usbutils pciutils imv vlc-qt zathura
+apk add man-db man-pages bash bash-completion xdg-desktop-portal xdg-desktop-portal-wlr xdg-desktop-portal-gtk font-jetbrains-mono font-droid-sans-mono-nerd font-noto-emoji font-wqy-zenhei adwaita-icon-theme papirus-icon-theme fuzzel mako waybar doas doasedit foot-extra-terminfo nemo wpa_supplicant usbutils pciutils imv vlc-qt zathura
 ```
 
 修改shell为`bash`
@@ -885,7 +885,7 @@ https://mirrors.ustc.edu.cn/alpine/edge/community
 安装`fcitx5`
 
 ```
-apk add fcitx5 fcitx5-chinese-addons fcitx5-configtool fcitx5-qt fcitx5-gtk xdg-desktop-portal xdg-desktop-portal-wlr xdg-desktop-portal-gtk
+apk add fcitx5 fcitx5-chinese-addons fcitx5-configtool fcitx5-qt fcitx5-gtk 
 ```
 
 在`sway`配置文件添加启动
