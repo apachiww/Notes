@@ -2785,6 +2785,10 @@ signatureValue
 
 随着量子计算的发展，RSA将会淘汰
 
+> ECC密钥使用命令`openssl ecparam -genkey -name curve -out prv.key`生成，其中`curve`需要是支持的曲线名，使用`openssl ecparam -list_curves`查看
+>
+> 生成对应公钥使用`openssl ec -in prv.key -pubout -out pub.key`
+
 首先生成RSA密钥，输出格式为`pem`，我们习惯使用`.key`后缀。不加长度默认`2048`bit（建议可以`4096`bit）
 
 ```shell
