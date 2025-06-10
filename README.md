@@ -2,9 +2,7 @@
 
 ~~My ADHD notes~~
 
-> 个人学习归纳，备忘。不保证质量，完成度和准确性
->
-> Learning is a lifelong deal. 长期慢更
+> 个人学习归纳，备忘。**不保证**质量，完成度和准确性
 
 ## 快速传送门
 
@@ -133,7 +131,8 @@
 | [250118a](250118a_plan9port.md) | Plan 9 port试用 | 0% |
 | [250302a](250302a_void.md) | VoidLinux安装与日常使用 | 100% |
 | [250404a](250404a_chimera.md) | ChimeraLinux安装与日常使用 | 100% |
-| [250414a](250414a_lfs.md) | Linux From Scratch | 100% |
+| [250414a](250414a_lfs.md) | Linux From Scratch | 40% |
+| [250608a](250608a_calc.md) | 一些古老可编程计算器的试玩 | 0% |
 
 ## 参考书收藏
 
